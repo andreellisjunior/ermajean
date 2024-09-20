@@ -198,8 +198,8 @@ export const addProfileNameAction = async (formData: FormData) => {
 
   const { data, error } = await supabase
     .from('profiles')
-    .insert([{ name, user_id: userId }])
-    .select();
+    .update([{ name }])
+    .eq('id', userId);
 
   if (error) {
     console.error(error.message);
