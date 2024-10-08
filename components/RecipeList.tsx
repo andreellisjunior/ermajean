@@ -10,7 +10,7 @@ const RecipeList = ({
   profiles,
   recipes,
 }: {
-  profiles: { name: string }[];
+  profiles: { name: string }[] | null;
   recipes: Recipe[];
 }) => {
   const [searchInput, setSearchInput] = useState('');

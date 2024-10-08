@@ -5,6 +5,7 @@ import RecipeCard from '@/components/ui/RecipeCard';
 import WelcomeModal from '@/components/WelcomeModal';
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
+import { Recipe } from '../types/types';
 
 export default async function ProtectedPage() {
   const supabase = createClient();
@@ -17,10 +18,12 @@ export default async function ProtectedPage() {
     return redirect('/');
   }
 
-  const { data: recipes, error } = await supabase.from('recipes').select('*');
-  const { data: profiles, error: profileError } = await supabase
+  const { data: recipes, error } = (await supabase
+    .from('recipes')
+    .select('*')) as { data: Recipe[]; error: any };
+  const { data: profiles, error: profileError } = (await supabase
     .from('profiles')
-    .select('name');
+    .select('name')) as { data: { name: string }[]; error: any };
 
   return <RecipeList profiles={profiles} recipes={recipes} />;
 }
