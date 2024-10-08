@@ -189,6 +189,23 @@ export const addNewRecipeAction = async (formData: FormData) => {
   return encodedRedirect('success', '/recipes', 'Recipe added successfully');
 };
 
+// deletes a recipe from the recipes table
+export const deleteRecipeAction = async (recipeId: string) => {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from('recipes')
+    .delete()
+    .eq('id', recipeId);
+
+  if (error) {
+    console.error(error.message);
+    return encodedRedirect('error', '/recipes', 'Could not delete recipe');
+  }
+
+  return encodedRedirect('success', '/recipes', 'Recipe deleted successfully');
+};
+
 // adds name to the profiles table
 export const addProfileNameAction = async (formData: FormData) => {
   const supabase = createClient();
