@@ -6,12 +6,23 @@ import Link from 'next/link';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { FormMessage, Message } from '@/components/form-message';
+import { createClient } from '@/utils/supabase/server';
+import { redirect } from 'next/navigation';
 
 export default async function Index({
   searchParams,
 }: {
   searchParams: Message;
 }) {
+  const supabase = createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    return redirect('/recipes');
+  }
   return (
     <>
       <div className='flex flex-col justify-evenly items-center w-full h-screen p-2'>

@@ -4,6 +4,7 @@ import { encodedRedirect } from '@/utils/utils';
 import { createClient } from '@/utils/supabase/server';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { aiPrompt } from '@/lib/openai';
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get('email')?.toString();
@@ -180,6 +181,48 @@ export const addNewRecipeAction = async (formData: FormData) => {
     .select();
 
   console.log(data);
+
+  if (error) {
+    console.error(error.message);
+    return encodedRedirect('error', '/recipes', 'Could not add recipe');
+  }
+
+  return encodedRedirect('success', '/recipes', 'Recipe added successfully');
+};
+
+export const addAIRecipeAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const taste = formData.get('taste')?.toString();
+  const serving = formData.get('serving')?.toString();
+  const total_time = formData.get('totalTime')?.toString();
+  const course = formData.get('course')?.toString();
+  const restrictions = formData.get('restrictions')?.toString();
+
+  const result = JSON.parse(
+    (await aiPrompt(taste, serving, total_time, course, restrictions))
+      .choices[0].message.content!
+  );
+
+  const { data, error } = await supabase
+    .from('recipes')
+    .insert([
+      {
+        recipe_name: result.recipe_name,
+        description: result.description,
+        prep_time: result.prep_time,
+        cook_time: result.cook_time,
+        total_time: result.total_time,
+        servings: result.servings,
+        difficulty_level: result.difficulty_level,
+        course: result.course,
+        ingredients: result.ingredients.join('\n'),
+        instructions: result.instructions.join('\n'),
+        user_id: userId,
+      },
+    ])
+    .select();
 
   if (error) {
     console.error(error.message);

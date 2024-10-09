@@ -8,7 +8,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { addNewRecipeAction } from '@/app/actions';
+import { addAIRecipeAction, addNewRecipeAction } from '@/app/actions';
 import ComboInput from './ComboInput';
 import DropdownInput from './DropdownInput';
 
@@ -99,7 +99,7 @@ const AddNewRecipe = () => {
       <Modal {...{ open, setOpen }}>
         <form
           action={(formData: FormData) => {
-            addNewRecipeAction(formData);
+            aiOpen ? addAIRecipeAction(formData) : addNewRecipeAction(formData);
             setOpen(false);
           }}
         >

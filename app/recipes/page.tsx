@@ -6,6 +6,7 @@ import WelcomeModal from '@/components/WelcomeModal';
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import { Recipe } from '../types/types';
+import { aiPrompt } from '@/lib/openai';
 
 export default async function ProtectedPage() {
   const supabase = createClient();
@@ -24,6 +25,8 @@ export default async function ProtectedPage() {
   const { data: profiles, error: profileError } = (await supabase
     .from('profiles')
     .select('name')) as { data: { name: string }[]; error: any };
+
+  // console.log(JSON.parse((await aiPrompt()).choices[0].message.content!));
 
   return <RecipeList profiles={profiles} recipes={recipes} />;
 }
