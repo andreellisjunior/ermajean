@@ -11,10 +11,12 @@ import { Textarea } from './ui/textarea';
 import { addAIRecipeAction, addNewRecipeAction } from '@/app/actions';
 import ComboInput from './ComboInput';
 import DropdownInput from './DropdownInput';
+import LoadingSpinner from './ui/LoadingSpinner';
 
 const AddNewRecipe = () => {
   const [open, setOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const aiForm = () => {
     return (
@@ -99,8 +101,10 @@ const AddNewRecipe = () => {
       <Modal {...{ open, setOpen }}>
         <form
           action={(formData: FormData) => {
+            setLoading(true);
             aiOpen ? addAIRecipeAction(formData) : addNewRecipeAction(formData);
             setOpen(false);
+            setLoading(false);
           }}
         >
           <div className='mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left'>
@@ -191,14 +195,18 @@ const AddNewRecipe = () => {
             )}
             <div className='mt-5 py-3 flex items-center gap-4 sticky bottom-0 right-0'>
               {aiOpen ? (
-                <Button
-                  variant={'outline'}
-                  className='w-full gap-2'
-                  type='submit'
-                >
-                  GENERATE
-                  <SparklesIcon className='h-6 w-6 text-primary' />
-                </Button>
+                loading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <Button
+                    variant={'outline'}
+                    className='w-full gap-2'
+                    type='submit'
+                  >
+                    GENERATE
+                    <SparklesIcon className='h-6 w-6 text-primary' />
+                  </Button>
+                )
               ) : (
                 <>
                   <Button

@@ -69,12 +69,24 @@ const RecipeModal = ({
           <hr />
           <div className='text-left flex flex-col gap-4'>
             <h3 className='text-lg font-semibold'>Ingredients</h3>
-            <p className='indent-4'>{recipe.ingredients}</p>
+            <ul className='list-disc flex flex-col gap-4'>
+              {recipe.ingredients.split('\n').map((ingredients, index) => (
+                <li key={index} className='ml-4'>
+                  {ingredients}
+                </li>
+              ))}
+            </ul>
           </div>
           <hr />
           <div className='text-left flex flex-col gap-4'>
             <h3 className='text-lg font-semibold'>Instructions</h3>
-            <p className='indent-4'>{recipe.instructions}</p>
+            <ul className='list-disc flex flex-col gap-4'>
+              {recipe.instructions.split('\n').map((instruction, index) => (
+                <li key={index} className='ml-4'>
+                  {instruction}
+                </li>
+              ))}
+            </ul>
           </div>
           <div className='mt-5 py-3 flex items-center gap-4'>
             <RecipeSettings recipeId={recipe.id} setOpen={setOpen} />

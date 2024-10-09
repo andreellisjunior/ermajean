@@ -21,7 +21,11 @@ export default async function ProtectedPage() {
 
   const { data: recipes, error } = (await supabase
     .from('recipes')
-    .select('*')) as { data: Recipe[]; error: any };
+    .select('*')
+    .order('created_at', { ascending: false })) as {
+    data: Recipe[];
+    error: any;
+  };
   const { data: profiles, error: profileError } = (await supabase
     .from('profiles')
     .select('name')) as { data: { name: string }[]; error: any };
