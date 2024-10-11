@@ -11,7 +11,7 @@ import { DialogTitle } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
-import { updateProfileAction } from '@/app/actions';
+import { signOutAction, updateProfileAction } from '@/app/actions';
 import { Message } from './form-message';
 import { toastDisplay } from '@/app/toastDisplay';
 import Image from 'next/image';
@@ -144,9 +144,9 @@ const RecipeList = ({
                 variant={'destructive'}
                 className='w-full gap-2'
                 type='button'
-                onClick={() => setProfile(false)}
+                onClick={() => signOutAction()}
               >
-                Log Out
+                Sign Out
               </Button>
               <Button variant={'default'} className='w-full' type='submit'>
                 Save

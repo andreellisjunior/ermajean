@@ -4,7 +4,8 @@ import { SubmitButton } from '@/components/submit-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
-import { SmtpMessage } from '../smtp-message';
+import Image from 'next/image';
+import Logo from '../../assets/Logo.svg';
 
 export default function Signup({ searchParams }: { searchParams: Message }) {
   if ('message' in searchParams) {
@@ -17,31 +18,45 @@ export default function Signup({ searchParams }: { searchParams: Message }) {
 
   return (
     <>
-      <form className='flex flex-col min-w-64 max-w-64 mx-auto'>
-        <h1 className='text-2xl font-medium'>Sign up</h1>
-        <p className='text-sm text text-foreground'>
-          Already have an account?{' '}
-          <Link className='text-primary font-medium underline' href='/'>
-            Sign in
-          </Link>
-        </p>
-        <div className='flex flex-col gap-2 [&>input]:mb-3 mt-8'>
-          <Label htmlFor='email'>Email</Label>
-          <Input name='email' placeholder='you@example.com' required />
-          <Label htmlFor='password'>Password</Label>
-          <Input
-            type='password'
-            name='password'
-            placeholder='Your password'
-            minLength={6}
-            required
-          />
-          <SubmitButton formAction={signUpAction} pendingText='Signing up...'>
-            Sign up
-          </SubmitButton>
-          <FormMessage message={searchParams} />
+      <div className='flex flex-col justify-evenly items-center w-full h-screen p-2'>
+        {/* Hero/Logo */}
+        <div className='flex flex-col items-center justify-center text-center'>
+          <h3>welcome to</h3>
+          <Image src={Logo} alt='logo' width={500} height={500} />
+          <p>Your personal recipe management and creation tool.</p>
         </div>
-      </form>
+        {/* Sign up/Sign in Section */}
+        <div className='w-full flex flex-col'>
+          <form className='flex flex-col min-w-64'>
+            <h1 className='text-2xl font-medium'>Sign up</h1>
+            <p className='text-sm text text-foreground self-end'>
+              Already have an account?{' '}
+              <Link className='text-primary font-medium underline' href='/'>
+                Sign in
+              </Link>
+            </p>
+            <div className='flex flex-col gap-2 [&>input]:mb-3 mt-8'>
+              <Label htmlFor='email'>Email</Label>
+              <Input name='email' placeholder='you@example.com' required />
+              <Label htmlFor='password'>Password</Label>
+              <Input
+                type='password'
+                name='password'
+                placeholder='Your password'
+                minLength={6}
+                required
+              />
+              <SubmitButton
+                formAction={signUpAction}
+                pendingText='Signing up...'
+              >
+                Sign up
+              </SubmitButton>
+              <FormMessage message={searchParams} />
+            </div>
+          </form>
+        </div>
+      </div>
     </>
   );
 }
