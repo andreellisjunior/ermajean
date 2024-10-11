@@ -1,14 +1,14 @@
-import AddNewRecipe from '@/components/AddNewRecipe';
 import RecipeList from '@/components/RecipeList';
-import { Input } from '@/components/ui/input';
-import RecipeCard from '@/components/ui/RecipeCard';
-import WelcomeModal from '@/components/WelcomeModal';
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import { Recipe } from '../types/types';
-import { aiPrompt } from '@/lib/openai';
+import { Message } from '@/components/form-message';
 
-export default async function ProtectedPage() {
+export default async function ProtectedPage({
+  searchParams,
+}: {
+  searchParams: Message;
+}) {
   const supabase = createClient();
 
   const {
@@ -32,5 +32,5 @@ export default async function ProtectedPage() {
 
   // console.log(JSON.parse((await aiPrompt()).choices[0].message.content!));
 
-  return <RecipeList profiles={profiles} recipes={recipes} />;
+  return <RecipeList {...{ profiles, recipes, searchParams }} />;
 }

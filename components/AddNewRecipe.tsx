@@ -12,8 +12,10 @@ import { addAIRecipeAction, addNewRecipeAction } from '@/app/actions';
 import ComboInput from './ComboInput';
 import DropdownInput from './DropdownInput';
 import LoadingSpinner from './ui/LoadingSpinner';
+import { toastDisplay } from '@/app/toastDisplay';
+import { Message } from './form-message';
 
-const AddNewRecipe = () => {
+const AddNewRecipe = ({ searchParams }: { searchParams: Message }) => {
   const [open, setOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -105,6 +107,7 @@ const AddNewRecipe = () => {
             aiOpen ? addAIRecipeAction(formData) : addNewRecipeAction(formData);
             setOpen(false);
             setLoading(false);
+            toastDisplay(searchParams);
           }}
         >
           <div className='mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left'>

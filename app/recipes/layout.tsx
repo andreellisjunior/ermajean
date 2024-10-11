@@ -1,5 +1,7 @@
 import { ThemeProvider } from 'next-themes';
 import { Comfortaa } from 'next/font/google';
+import { Bounce, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -28,6 +30,19 @@ export default function RootLayout({
       disableTransitionOnChange
     >
       <div className='max-w-xl mx-auto'>{children}</div>
+      <ToastContainer
+        position='top-center'
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme='light'
+        transition={Bounce}
+      />
     </ThemeProvider>
   );
 }

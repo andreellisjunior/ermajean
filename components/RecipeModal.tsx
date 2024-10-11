@@ -7,15 +7,18 @@ import TemplateImage from '../app/assets/food-placeholder.png';
 import { Recipe } from '@/app/types/types';
 import { Button } from './ui/button';
 import RecipeSettings from './RecipeSettings';
+import { Message } from './form-message';
 
 const RecipeModal = ({
   recipe,
   open,
   setOpen,
+  searchParams,
 }: {
   recipe: Recipe;
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
+  searchParams: Message;
 }) => {
   return (
     <Modal {...{ open, setOpen }}>
@@ -89,14 +92,18 @@ const RecipeModal = ({
             </ul>
           </div>
           <div className='mt-5 py-3 flex items-center gap-4'>
-            <RecipeSettings recipeId={recipe.id} setOpen={setOpen} />
+            <RecipeSettings
+              recipeId={recipe.id}
+              setOpen={setOpen}
+              searchParams={searchParams}
+            />
             <Button
               variant={'outline'}
               className='w-full gap-2'
               onClick={() => setOpen(false)}
               type='button'
             >
-              Edit
+              Close
             </Button>
             <Button variant={'default'} className='w-full' type='submit'>
               Save

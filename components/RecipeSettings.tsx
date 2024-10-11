@@ -2,13 +2,18 @@ import { deleteRecipeAction } from '@/app/actions';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { Cog6ToothIcon } from '@heroicons/react/24/outline';
 import { Dispatch, SetStateAction } from 'react';
+import { Message } from './form-message';
+import { toastDisplay } from '@/app/toastDisplay';
+import { toast } from 'react-toastify';
 
 export default function RecipeSettings({
   recipeId,
   setOpen,
+  searchParams,
 }: {
   recipeId: string;
   setOpen: Dispatch<SetStateAction<boolean>>;
+  searchParams: Message;
 }) {
   return (
     <div className='w-full justify-center'>
@@ -24,9 +29,10 @@ export default function RecipeSettings({
           >
             <div className='p-3'>
               <button
-                onClick={() => {
-                  deleteRecipeAction(recipeId);
+                onClick={async () => {
+                  await deleteRecipeAction(recipeId);
                   setOpen(false);
+                  toast.success('Recipe deleted successfully');
                 }}
                 className='block rounded-lg py-2 px-3 transition hover:bg-red-500/5 text-xs text-start'
               >

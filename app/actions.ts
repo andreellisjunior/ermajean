@@ -272,3 +272,22 @@ export const addProfileNameAction = async (formData: FormData) => {
     'Profile name added successfully'
   );
 };
+
+export const updateProfileAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const name = formData.get('name')?.toString();
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ name })
+    .eq('id', userId);
+
+  if (error) {
+    console.error(error.message);
+    return encodedRedirect('error', '/recipes', 'Could not update profile');
+  }
+
+  return encodedRedirect('success', '/recipes', 'Profile updated successfully');
+};

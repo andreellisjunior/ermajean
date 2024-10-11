@@ -7,6 +7,7 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { addProfileNameAction } from '@/app/actions';
+import { toast } from 'react-toastify';
 
 const WelcomeModal = () => {
   const [open, setOpen] = useState(true);
@@ -29,9 +30,10 @@ const WelcomeModal = () => {
         </p>
         <div className='content mt-12'>
           <form
-            action={(formData: FormData) => {
-              addProfileNameAction(formData);
+            action={async (formData: FormData) => {
+              await addProfileNameAction(formData);
               setOpen(false);
+              toast.success('Name saved successfully');
             }}
             className='flex flex-col gap-4'
           >

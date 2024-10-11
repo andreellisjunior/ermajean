@@ -4,8 +4,15 @@ import React from 'react';
 import TemplateImage from '../../app/assets/food-placeholder.png';
 import RecipeModal from '../RecipeModal';
 import { Recipe } from '@/app/types/types';
+import { Message } from '../form-message';
 
-const RecipeCard = ({ recipe }: { recipe: Recipe }) => {
+const RecipeCard = ({
+  recipe,
+  searchParams,
+}: {
+  recipe: Recipe;
+  searchParams: Message;
+}) => {
   const [open, setOpen] = React.useState(false);
   return (
     <>
@@ -34,7 +41,7 @@ const RecipeCard = ({ recipe }: { recipe: Recipe }) => {
           </p>
         </div>
       </div>
-      <RecipeModal {...{ recipe, open, setOpen }} />
+      <RecipeModal {...{ recipe, open, setOpen, searchParams }} />
     </>
   );
 };
