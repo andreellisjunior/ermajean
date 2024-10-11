@@ -86,13 +86,13 @@ const RecipeList = ({
                   Click the plus button to get started
                 </p>
               </div>
-              <Image
+              {/* <Image
                 src={Arrow.src}
                 width={100}
                 height={50}
                 alt='arrow image'
                 className='absolute left-1/2 bottom-0 transform -translate-x-1/2 -translate-y-1/8 block sm:hidden'
-              />
+              /> */}
             </div>
           ) : (
             filteredRecipes?.map((recipe) => (
