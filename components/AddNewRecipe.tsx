@@ -193,11 +193,11 @@ const AddNewRecipe = () => {
                 </div>
               </>
             )}
-            <div className='mt-5 py-3 flex items-center gap-4 sticky bottom-0 right-0'>
-              {aiOpen ? (
-                loading ? (
-                  <LoadingSpinner />
-                ) : (
+            {loading ? (
+              <LoadingSpinner />
+            ) : (
+              <div className='mt-5 py-3 flex items-center gap-4 sticky bottom-0 right-0'>
+                {aiOpen ? (
                   <Button
                     variant={'outline'}
                     className='w-full gap-2'
@@ -206,27 +206,31 @@ const AddNewRecipe = () => {
                     GENERATE
                     <SparklesIcon className='h-6 w-6 text-primary' />
                   </Button>
-                )
-              ) : (
-                <>
-                  <Button
-                    variant={'outline'}
-                    className='w-full gap-2'
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setAiOpen(true);
-                    }}
-                    type='button'
-                  >
-                    Use AI
-                    <SparklesIcon className='h-6 w-6 text-primary' />
-                  </Button>
-                  <Button variant={'default'} className='w-full' type='submit'>
-                    Save
-                  </Button>
-                </>
-              )}
-            </div>
+                ) : (
+                  <>
+                    <Button
+                      variant={'outline'}
+                      className='w-full gap-2'
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setAiOpen(true);
+                      }}
+                      type='button'
+                    >
+                      Use AI
+                      <SparklesIcon className='h-6 w-6 text-primary' />
+                    </Button>
+                    <Button
+                      variant={'default'}
+                      className='w-full'
+                      type='submit'
+                    >
+                      Save
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </form>
       </Modal>

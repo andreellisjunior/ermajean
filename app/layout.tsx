@@ -8,6 +8,12 @@ const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : 'http://localhost:3000';
 
+export const metadata = {
+  metadataBase: new URL(defaultUrl),
+  title: 'Recipes | ErmaJean',
+  description: 'A collection of recipes from ErmaJean',
+};
+
 const comfortaa = Comfortaa({
   subsets: ['latin'],
 });
@@ -35,6 +41,11 @@ export default function RootLayout({
         />
         <meta name='apple-mobile-web-app-title' content='ermajean' />
         <link rel='manifest' href='/site.webmanifest' />
+        <meta name='apple-mobile-web-app-capable' content='yes' />
+        <meta
+          name='apple-mobile-web-app-status-bar-style'
+          content='black-translucent'
+        />
       </Head>
       <body className='bg-background text-foreground'>
         <BackgroundWrapper>
