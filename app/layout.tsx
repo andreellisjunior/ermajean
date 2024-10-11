@@ -47,7 +47,7 @@ export default function RootLayout({
           content='black-translucent'
         />
       </Head>
-      <body className='bg-background text-foreground'>
+      <body className='bg-background text-foreground bg-[#F7F7ED]'>
         <BackgroundWrapper>
           <div className='p-4 max-w-xl mx-auto'>{children}</div>
         </BackgroundWrapper>
