@@ -14,6 +14,8 @@ import DropdownInput from './DropdownInput';
 import LoadingSpinner from './ui/LoadingSpinner';
 import { toastDisplay } from '@/app/toastDisplay';
 import { Message } from './form-message';
+import { SubmitButton } from './submit-button';
+import { toast } from 'react-toastify';
 
 const AddNewRecipe = ({ searchParams }: { searchParams: Message }) => {
   const [open, setOpen] = useState(false);
@@ -47,15 +49,20 @@ const AddNewRecipe = ({ searchParams }: { searchParams: Message }) => {
           <Input
             name='taste'
             placeholder='Balanced chicken meal with a lot of veggies'
+            required
           />
         </div>
         <div className='mt-4 text-left'>
           <Label htmlFor='serving'>How many are eating?</Label>
-          <Input name='serving' placeholder='5 people, just me' />
+          <Input name='serving' placeholder='5 people, just me' required />
         </div>
         <div className='mt-4 text-left'>
           <Label htmlFor='total_time'>How much total time do you have?</Label>
-          <Input name='total_time' placeholder='1 hour?, 2 hours?, 30 min.?' />
+          <Input
+            name='total_time'
+            placeholder='1 hour?, 2 hours?, 30 min.?'
+            required
+          />
         </div>
         <div className='mt-4 text-left'>
           <Label htmlFor='restrictions'>
@@ -71,12 +78,13 @@ const AddNewRecipe = ({ searchParams }: { searchParams: Message }) => {
           <Input
             name='course'
             placeholder='Breakfast, lunch, dinner, or snack'
+            required
           />
         </div>
       </>
     );
   };
-
+  console.log(loading);
   return (
     <>
       <div className='fixed bottom-5 right-5 shadow-lg shadow-gray-600 rounded-full'>
@@ -102,12 +110,14 @@ const AddNewRecipe = ({ searchParams }: { searchParams: Message }) => {
       </div>
       <Modal {...{ open, setOpen }}>
         <form
-          action={(formData: FormData) => {
+          action={async (formData: FormData) => {
             setLoading(true);
-            aiOpen ? addAIRecipeAction(formData) : addNewRecipeAction(formData);
+            aiOpen
+              ? await addAIRecipeAction(formData)
+              : await addNewRecipeAction(formData);
             setOpen(false);
             setLoading(false);
-            toastDisplay(searchParams);
+            toast.success('Recipe saved successfully');
           }}
         >
           <div className='mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left'>
@@ -201,14 +211,24 @@ const AddNewRecipe = ({ searchParams }: { searchParams: Message }) => {
             ) : (
               <div className='mt-5 py-3 flex items-center gap-4 sticky bottom-0 right-0'>
                 {aiOpen ? (
-                  <Button
-                    variant={'outline'}
-                    className='w-full gap-2'
-                    type='submit'
-                  >
-                    GENERATE
-                    <SparklesIcon className='h-6 w-6 text-primary' />
-                  </Button>
+                  <div className='flex flex-col w-full gap-4'>
+                    <SubmitButton
+                      variant={'outline'}
+                      className='w-full gap-2 border-primary'
+                      type='submit'
+                      pendingText='Generating...'
+                    >
+                      GENERATE
+                      <SparklesIcon className='h-6 w-6 text-primary' />
+                    </SubmitButton>
+                    <Button
+                      variant={'ghost'}
+                      type='button'
+                      onClick={() => setAiOpen(false)}
+                    >
+                      Go Back
+                    </Button>
+                  </div>
                 ) : (
                   <>
                     <Button

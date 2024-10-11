@@ -18,7 +18,7 @@ export const aiPrompt = async (
       },
       {
         role: 'user',
-        content: `Come up with a detailed recipe. I have a taste for ${taste}, I am serving ${serving}, I have ${totalTime} to cook, and I am looking for a ${course} course. ${restrictions ? `I have the following restrictions: ${restrictions}` : ''}. The output of the recipe should include the following details in json format: recipe_name, description, prep_time, cook_time, total_time, servings, difficulty_level, course, ingredients, instructions`,
+        content: `Come up with a detailed recipe. I have a taste for ${taste}, I am serving ${serving}, I have ${totalTime} to cook, and I am looking for a ${course} course. ${restrictions ? `I have the following restrictions: ${restrictions}` : ''}. The output of the recipe should include the following details in json format (make sure ingredients and instructions return an array of strings and each ingredient and instruction is a new line): recipe_name, description, prep_time, cook_time, total_time, servings, difficulty_level, course, ingredients, instructions`,
       },
     ],
   });
