@@ -1,8 +1,8 @@
-import BackgroundWrapper from '@/components/ui/BackgroundWrapper';
+import { ThemeProvider } from 'next-themes';
 import { Comfortaa } from 'next/font/google';
-import Head from 'next/head';
 import '../globals.css';
-import 'react-toastify/dist/ReactToastify.css';
+import BackgroundWrapper from '@/components/ui/BackgroundWrapper';
+import Head from 'next/head';
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`

@@ -1,8 +1,7 @@
-import { ThemeProvider } from 'next-themes';
 import { Comfortaa } from 'next/font/google';
-import './globals.css';
-import BackgroundWrapper from '@/components/ui/BackgroundWrapper';
 import Head from 'next/head';
+import '../../../globals.css';
+import 'react-toastify/dist/ReactToastify.css';
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -47,11 +46,7 @@ export default function RootLayout({
           content='black-translucent'
         />
       </Head>
-      <body className='bg-background text-foreground bg-[#F7F7ED]'>
-        <BackgroundWrapper>
-          <div className='p-4 max-w-xl mx-auto'>{children}</div>
-        </BackgroundWrapper>
-      </body>
+      <body className='bg-[#F7F7ED] max-w-2xl mx-auto p-4'>{children}</body>
     </html>
   );
 }

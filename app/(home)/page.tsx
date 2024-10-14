@@ -1,7 +1,7 @@
 import Image from 'next/image';
-import Logo from '../app/assets/Logo.svg';
+import Logo from '../../app/assets/Logo.svg';
 import { SubmitButton } from '@/components/submit-button';
-import { signInAction } from './actions';
+import { signInAction } from '../actions';
 import Link from 'next/link';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
