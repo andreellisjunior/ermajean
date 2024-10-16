@@ -201,10 +201,17 @@ export const addAIRecipeAction = async (formData: FormData) => {
   const course = formData.get('course')?.toString();
   const restrictions = formData.get('restrictions')?.toString();
 
-  const result = JSON.parse(
-    (await aiPrompt(taste, serving, total_time, course, restrictions))
-      .choices[0].message.content!
+  const aiData = await aiPrompt(
+    taste,
+    serving,
+    total_time,
+    course,
+    restrictions
   );
+
+  console.log(aiData.choices[0].message.content);
+
+  const result = JSON.parse(aiData.choices[0].message.content!);
 
   const { data, error } = await supabase
     .from('recipes')

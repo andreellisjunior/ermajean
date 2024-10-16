@@ -12,13 +12,15 @@ export default function RecipeSettings({
   recipeId,
   setOpen,
   searchParams,
+  recipeName,
 }: {
   recipeId: string;
   setOpen: Dispatch<SetStateAction<boolean>>;
   searchParams: Message;
+  recipeName: string;
 }) {
   const shareOptions = {
-    title: 'Share Recipe',
+    title: recipeName,
     url: `/recipe/${recipeId}`,
   };
   return (
