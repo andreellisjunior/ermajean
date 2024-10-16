@@ -111,7 +111,7 @@ const RecipeList = ({
       <Modal open={profile} setOpen={setProfile}>
         <DialogTitle
           as='h3'
-          className='text-xl font-semibold leading-6 text-gray-900 capitalize mb-3 flex items-center justify-between'
+          className='text-xl font-semibold leading-6 text-gray-900 capitalize mb-3 flex items-center justify-between w-full gap-4'
         >
           Profile Settings
           <XMarkIcon
@@ -122,7 +122,7 @@ const RecipeList = ({
           />
         </DialogTitle>
         <form
-          className='h-full'
+          className='h-full w-full'
           action={async (formData) => {
             await updateProfileAction(formData);
             setProfile(false);

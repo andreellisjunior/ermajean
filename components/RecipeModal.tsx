@@ -25,12 +25,12 @@ const RecipeModal = ({
       <div className='mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left'>
         <DialogTitle
           as='h3'
-          className='text-xl font-semibold leading-6 text-gray-900 capitalize mb-3'
+          className='text-xl font-semibold leading-6 text-gray-900 capitalize mb-3 flex items-center justify-between text-left'
         >
           {recipe.recipe_name}
           <XMarkIcon
             onClick={() => setOpen(false)}
-            className='h-6 w-6 text-primary absolute right-3 top-8'
+            className='h-6 w-6 text-primary'
           />
         </DialogTitle>
         <p className='text-gray-500 text-sm'>{recipe.description}</p>

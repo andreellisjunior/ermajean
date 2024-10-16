@@ -56,6 +56,7 @@ export default function ComboInput({ name }: { name: string }) {
               person?.name
             }
             onChange={(event) => setQuery(event.target.value)}
+            required
           />
           <ComboboxButton className='group absolute inset-y-0 right-0 px-2.5'>
             <ChevronDownIcon className='size-4 fill-black group-data-[hover]:fill-black' />

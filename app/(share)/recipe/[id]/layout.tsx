@@ -2,8 +2,9 @@ import { Comfortaa } from 'next/font/google';
 import Head from 'next/head';
 import '../../../globals.css';
 import 'react-toastify/dist/ReactToastify.css';
-import { createClient } from '@/utils/supabase/server';
-import { Recipe } from '@/app/types/types';
+import Logo from '../../../assets/logo.svg';
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -50,7 +51,19 @@ export default async function RootLayout({
           content='black-translucent'
         />
       </Head>
-      <body className='bg-[#F7F7ED] max-w-2xl mx-auto p-4'>{children}</body>
+      <body className='bg-[#F7F7ED] max-w-2xl mx-auto p-4'>
+        <div className='flex mb-6 justify-between items-center flex-col border-b-2 pb-4'>
+          <Image src={Logo} alt='ErmaJean Logo' width={250} height={250} />
+
+          <p>What to create, save, and share your own recipe?</p>
+          <a href='/'>
+            <Button size={'sm'} className='mt-2'>
+              Create a free account
+            </Button>
+          </a>
+        </div>
+        {children}
+      </body>
     </html>
   );
 }

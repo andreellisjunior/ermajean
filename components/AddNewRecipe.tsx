@@ -84,7 +84,6 @@ const AddNewRecipe = ({ searchParams }: { searchParams: Message }) => {
       </>
     );
   };
-  console.log(loading);
   return (
     <>
       <div className='fixed bottom-5 right-5 shadow-lg shadow-gray-600 rounded-full'>
@@ -117,6 +116,7 @@ const AddNewRecipe = ({ searchParams }: { searchParams: Message }) => {
               : await addNewRecipeAction(formData);
             setOpen(false);
             setLoading(false);
+            setAiOpen(false);
             toast.success('Recipe saved successfully');
           }}
         >
@@ -127,27 +127,27 @@ const AddNewRecipe = ({ searchParams }: { searchParams: Message }) => {
               <>
                 <DialogTitle
                   as='h3'
-                  className='text-xl font-semibold leading-6 text-gray-900 capitalize mb-3'
+                  className='text-xl font-semibold leading-6 text-gray-900 capitalize mb-3 flex items-center justify-between text-left gap-2'
                 >
                   Add New Recipe
                   <XMarkIcon
                     onClick={() => {
                       setOpen(false);
                     }}
-                    className='h-6 w-6 text-primary absolute right-3 top-8'
+                    className='h-6 w-6 text-primary'
                   />
                 </DialogTitle>
-                <p className='text-gray-500 text-sm'>
+                <p className='text-gray-500 text-sm text-left'>
                   Add all details as best you can for the recipe. You can add a
                   photo when done!
                 </p>
                 <div className='mt-4 text-left'>
                   <Label htmlFor='recipeName'>Name:</Label>
-                  <Input name='recipeName' placeholder='Recipe Name' />
+                  <Input name='recipeName' placeholder='Recipe Name' required />
                 </div>
                 <div className='mt-4 text-left'>
                   <Label htmlFor='desc'>Description:</Label>
-                  <Input name='desc' placeholder='Description' />
+                  <Input name='desc' placeholder='Description' required />
                 </div>
                 <div className='mt-4 text-left'>
                   <Label htmlFor='prepTime'>Prep Time:</Label>
@@ -163,7 +163,11 @@ const AddNewRecipe = ({ searchParams }: { searchParams: Message }) => {
                 </div>
                 <div className='mt-4 text-left'>
                   <Label htmlFor='servings'>Servings:</Label>
-                  <Input name='servings' placeholder='2 - 4 Servings' />
+                  <Input
+                    name='servings'
+                    placeholder='2 - 4 Servings'
+                    required
+                  />
                 </div>
                 <div className='mt-4 text-left'>
                   <Label htmlFor='level'>Difficulty Level:</Label>
@@ -195,6 +199,7 @@ const AddNewRecipe = ({ searchParams }: { searchParams: Message }) => {
                   <Textarea
                     name='ingredients'
                     placeholder='List all ingredients'
+                    required
                   />
                 </div>
                 <div className='mt-4 text-left'>
@@ -202,6 +207,7 @@ const AddNewRecipe = ({ searchParams }: { searchParams: Message }) => {
                   <Textarea
                     name='instructions'
                     placeholder='List your instructions, your way'
+                    required
                   />
                 </div>
               </>
