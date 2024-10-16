@@ -96,6 +96,7 @@ const RecipeModal = ({
               recipeId={recipe.id}
               setOpen={setOpen}
               searchParams={searchParams}
+              recipeName={recipe.recipe_name}
             />
             <Button
               variant={'outline'}
