@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/server';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { aiPrompt } from '@/lib/openai';
+import { Recipe } from './types/types';
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get('email')?.toString();
@@ -230,6 +231,50 @@ export const addAIRecipeAction = async (formData: FormData) => {
   }
 
   return encodedRedirect('success', '/recipes', 'Recipe added successfully');
+};
+
+// copy the recipe to the share_recipes table
+export const shareRecipeAction = async (recipeId: string) => {
+  const supabase = createClient();
+
+  // check if the recipe exists in the share_recipes table
+  const { data: recipeExists, error: recipeErr } = (await supabase
+    .from('share_recipes')
+    .select('*')
+    .eq('recipe_id', recipeId)
+    .single()) as { data: Recipe; error: any };
+
+  const { data: singleRecipe, error: err } = (await supabase
+    .from('recipes')
+    .select('*')
+    .eq('id', recipeId)
+    .single()) as { data: Recipe; error: any };
+
+  if (recipeExists) {
+    return encodedRedirect('success', '/recipes', 'Recipe shared successfully');
+  } else {
+    const { data, error } = await supabase.from('share_recipes').insert([
+      {
+        recipe_name: singleRecipe.recipe_name,
+        description: singleRecipe.description,
+        prep_time: singleRecipe.prep_time,
+        cook_time: singleRecipe.cook_time,
+        total_time: singleRecipe.total_time,
+        servings: singleRecipe.servings,
+        difficulty_level: singleRecipe.difficulty_level,
+        course: singleRecipe.course,
+        ingredients: singleRecipe.ingredients,
+        instructions: singleRecipe.instructions,
+        recipe_id: singleRecipe.id,
+      },
+    ]);
+
+    if (error || err) {
+      console.error(error?.message || err?.message);
+      return encodedRedirect('error', '/recipes', 'Could not share recipe');
+    }
+    return encodedRedirect('success', '/recipes', 'Recipe shared successfully');
+  }
 };
 
 // deletes a recipe from the recipes table

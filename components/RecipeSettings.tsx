@@ -1,4 +1,4 @@
-import { deleteRecipeAction } from '@/app/actions';
+import { deleteRecipeAction, shareRecipeAction } from '@/app/actions';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { Cog6ToothIcon } from '@heroicons/react/24/outline';
 import { Dispatch, SetStateAction } from 'react';
@@ -19,7 +19,6 @@ export default function RecipeSettings({
 }) {
   const shareOptions = {
     title: 'Share Recipe',
-    text: recipeId,
     url: `/recipe/${recipeId}`,
   };
   return (
@@ -37,7 +36,12 @@ export default function RecipeSettings({
             <div className='p-3'>
               <button
                 onClick={async () => {
-                  await navigator.share(shareOptions);
+                  try {
+                    await navigator.share(shareOptions);
+                    await shareRecipeAction(recipeId);
+                  } catch (error) {
+                    console.error(error);
+                  }
                 }}
                 className='block rounded-lg py-2 px-3 transition hover:bg-primary/5 text-xs text-start w-full'
               >

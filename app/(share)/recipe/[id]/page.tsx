@@ -6,9 +6,9 @@ const Recipe = async ({ params }: { params: { id: string } }) => {
   const supabase = createClient();
 
   const { data: recipes, error } = (await supabase
-    .from('recipes')
+    .from('share_recipes')
     .select('*')
-    .eq('id', params.id)
+    .eq('recipe_id', params.id)
     .maybeSingle()) as { data: Recipe; error: any };
 
   return (
