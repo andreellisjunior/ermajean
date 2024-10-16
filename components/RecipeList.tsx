@@ -8,7 +8,7 @@ import { Cog8ToothIcon, UserCircleIcon } from '@heroicons/react/24/solid';
 import { useEffect, useState } from 'react';
 import Modal from './Modal';
 import { DialogTitle } from '@headlessui/react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
 import { signOutAction, updateProfileAction } from '@/app/actions';
@@ -16,6 +16,7 @@ import { Message } from './form-message';
 import { toastDisplay } from '@/app/toastDisplay';
 import Image from 'next/image';
 import Arrow from '../app/assets/arrrow.png';
+import Link from 'next/link';
 
 const RecipeList = ({
   profiles,
@@ -113,7 +114,17 @@ const RecipeList = ({
           as='h3'
           className='text-xl font-semibold leading-6 text-gray-900 capitalize mb-3 flex items-center justify-between w-full gap-4'
         >
-          Profile Settings
+          <div>
+            Profile Settings
+            <Link
+              className='text-xs flex gap-2 text-primary font-bold'
+              href='/'
+            >
+              Refresh App
+              <ArrowPathIcon className='h-4 w-auto' />
+            </Link>
+          </div>
+
           <XMarkIcon
             onClick={() => {
               setProfile(false);
