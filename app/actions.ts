@@ -6,6 +6,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { aiPrompt } from '@/lib/openai';
 import { Recipe } from './types/types';
+import { revalidatePath } from 'next/cache';
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get('email')?.toString();
@@ -42,6 +43,8 @@ export const signInAction = async (formData: FormData) => {
   const password = formData.get('password') as string;
   const supabase = createClient();
 
+  console.log('Attempting to sign in with email:', email);
+
   const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -51,7 +54,11 @@ export const signInAction = async (formData: FormData) => {
     return encodedRedirect('error', '/', error.message);
   }
 
-  return redirect('/recipes');
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN') {
+      return redirect('/recipes?refresh=true');
+    }
+  });
 };
 
 export const forgotPasswordAction = async (formData: FormData) => {

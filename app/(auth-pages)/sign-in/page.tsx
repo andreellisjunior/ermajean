@@ -1,43 +1,63 @@
-import { signInAction } from "@/app/actions";
-import { FormMessage, Message } from "@/components/form-message";
-import { SubmitButton } from "@/components/submit-button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Link from "next/link";
+import { signInAction } from '@/app/actions';
+import { FormMessage, Message } from '@/components/form-message';
+import { SubmitButton } from '@/components/submit-button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import Link from 'next/link';
+import Logo from '../../assets/Logo.svg';
+import Image from 'next/image';
 
 export default function Login({ searchParams }: { searchParams: Message }) {
   return (
-    <form className="flex-1 flex flex-col min-w-64">
-      <h1 className="text-2xl font-medium">Sign in</h1>
-      <p className="text-sm text-foreground">
-        Don't have an account?{" "}
-        <Link className="text-foreground font-medium underline" href="/sign-up">
-          Sign up
-        </Link>
-      </p>
-      <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
-        <Label htmlFor="email">Email</Label>
-        <Input name="email" placeholder="you@example.com" required />
-        <div className="flex justify-between items-center">
-          <Label htmlFor="password">Password</Label>
-          <Link
-            className="text-xs text-foreground underline"
-            href="/forgot-password"
-          >
-            Forgot Password?
-          </Link>
+    <>
+      <div className='flex flex-col justify-evenly items-center w-full h-screen p-2'>
+        {/* Hero/Logo */}
+        <div className='flex flex-col items-center justify-center text-center'>
+          <h3>welcome to</h3>
+          <Image src={Logo} alt='logo' width={500} height={500} />
+          <p>Your personal recipe management and creation tool.</p>
         </div>
-        <Input
-          type="password"
-          name="password"
-          placeholder="Your password"
-          required
-        />
-        <SubmitButton pendingText="Signing In..." formAction={signInAction}>
-          Sign in
-        </SubmitButton>
-        <FormMessage message={searchParams} />
+        {/* Sign up/Sign in Section */}
+        <div className='w-full flex flex-col'>
+          <form className='flex-1 flex flex-col min-w-64'>
+            <div className='flex flex-col gap-2 [&>input]:mb-3 mt-8'>
+              <Label htmlFor='email'>Email</Label>
+              <Input name='email' placeholder='you@example.com' required />
+              <div className='flex justify-between items-center'>
+                <Label htmlFor='password'>Password</Label>
+                <Link
+                  className='text-xs text-primary underline font-bold'
+                  href='/forgot-password'
+                >
+                  Forgot Password?
+                </Link>
+              </div>
+              <Input
+                type='password'
+                name='password'
+                placeholder='Your password'
+                required
+              />
+              <p className='text-sm text-foreground self-end'>
+                Don't have an account?{' '}
+                <Link
+                  className='text-primary font-bold underline'
+                  href='/sign-up'
+                >
+                  Sign up
+                </Link>
+              </p>
+              <SubmitButton
+                pendingText='Signing In...'
+                formAction={signInAction}
+              >
+                Sign in
+              </SubmitButton>
+              <FormMessage message={searchParams} />
+            </div>
+          </form>
+        </div>
       </div>
-    </form>
+    </>
   );
 }
