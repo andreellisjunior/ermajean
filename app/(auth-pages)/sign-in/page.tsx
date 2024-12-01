@@ -1,20 +1,26 @@
 import { signInAction } from '@/app/actions';
-import { FormMessage, Message } from '@/components/form-message';
-import { SubmitButton } from '@/components/submit-button';
+import { FormMessage, Message } from '@/components/ui/form-message';
+import { SubmitButton } from '@/components/ui/submit-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import Logo from '../../assets/Logo.svg';
 import Image from 'next/image';
 
-export default function Login({ searchParams }: { searchParams: Message }) {
+export default async function Login({
+  searchParams,
+}: {
+  searchParams: Message;
+}) {
   return (
     <>
       <div className='flex flex-col justify-evenly items-center w-full h-screen p-2'>
         {/* Hero/Logo */}
         <div className='flex flex-col items-center justify-center text-center'>
           <h3>welcome to</h3>
-          <Image src={Logo} alt='logo' width={500} height={500} />
+          <a href='/'>
+            <Image src={Logo} alt='logo' width={500} height={500} />
+          </a>
           <p>Your personal recipe management and creation tool.</p>
         </div>
         {/* Sign up/Sign in Section */}
@@ -39,7 +45,7 @@ export default function Login({ searchParams }: { searchParams: Message }) {
                 required
               />
               <p className='text-sm text-foreground self-end'>
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <Link
                   className='text-primary font-bold underline'
                   href='/sign-up'

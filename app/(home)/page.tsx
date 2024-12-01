@@ -1,19 +1,14 @@
-import Image from 'next/image';
-import Logo from '../../app/assets/Logo.svg';
-import { SubmitButton } from '@/components/submit-button';
-import { signInAction } from '../actions';
-import Link from 'next/link';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { FormMessage, Message } from '@/components/form-message';
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@/libs/supabase/server';
 import { redirect } from 'next/navigation';
+import Header from '@/components/ui/Header';
+import Pricing from '@/components/Pricing';
+import Features from '@/components/Features';
+import PricingPlan from '@/components/PricingPlan';
+import CTA from '@/components/CTA';
+import CallToAction from '@/components/ui/CallToAction';
+import Footer from '@/components/Footer';
 
-export default async function Index({
-  searchParams,
-}: {
-  searchParams: Message;
-}) {
+export default async function Index() {
   const supabase = createClient();
 
   const {
@@ -25,54 +20,13 @@ export default async function Index({
   }
   return (
     <>
-      <div className='flex flex-col justify-evenly items-center w-full h-screen p-2'>
-        {/* Hero/Logo */}
-        <div className='flex flex-col items-center justify-center text-center'>
-          <h3>welcome to</h3>
-          <Image src={Logo} alt='logo' width={500} height={500} />
-          <p>Your personal recipe management and creation tool.</p>
-        </div>
-        {/* Sign up/Sign in Section */}
-        <div className='w-full flex flex-col'>
-          <form className='flex-1 flex flex-col min-w-64'>
-            <div className='flex flex-col gap-2 [&>input]:mb-3 mt-8'>
-              <Label htmlFor='email'>Email</Label>
-              <Input name='email' placeholder='you@example.com' required />
-              <div className='flex justify-between items-center'>
-                <Label htmlFor='password'>Password</Label>
-                <Link
-                  className='text-xs text-primary underline font-bold'
-                  href='/forgot-password'
-                >
-                  Forgot Password?
-                </Link>
-              </div>
-              <Input
-                type='password'
-                name='password'
-                placeholder='Your password'
-                required
-              />
-              <p className='text-sm text-foreground self-end'>
-                Don't have an account?{' '}
-                <Link
-                  className='text-primary font-bold underline'
-                  href='/sign-up'
-                >
-                  Sign up
-                </Link>
-              </p>
-              <SubmitButton
-                pendingText='Signing In...'
-                formAction={signInAction}
-              >
-                Sign in
-              </SubmitButton>
-              <FormMessage message={searchParams} />
-            </div>
-          </form>
-        </div>
-      </div>
+      <Header />
+      <Features />
+      <hr className='max-w-2xl mx-auto h-[2px] bg-[#094a231a] rounded-full' />
+      <PricingPlan />
+      <hr className='max-w-2xl mx-auto h-[2px] bg-[#094a231a] rounded-full' />
+      <CallToAction />
+      <Footer />
     </>
   );
 }

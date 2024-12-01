@@ -52,9 +52,9 @@ const Logo = () => {
           width='361.468'
           height='107.193'
           filterUnits='userSpaceOnUse'
-          color-interpolation-filters='sRGB'
+          colorInterpolationFilters='sRGB'
         >
-          <feFlood flood-opacity='0' result='BackgroundImageFix' />
+          <feFlood floodOpacity='0' result='BackgroundImageFix' />
           <feColorMatrix
             in='SourceAlpha'
             type='matrix'
@@ -88,8 +88,8 @@ const Logo = () => {
           y2='73.5207'
           gradientUnits='userSpaceOnUse'
         >
-          <stop stop-color='#82204A' />
-          <stop offset='0.692627' stop-color='#386150' />
+          <stop stopColor='#82204A' />
+          <stop offset='0.692627' stopColor='#386150' />
         </linearGradient>
         <linearGradient
           id='paint1_linear_7_213'
@@ -99,8 +99,8 @@ const Logo = () => {
           y2='73.5207'
           gradientUnits='userSpaceOnUse'
         >
-          <stop stop-color='#82204A' />
-          <stop offset='0.692627' stop-color='#386150' />
+          <stop stopColor='#82204A' />
+          <stop offset='0.692627' stopColor='#386150' />
         </linearGradient>
         <linearGradient
           id='paint2_linear_7_213'
@@ -110,8 +110,8 @@ const Logo = () => {
           y2='73.5207'
           gradientUnits='userSpaceOnUse'
         >
-          <stop stop-color='#82204A' />
-          <stop offset='0.692627' stop-color='#386150' />
+          <stop stopColor='#82204A' />
+          <stop offset='0.692627' stopColor='#386150' />
         </linearGradient>
         <linearGradient
           id='paint3_linear_7_213'
@@ -121,8 +121,8 @@ const Logo = () => {
           y2='73.5207'
           gradientUnits='userSpaceOnUse'
         >
-          <stop stop-color='#82204A' />
-          <stop offset='0.692627' stop-color='#386150' />
+          <stop stopColor='#82204A' />
+          <stop offset='0.692627' stopColor='#386150' />
         </linearGradient>
         <linearGradient
           id='paint4_linear_7_213'
@@ -132,8 +132,8 @@ const Logo = () => {
           y2='73.5207'
           gradientUnits='userSpaceOnUse'
         >
-          <stop stop-color='#82204A' />
-          <stop offset='0.692627' stop-color='#386150' />
+          <stop stopColor='#82204A' />
+          <stop offset='0.692627' stopColor='#386150' />
         </linearGradient>
         <linearGradient
           id='paint5_linear_7_213'
@@ -143,8 +143,8 @@ const Logo = () => {
           y2='73.5207'
           gradientUnits='userSpaceOnUse'
         >
-          <stop stop-color='#82204A' />
-          <stop offset='0.692627' stop-color='#386150' />
+          <stop stopColor='#82204A' />
+          <stop offset='0.692627' stopColor='#386150' />
         </linearGradient>
         <linearGradient
           id='paint6_linear_7_213'
@@ -154,8 +154,8 @@ const Logo = () => {
           y2='73.5207'
           gradientUnits='userSpaceOnUse'
         >
-          <stop stop-color='#82204A' />
-          <stop offset='0.692627' stop-color='#386150' />
+          <stop stopColor='#82204A' />
+          <stop offset='0.692627' stopColor='#386150' />
         </linearGradient>
         <linearGradient
           id='paint7_linear_7_213'
@@ -165,8 +165,8 @@ const Logo = () => {
           y2='73.5207'
           gradientUnits='userSpaceOnUse'
         >
-          <stop stop-color='#82204A' />
-          <stop offset='0.692627' stop-color='#386150' />
+          <stop stopColor='#82204A' />
+          <stop offset='0.692627' stopColor='#386150' />
         </linearGradient>
       </defs>
     </svg>

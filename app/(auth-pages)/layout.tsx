@@ -1,8 +1,10 @@
-import { ThemeProvider } from 'next-themes';
 import { Comfortaa } from 'next/font/google';
 import '../globals.css';
 import BackgroundWrapper from '@/components/ui/BackgroundWrapper';
 import Head from 'next/head';
+import { ReactNode } from 'react';
+import { createClient } from '@/libs/supabase/server';
+import { redirect } from 'next/navigation';
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -18,11 +20,20 @@ const comfortaa = Comfortaa({
   subsets: ['latin'],
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
+  const supabase = createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    redirect('/recipes');
+  }
   return (
     <html lang='en' className={comfortaa.className} suppressHydrationWarning>
       <Head>

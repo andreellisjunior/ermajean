@@ -2,9 +2,9 @@
 
 import React from 'react';
 import TemplateImage from '../../app/assets/food-placeholder.png';
-import RecipeModal from '../RecipeModal';
-import { Recipe } from '@/app/types/types';
-import { Message } from '../form-message';
+import RecipeModal from './RecipeModal';
+import { Recipe } from '../../types';
+import { Message } from './form-message';
 
 const RecipeCard = ({
   recipe,

@@ -1,12 +1,13 @@
 'use server';
 
-import { encodedRedirect } from '@/utils/utils';
-import { createClient } from '@/utils/supabase/server';
+import { encodedRedirect } from '../libs/utils';
+import { createClient } from '../libs/supabase/server';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { aiPrompt } from '@/lib/openai';
-import { Recipe } from './types/types';
-import { revalidatePath } from 'next/cache';
+import { aiPrompt } from '../libs/openai';
+import { Recipe } from '../types/config';
+import apiClient from '@/libs/api';
+import config from '@/config';
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get('email')?.toString();
@@ -15,7 +16,11 @@ export const signUpAction = async (formData: FormData) => {
   const origin = headers().get('origin');
 
   if (!email || !password) {
-    return { error: 'Email and password are required' };
+    return encodedRedirect(
+      'error',
+      '/sign-up',
+      'Email and password are required'
+    );
   }
 
   const { error } = await supabase.auth.signUp({
@@ -45,20 +50,18 @@ export const signInAction = async (formData: FormData) => {
 
   console.log('Attempting to sign in with email:', email);
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
   if (error) {
+    console.log(error);
     return encodedRedirect('error', '/', error.message);
   }
-
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_IN') {
-      return redirect('/recipes?refresh=true');
-    }
-  });
+  if (data) {
+    return redirect('/recipes');
+  }
 };
 
 export const forgotPasswordAction = async (formData: FormData) => {
@@ -203,6 +206,7 @@ export const addAIRecipeAction = async (formData: FormData) => {
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
   const taste = formData.get('taste')?.toString();
+  const ingredients = formData.get('ingredients')?.toString();
   const serving = formData.get('serving')?.toString();
   const total_time = formData.get('totalTime')?.toString();
   const course = formData.get('course')?.toString();
@@ -210,13 +214,12 @@ export const addAIRecipeAction = async (formData: FormData) => {
 
   const aiData = await aiPrompt(
     taste,
+    ingredients,
     serving,
     total_time,
     course,
     restrictions
   );
-
-  console.log(aiData.choices[0].message.content);
 
   const result = JSON.parse(aiData.choices[0].message.content!);
 
@@ -337,8 +340,18 @@ export const updateProfileAction = async (formData: FormData) => {
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
   const name = formData.get('name')?.toString();
+  // const email = formData.get('email')?.toString();
 
-  const { data, error } = await supabase
+  // const { data: userEmail, error: userError } = await supabase.auth.updateUser({
+  //   email,
+  // });
+
+  // if (userError) {
+  //   console.error(userError.message);
+  //   return encodedRedirect('error', '/recipes', 'Could not update email');
+  // }
+
+  const { error } = await supabase
     .from('profiles')
     .update({ name })
     .eq('id', userId);
@@ -349,4 +362,15 @@ export const updateProfileAction = async (formData: FormData) => {
   }
 
   return encodedRedirect('success', '/recipes', 'Profile updated successfully');
+};
+
+// delete a user
+export const deleteUserAction = async () => {
+  const supabase = createClient();
+
+  await supabase.rpc('delete_user');
+
+  supabase.auth.signOut();
+
+  return redirect('/');
 };
