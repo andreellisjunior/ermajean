@@ -39,7 +39,7 @@ const RecipeList = ({
       {/* Header and Search */}
       <div className='min-h-60 flex flex-col w-full items-center gap-4 justify-center'>
         <div
-          className='flex items-center gap-2'
+          className='flex items-center gap-2 cursor-pointer'
           onClick={() => setProfile(true)}
         >
           <h1 className='text-3xl italic'>

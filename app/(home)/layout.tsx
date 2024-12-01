@@ -19,7 +19,10 @@ export const viewport: Viewport = {
 
 // This adds default SEO tags to all pages in our app.
 // You can override them in each page passing params to getSOTags() function.
-export const metadata = getSEOTags();
+export const metadata = getSEOTags({
+  title: 'Personal Recipe Management | ermajean',
+  description: 'Create, save and share your recipes with ease.',
+});
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

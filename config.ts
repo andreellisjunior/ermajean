@@ -3,7 +3,7 @@ import { ConfigProps } from './types/config';
 
 const config = {
   // REQUIRED
-  appName: 'ErmaJean',
+  appName: 'ermajean',
   // REQUIRED: a short description of your app for SEO tags (can be overwritten)
   appDescription: 'Create, Save and Share the Recipes you love!',
   // REQUIRED (no https://, not trialing slash at the end, just the naked domain)

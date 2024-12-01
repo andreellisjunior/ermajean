@@ -3,11 +3,9 @@
 import { encodedRedirect } from '../libs/utils';
 import { createClient } from '../libs/supabase/server';
 import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { aiPrompt } from '../libs/openai';
 import { Recipe } from '../types/config';
-import apiClient from '@/libs/api';
-import config from '@/config';
+import { redirect } from 'next/navigation';
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get('email')?.toString();
@@ -48,20 +46,20 @@ export const signInAction = async (formData: FormData) => {
   const password = formData.get('password') as string;
   const supabase = createClient();
 
-  console.log('Attempting to sign in with email:', email);
-
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
   if (error) {
-    console.log(error);
     return encodedRedirect('error', '/', error.message);
   }
-  if (data) {
-    return redirect('/recipes');
-  }
+
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN') {
+      return redirect('/recipes?refresh=true');
+    }
+  });
 };
 
 export const forgotPasswordAction = async (formData: FormData) => {
