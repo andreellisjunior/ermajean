@@ -372,3 +372,31 @@ export const deleteUserAction = async () => {
 
   return redirect('/');
 };
+
+export const addNewNoteAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const title = formData.get('title')?.toString();
+  const note = formData.get('note')?.toString();
+
+  const { data, error } = await supabase
+    .from('notes')
+    .insert([
+      {
+        id: userId,
+        title,
+        note,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    ])
+    .select();
+
+  if (error) {
+    console.error(error.message);
+    return encodedRedirect('error', '/recipes', 'Could not add note');
+  }
+
+  return encodedRedirect('success', '/recipes', 'Note added successfully');
+};

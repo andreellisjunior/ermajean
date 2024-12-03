@@ -5,6 +5,7 @@ import { Dispatch, SetStateAction } from 'react';
 import { Message } from './form-message';
 import { toast } from 'react-toastify';
 import { DeleteWarning } from '../DeleteWarning';
+import RecipeNotes from '../RecipeNotes';
 
 export default function RecipeSettings({
   recipeId,
@@ -38,6 +39,7 @@ export default function RecipeSettings({
             className='z-50 bg-white/5 backdrop-blur-lg divide-y divide-white/5 rounded-xl text-sm/6 transition duration-200 ease-in-out [--anchor-gap:var(--spacing-5)] data-[closed]:-translate-y-1 data-[closed]:opacity-0 shadow-xl border-[0.5px] border-black/10 w-72'
           >
             <div className='p-3'>
+              <RecipeNotes />
               <button
                 onClick={async () => {
                   try {
@@ -49,7 +51,7 @@ export default function RecipeSettings({
                 }}
                 className='block rounded-lg py-2 px-3 transition hover:bg-primary/5 text-xs text-start w-full'
               >
-                <p className='font-semibold text-black'>Share Recipe</p>
+                <p className='font-semibold text-black'>Share</p>
                 <p className='text-black/50'>
                   Share with your family and friends!
                 </p>
