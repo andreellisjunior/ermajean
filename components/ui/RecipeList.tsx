@@ -65,8 +65,8 @@ const RecipeList = ({
 
       {/* Content section */}
       <div className='min-h-44 overflow-y-auto px-4'>
-        <div>{/* Filter and categories */}</div>
-        <div className='py-12'>
+        {/* TODO: Filtering categories */}
+        <div className='pb-12'>
           {/* Recipes */}
           {filteredRecipes?.length === 0 ? (
             <div className='absolute left-1/2 bottom-0 transform -translate-x-1/2 -translate-y-1/4 w-full'>

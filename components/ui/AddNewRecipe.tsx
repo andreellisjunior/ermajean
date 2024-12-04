@@ -127,7 +127,9 @@ const AddNewRecipe = ({
       </div>
       <Modal {...{ open, setOpen }}>
         <form
-          action={async (formData: FormData) => {
+          onSubmit={async (event: React.FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+            const formData = new FormData(event.currentTarget);
             setLoading(true);
             aiOpen
               ? await addAIRecipeAction(formData)

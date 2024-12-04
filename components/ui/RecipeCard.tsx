@@ -18,7 +18,7 @@ const RecipeCard = ({
     <>
       <div
         onClick={() => setOpen(true)}
-        className='w-full rounded-xl border border-gray-400 my-8 overflow-hidden bg-white hover:shadow-xl hover:cursor-pointer hover:-translate-y-2 transition-all'
+        className='w-full rounded-xl border border-gray-400 mb-8 overflow-hidden bg-white hover:shadow-xl hover:cursor-pointer hover:-translate-y-2 transition-all'
       >
         <div
           className='h-40 w-full'

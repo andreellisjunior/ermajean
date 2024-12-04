@@ -154,22 +154,6 @@ export const addNewRecipeAction = async (formData: FormData) => {
   const ingredients = formData.get('ingredients')?.toString();
   const instructions = formData.get('instructions')?.toString();
 
-  console.log(formData);
-  // Log the retrieved values
-  console.log({
-    recipe_name,
-    description,
-    prep_time,
-    cook_time,
-    total_time,
-    servings,
-    difficulty_level,
-    course,
-    ingredients,
-    instructions,
-    user_id: userId,
-  });
-
   const { data, error } = await supabase
     .from('recipes')
     .insert([
@@ -188,8 +172,6 @@ export const addNewRecipeAction = async (formData: FormData) => {
       },
     ])
     .select();
-
-  console.log(data);
 
   if (error) {
     console.error(error.message);
