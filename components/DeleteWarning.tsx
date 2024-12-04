@@ -61,7 +61,8 @@ export function DeleteWarning({
                 type='button'
                 onClick={async () => {
                   setLoading(true);
-                  action();
+                  await action();
+                  setLoading(false);
                 }}
                 variant='destructive'
                 size='sm'

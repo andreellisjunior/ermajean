@@ -377,21 +377,20 @@ export const addNewNoteAction = async (formData: FormData) => {
   const supabase = createClient();
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
+  const recipe_id = formData.get('recipeId')?.toString();
   const title = formData.get('title')?.toString();
   const note = formData.get('note')?.toString();
 
-  const { data, error } = await supabase
-    .from('notes')
-    .insert([
-      {
-        id: userId,
-        title,
-        note,
-        created_at: new Date(),
-        updated_at: new Date(),
-      },
-    ])
-    .select();
+  const { data, error } = await supabase.from('notes').insert([
+    {
+      user_id: userId,
+      title,
+      note,
+      recipe_id,
+      created_at: new Date(),
+      updated_at: new Date(),
+    },
+  ]);
 
   if (error) {
     console.error(error.message);
@@ -399,4 +398,20 @@ export const addNewNoteAction = async (formData: FormData) => {
   }
 
   return encodedRedirect('success', '/recipes', 'Note added successfully');
+};
+
+export const deleteNoteAction = async (noteId: number) => {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from('notes')
+    .delete()
+    .eq('id', noteId);
+
+  if (error) {
+    console.error(error.message);
+    return encodedRedirect('error', '/recipes', 'Could not delete note');
+  }
+
+  return encodedRedirect('success', '/recipes', 'Note deleted successfully');
 };

@@ -39,7 +39,7 @@ export default function RecipeSettings({
             className='z-50 bg-white/5 backdrop-blur-lg divide-y divide-white/5 rounded-xl text-sm/6 transition duration-200 ease-in-out [--anchor-gap:var(--spacing-5)] data-[closed]:-translate-y-1 data-[closed]:opacity-0 shadow-xl border-[0.5px] border-black/10 w-72'
           >
             <div className='p-3'>
-              <RecipeNotes />
+              <RecipeNotes {...{ recipeName, recipeId }} />
               <button
                 onClick={async () => {
                   try {
