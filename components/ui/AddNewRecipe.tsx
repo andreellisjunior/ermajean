@@ -67,7 +67,6 @@ const AddNewRecipe = ({
           <Input
             name='ingredients'
             placeholder='Chicken, broccoli, rice, salt, pepper, garlic, etc.'
-            required
           />
         </div>
         <div className='mt-4 text-left'>
