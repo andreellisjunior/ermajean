@@ -9,10 +9,6 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const recipeId = searchParams.get('id');
 
-  if (!user) {
-    return { status: 401, body: 'Unauthorized' };
-  }
-
   const { data: notes, error } = await supabase
     .from('notes')
     .select('*')
