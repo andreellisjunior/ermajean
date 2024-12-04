@@ -19,7 +19,7 @@ const RecipeNotes = ({
   const [openNote, setOpenNote] = useState(false);
   const [edit, setEdit] = useState(false);
   const [deleteWarn, setDeleteWarn] = useState(false);
-  const [formFields, setFormData] = useState({
+  const [formFields, setFormFields] = useState({
     id: 0,
     titleText: '',
     noteText: '',
@@ -110,7 +110,7 @@ const RecipeNotes = ({
                   className='hover:cursor-pointer'
                   onClick={() => {
                     setEdit(true);
-                    setFormData({
+                    setFormFields({
                       id: note.id,
                       titleText: note.title,
                       noteText: note.note,
@@ -175,6 +175,7 @@ const RecipeNotes = ({
           edit,
           setEdit,
           formFields,
+          setFormFields,
           deleteWarn,
           setDeleteWarn,
           deleteNote,

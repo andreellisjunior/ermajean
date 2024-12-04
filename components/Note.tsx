@@ -6,7 +6,6 @@ import Modal from './ui/Modal';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { SubmitButton } from './ui/submit-button';
-import { deleteNoteAction } from '@/app/actions';
 import { DeleteWarning } from './DeleteWarning';
 
 const Note = ({
@@ -17,6 +16,7 @@ const Note = ({
   edit,
   setEdit,
   formFields,
+  setFormFields,
   deleteWarn,
   setDeleteWarn,
   deleteNote,
@@ -29,6 +29,9 @@ const Note = ({
   note: (note: { title: string; note: string }) => void;
   formFields: { id: number; titleText: string; noteText: string };
   deleteWarn: boolean;
+  setFormFields: Dispatch<
+    SetStateAction<{ id: number; titleText: string; noteText: string }>
+  >;
   setDeleteWarn: Dispatch<SetStateAction<boolean>>;
   deleteNote: (id: number) => void;
 }) => {
@@ -43,6 +46,8 @@ const Note = ({
           <XMarkIcon
             onClick={() => {
               setOpenNote(false);
+              setEdit(false);
+              setFormFields({ id: 0, titleText: '', noteText: '' });
             }}
             className='h-6 w-6 text-primary hover:cursor-pointer'
           />
@@ -91,19 +96,25 @@ const Note = ({
             </div>
           </div>
           <div className='mt-5 py-3 flex items-center sticky bottom-0 gap-4 w-full'>
-            <Button
-              type='button'
-              className='w-fit'
-              variant='destructive'
-              onClick={() => setDeleteWarn(true)}
-            >
-              <TrashIcon className='h-6 w-6' />
-            </Button>
+            {edit && (
+              <Button
+                type='button'
+                className='w-fit'
+                variant='destructive'
+                onClick={() => setDeleteWarn(true)}
+              >
+                <TrashIcon className='h-6 w-6' />
+              </Button>
+            )}
             <Button
               type='button'
               className='w-full'
               variant='outline'
-              onClick={() => setOpenNote(false)}
+              onClick={() => {
+                setOpenNote(false);
+                setEdit(false);
+                setFormFields({ id: 0, titleText: '', noteText: '' });
+              }}
             >
               Cancel
             </Button>
