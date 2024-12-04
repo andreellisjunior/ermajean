@@ -85,7 +85,7 @@ const RecipeNotes = ({
           List all your notes and tips for this recipe.
         </p>
       </button>
-      <Modal {...{ open, setOpen }}>
+      <Modal {...{ open, setOpen }} height='h-full'>
         <DialogTitle
           as='h3'
           className='text-xl font-semibold leading-6 text-gray-900 capitalize mb-3 flex items-center justify-between text-left gap-2 w-full'
@@ -99,7 +99,7 @@ const RecipeNotes = ({
           />
         </DialogTitle>
         <div className='flex flex-col justify-between h-full'>
-          <div className='p-3 w-full'>
+          <div className='p-3 w-full min-h-96'>
             {loadingNotes ? (
               <LoadingSpinner />
             ) : notes.length ? (
