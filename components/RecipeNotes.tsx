@@ -33,7 +33,6 @@ const RecipeNotes = ({
     setLoadingNotes(true);
     const res = await fetch(`/api/notes?id=${recipeId}`);
     const data = await res.json();
-    console.log(data);
     setNotes(data);
     setLoadingNotes(false);
   };
