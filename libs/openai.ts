@@ -23,7 +23,7 @@ export const aiPrompt = async (
           ingredients
             ? `I have the following available ingredients: ${ingredients}`
             : `I do not have specific ingredients so I am open to suggestions`
-        }. I am serving ${serving} people. and my total prep and cook time is limited to ${totalTime}. This meal is intended for ${course}. ${
+        }. I am serving ${serving} people. and my total time (prep + cooking) is limited to ${totalTime}. This meal is intended for ${course}. ${
           restrictions
             ? `Please note the dietary restrictions: ${restrictions}`
             : 'I have no dietary restrictions'
