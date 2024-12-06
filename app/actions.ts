@@ -6,6 +6,7 @@ import { headers } from 'next/headers';
 import { aiPrompt } from '../libs/openai';
 import { Recipe } from '../types/config';
 import { redirect } from 'next/navigation';
+import {createClassGroupUtils} from "tailwind-merge/src/lib/class-group-utils";
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get('email')?.toString();
@@ -52,14 +53,15 @@ export const signInAction = async (formData: FormData) => {
   });
 
   if (error) {
-    return encodedRedirect('error', '/', error.message);
-  }
+    return { status: 500, message: error.message}
+  } else {
 
   supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_IN') {
       return redirect('/recipes?refresh=true');
     }
   });
+  }
 };
 
 export const forgotPasswordAction = async (formData: FormData) => {

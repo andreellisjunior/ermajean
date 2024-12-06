@@ -5,6 +5,8 @@ import Head from 'next/head';
 import { ReactNode } from 'react';
 import { createClient } from '@/libs/supabase/server';
 import { redirect } from 'next/navigation';
+import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer} from "react-toastify";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -61,6 +63,7 @@ export default async function RootLayout({
       <body className='bg-background text-foreground bg-[#F7F7ED]'>
         <BackgroundWrapper>
           <div className='p-4 max-w-xl mx-auto'>{children}</div>
+          <ToastContainer />
         </BackgroundWrapper>
       </body>
     </html>

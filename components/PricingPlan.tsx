@@ -8,7 +8,7 @@ const tiers = [
     priceMonthly: '$0',
     description:
       'Perfect for getting started. Get all the basics you need to start saving your favorite recipes.',
-    features: ['30 recipes', '30 notes'],
+    features: ['Save your own recipes', 'Unlimited recipe notes', 'Unlimited shares'],
     featured: false,
   },
   {
@@ -19,10 +19,8 @@ const tiers = [
     description:
       'Unlock the power of AI and take your recipes to the next level.',
     features: [
+      'All of Free',
       'AI recipe creation',
-      'Unlimited recipes',
-      'Unlimited notes',
-      'Unlimited shares',
     ],
     featured: true,
   },
@@ -63,7 +61,7 @@ export default function PricingPlan() {
             key={tier.id}
             className={classNames(
               tier.featured
-                ? 'relative bg-primary shadow-2xl lg:h-[70vh]'
+                ? 'relative bg-primary shadow-2xl lg:h-[70vh] flex flex-col'
                 : 'bg-white/60 sm:mx-8 lg:mx-0',
               tier.featured
                 ? ''
@@ -133,7 +131,7 @@ export default function PricingPlan() {
               aria-describedby={tier.id}
               className={classNames(
                 tier.featured
-                  ? 'bg-secondary text-primary shadow-sm hover:bg-secondary/90 focus-visible:outline-primary'
+                  ? 'bg-secondary text-primary shadow-sm hover:bg-secondary/90 focus-visible:outline-primary mt-auto'
                   : 'bg-primary text-white ring-1 ring-inset ring-secondary hover:ring-secondary hover:bg-primary/90 focus-visible:outline-indigo-600',
                 'mt-8 block rounded-md px-3.5 py-2.5 text-center text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 sm:mt-10 transition-all'
               )}
