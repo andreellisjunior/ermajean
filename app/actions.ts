@@ -189,10 +189,28 @@ export const addNewRecipeAction = async (formData: FormData) => {
       })
       .eq("id", id)
       .eq("user_id", userId);
-    if (error) {
-      console.error(error.message);
+
+    const { data: shared, error: err } = await supabase
+      .from("share_recipes")
+      .update({
+        recipe_name,
+        description,
+        prep_time,
+        cook_time,
+        total_time,
+        servings,
+        difficulty_level,
+        course,
+        ingredients,
+        instructions,
+      })
+      .eq("recipe_id", id);
+
+    if (error || err) {
+      console.error(error.message || err);
       return encodedRedirect("error", "/recipes", "Could not edit recipe");
     }
+
     return encodedRedirect(
       "success",
       "/recipes",
