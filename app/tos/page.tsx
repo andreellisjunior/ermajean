@@ -57,39 +57,33 @@ const TOS = () => {
           className="leading-relaxed whitespace-pre-wrap"
           style={{ fontFamily: "sans-serif" }}
         >
-          {`Last Updated: September 26, 2023
+          {`Effective Date: December 13, 2024
 
-Welcome to ShipFast!
+Welcome to ermajean! These Terms & Services ("Terms") govern your access to and use of our website and services (collectively, the "Services"). By using the Services, you agree to be bound by these Terms. If you do not agree, do not use our Services.
 
-These Terms of Service ("Terms") govern your use of the ShipFast website at https://shipfa.st ("Website") and the services provided by ShipFast. By using our Website and services, you agree to these Terms.
+1. Acceptance of Terms By accessing or using ermajean, you agree to comply with and be bound by these Terms. If you are using the Services on behalf of an organization, you represent that you are authorized to bind that organization to these Terms.
 
-1. Description of ShipFast
+2. Description of Services ermajean is a recipe management tool that allows users to save their own recipes and generate new ones. By subscribing to the Services, users agree to have their data stored on ermajean servers and those of associated partners.
 
-ShipFast is a platform that offers a JavaScript code boilerplate to assist entrepreneurs in launching their startups more efficiently.
+3. User Accounts
 
-2. Ownership and Usage Rights
+Account Information: To use the Services, you must provide accurate and complete information, including your name, email address, and payment information.
 
-When you purchase a package from ShipFast, you gain the right to download and use the code provided for creating applications. You own the code you create but do not have the right to resell it. We offer a full refund within 7 days of purchase, as specified in our refund policy.
+Data Storage: All data associated with your account, including recipes and personal information, will be stored by ermajean and its partners. By using the Services, you consent to this storage.
 
-3. User Data and Privacy
+4. User Data
 
-We collect and store user data, including name, email, and payment information, as necessary to provide our services. For details on how we handle your data, please refer to our Privacy Policy at https://shipfa.st/privacy-policy.
+Collected Data: ermajean collects your name, email address, and payment information to provide and manage the Services.
 
-4. Non-Personal Data Collection
+Privacy Policy: For details on how we handle your personal information, please review our Privacy Policy at https://ermajean.com/privacy-policy.
 
-We use web cookies to collect non-personal data for the purpose of improving our services and user experience.
+5. Updates to the Termsermajean reserves the right to update these Terms at any time. Users will be notified of any changes via the email associated with their account. Continued use of the Services after updates constitutes acceptance of the revised Terms.
 
-5. Governing Law
+6. Governing LawThese Terms are governed by the laws of the United States of America. Any disputes arising from these Terms will be resolved in accordance with these laws.
 
-These Terms are governed by the laws of France.
+7. Contact InformationFor any questions or concerns about these Terms, please contact us at:Email: support@ermajean.com
 
-6. Updates to the Terms
-
-We may update these Terms from time to time. Users will be notified of any changes via email.
-
-For any questions or concerns regarding these Terms of Service, please contact us at marc@shipfa.st.
-
-Thank you for using ShipFast!`}
+By using ermajean, you acknowledge that you have read, understood, and agree to these Terms & Services.`}
         </pre>
       </div>
     </main>
