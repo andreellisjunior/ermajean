@@ -50,8 +50,7 @@ const AddNewRecipe = ({
           />
         </DialogTitle>
         <p className="text-gray-500 text-sm">
-          Add all details as best you can for the recipe. You can add a photo
-          when done!
+          Add all details as best you can for the recipe. (photo coming soon!)
         </p>
         <div className="mt-4 text-left">
           <Label htmlFor="taste">What do you have taste for?</Label>
@@ -141,8 +140,7 @@ const AddNewRecipe = ({
           />
         </DialogTitle>
         <p className="text-gray-500 text-sm text-left">
-          Add all details as best you can for the recipe. You can add a photo
-          when done!
+          Add all details as best you can for the recipe. (photo coming soon!)
         </p>
         <div className="mt-4 text-left">
           <Label htmlFor="recipeName">Name:</Label>
@@ -277,7 +275,7 @@ const AddNewRecipe = ({
                       setAiOpen(true);
                     }
                   }}
-                  className="w-full border border-gray-200 flex flex-col items-center justify-center p-12 rounded-lg gap-4 h-full hover:shadow-2xl hover:cursor-pointer transition"
+                  className="w-full border border-gray-200 flex flex-col items-center justify-center p-12 rounded-lg gap-4 h-full hover:shadow-md hover:cursor-pointer transition"
                 >
                   <SparklesIcon className="w-12 h-auto text-primary" />
                   <h5 className="text-2xl">Generate a New One!</h5>
@@ -287,7 +285,7 @@ const AddNewRecipe = ({
                     setAiOpen(false);
                     setDefaultOpen(true);
                   }}
-                  className="w-full border border-gray-200 flex flex-col items-center justify-center p-12 rounded-lg gap-4 h-full hover:shadow-2xl hover:cursor-pointer transition"
+                  className="w-full border border-gray-200 flex flex-col items-center justify-center p-12 rounded-lg gap-4 h-full hover:shadow-md hover:cursor-pointer transition"
                 >
                   <BookIcon className="w-12 h-auto text-primary" />
                   <h5 className="text-2xl">Add My Own!</h5>
