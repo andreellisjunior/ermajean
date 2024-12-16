@@ -262,7 +262,7 @@ const AddNewRecipe = ({
           }}
           className="h-full"
         >
-          <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left h-full">
+          <div className="mt-3 text-center sm:mt-0 sm:text-left h-full">
             {!aiOpen && !defaultOpen ? (
               <div className="flex flex-wrap items-center justify-center gap-4 h-auto">
                 <div
