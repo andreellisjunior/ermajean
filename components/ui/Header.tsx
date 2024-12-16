@@ -128,7 +128,7 @@ export default function Header() {
 
       <div className="relative isolate px-6 py-32 md:px-8">
         <div className="relative overflow-hidden">
-          <div className="pb-80 sm:pb-40 md:pb-4 md:pt-4">
+          <div className="md:pb-4 md:pt-4">
             <div className="relative flex flex-col gap-4 lg:flex-row items-center mx-auto lg:max-w-5xl px-4 sm:static sm:px-6 md:px-8">
               <div className="text-center lg:text-start lg:w-1/2">
                 <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">
