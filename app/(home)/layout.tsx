@@ -1,30 +1,36 @@
-import { ThemeProvider } from 'next-themes';
+import { ReactNode } from 'react';
+import { Viewport } from 'next';
+import { getSEOTags } from '@/libs/seo';
+import config from '@/config';
 import { Comfortaa } from 'next/font/google';
 import '../globals.css';
-import BackgroundWrapper from '@/components/ui/BackgroundWrapper';
 import Head from 'next/head';
-
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : 'http://localhost:3000';
-
-export const metadata = {
-  metadataBase: new URL(defaultUrl),
-  title: 'ErmaJean | Your Personal Recipe Management System',
-  description: 'A collection of recipes from ErmaJean',
-};
 
 const comfortaa = Comfortaa({
   subsets: ['latin'],
 });
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export const viewport: Viewport = {
+  // Will use the primary color of your theme to show a nice theme color in the URL bar of supported browsers
+  themeColor: '#F7F7ED',
+  width: 'device-width',
+  initialScale: 1,
+};
+
+// This adds default SEO tags to all pages in our app.
+// You can override them in each page passing params to getSOTags() function.
+export const metadata = getSEOTags({
+  title: 'Personal Recipe Management | ermajean',
+  description: 'Create, save and share your recipes with ease.',
+});
+
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang='en' className={comfortaa.className} suppressHydrationWarning>
+    <html
+      lang='en'
+      className={`${comfortaa.className} scroll-smooth`}
+      suppressHydrationWarning
+    >
       <Head>
         <link
           rel='icon'
@@ -47,10 +53,8 @@ export default function RootLayout({
           content='black-translucent'
         />
       </Head>
-      <body className='bg-background text-foreground bg-[#F7F7ED]'>
-        <BackgroundWrapper>
-          <div className='p-4 max-w-xl mx-auto'>{children}</div>
-        </BackgroundWrapper>
+      <body className='text-foreground bg-[#F7F7ED]'>
+        <div className='mx-auto'>{children}</div>
       </body>
     </html>
   );

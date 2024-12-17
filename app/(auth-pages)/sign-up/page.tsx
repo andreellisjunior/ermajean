@@ -1,6 +1,6 @@
 import { signUpAction } from '@/app/actions';
-import { FormMessage, Message } from '@/components/form-message';
-import { SubmitButton } from '@/components/submit-button';
+import { FormMessage, Message } from '@/components/ui/form-message';
+import { SubmitButton } from '@/components/ui/submit-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
@@ -22,7 +22,9 @@ export default function Signup({ searchParams }: { searchParams: Message }) {
         {/* Hero/Logo */}
         <div className='flex flex-col items-center justify-center text-center'>
           <h3>welcome to</h3>
-          <Image src={Logo} alt='logo' width={500} height={500} />
+          <a href='/'>
+            <Image src={Logo} alt='logo' width={500} height={500} />
+          </a>
           <p>Your personal recipe management and creation tool.</p>
         </div>
         {/* Sign up/Sign in Section */}

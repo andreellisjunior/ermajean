@@ -2,9 +2,9 @@
 
 import React from 'react';
 import TemplateImage from '../../app/assets/food-placeholder.png';
-import RecipeModal from '../RecipeModal';
-import { Recipe } from '@/app/types/types';
-import { Message } from '../form-message';
+import RecipeModal from './RecipeModal';
+import { Recipe } from '../../types';
+import { Message } from './form-message';
 
 const RecipeCard = ({
   recipe,
@@ -18,7 +18,7 @@ const RecipeCard = ({
     <>
       <div
         onClick={() => setOpen(true)}
-        className='w-full rounded-xl border border-gray-400 my-8 overflow-hidden bg-white'
+        className='w-full rounded-xl border border-gray-400 mb-8 overflow-hidden bg-white hover:shadow-xl hover:cursor-pointer hover:-translate-y-2 transition-all'
       >
         <div
           className='h-40 w-full'

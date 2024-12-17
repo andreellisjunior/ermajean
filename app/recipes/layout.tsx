@@ -3,6 +3,7 @@ import { Comfortaa } from 'next/font/google';
 import Head from 'next/head';
 import '../globals.css';
 import 'react-toastify/dist/ReactToastify.css';
+import { ReactNode } from 'react';
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -18,11 +19,7 @@ const comfortaa = Comfortaa({
   subsets: ['latin'],
 });
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang='en' className={comfortaa.className} suppressHydrationWarning>
       <Head>

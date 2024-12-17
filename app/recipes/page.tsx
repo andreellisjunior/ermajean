@@ -1,8 +1,8 @@
-import RecipeList from '@/components/RecipeList';
-import { createClient } from '@/utils/supabase/server';
+import RecipeList from '@/components/ui/RecipeList';
+import { createClient } from '@/libs/supabase/server';
 import { redirect } from 'next/navigation';
-import { Recipe } from '../types/types';
-import { Message } from '@/components/form-message';
+import { Recipe } from '@/types/config';
+import { Message } from '@/components/ui/form-message';
 
 export default async function ProtectedPage({
   searchParams,
@@ -28,9 +28,10 @@ export default async function ProtectedPage({
   };
   const { data: profiles, error: profileError } = (await supabase
     .from('profiles')
-    .select('name')) as { data: { name: string }[]; error: any };
-
-  // console.log(JSON.parse((await aiPrompt()).choices[0].message.content!));
+    .select('name, email, has_access')) as {
+    data: { name: string; email: string; has_access: boolean }[];
+    error: any;
+  };
 
   return <RecipeList {...{ profiles, recipes, searchParams }} />;
 }

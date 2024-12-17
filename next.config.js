@@ -1,28 +1,14 @@
-const withPWA = require("next-pwa");
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  experimental: { esmExternals: true, scrollRestoration: true },
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "placehold.co",
-      },
-      {
-        protocol: "https",
-        hostname: "coventiassets.blob.core.windows.net",
-      },
+    domains: [
+      // NextJS <Image> component needs to whitelist domains for src={}
+      "lh3.googleusercontent.com",
+      "pbs.twimg.com",
+      "images.unsplash.com",
+      "logos-world.net",
     ],
-    ...withPWA({
-      dest: "public",
-      register: true,
-      skipWaiting: true,
-
-      // buildExcludes: [/middleware-manifest.json$/],
-      // disable: process.env.NODE_ENV === "development",
-    }),
   },
 };
 

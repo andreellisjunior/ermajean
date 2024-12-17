@@ -1,15 +1,15 @@
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@/libs/supabase/server';
 import TemplateImage from '@/app/assets/food-placeholder.png';
-import type { Recipe } from '@/app/types/types';
+import type { Recipe } from '@/types/config';
 
-const Recipe = async ({ params }: { params: { id: string } }) => {
+const ShareRecipe = async ({ params }: { params: { id: string } }) => {
   const supabase = createClient();
 
-  const { data: recipes, error } = (await supabase
+  const { data: recipes } = (await supabase
     .from('share_recipes')
     .select('*')
     .eq('recipe_id', params.id)
-    .maybeSingle()) as { data: Recipe; error: any };
+    .maybeSingle()) as { data: Recipe };
 
   return (
     <div className='flex flex-col gap-4 relative h-screen overflow-y-scroll'>
@@ -79,4 +79,4 @@ const Recipe = async ({ params }: { params: { id: string } }) => {
   );
 };
 
-export default Recipe;
+export default ShareRecipe;

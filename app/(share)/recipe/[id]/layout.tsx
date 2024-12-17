@@ -3,9 +3,9 @@ import Head from 'next/head';
 import '../../../globals.css';
 import 'react-toastify/dist/ReactToastify.css';
 
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/ui/Logo';
+import { ReactNode } from 'react';
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -25,7 +25,7 @@ export default async function RootLayout({
   children,
   params,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   params: { id: string };
 }) {
   return (
