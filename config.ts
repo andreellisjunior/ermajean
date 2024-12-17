@@ -18,7 +18,7 @@ const config = {
     // Create multiple plans in your Stripe dashboard, then add them here. You can add as many plans as you want, just make sure to add the priceId
     plans: [
       {
-        priceId: "price_1QVfRnEl9PRnOeq5u1G8LuQR",
+        priceId: "price_1QBHF8El9PRnOeq5JerI2gKw",
         // This plan will look different on the pricing page, it will be highlighted. You can only have one plan with isFeatured: true
         isFeatured: true,
         name: "Premium",
@@ -66,7 +66,7 @@ const config = {
     // REQUIRED — the path to log in users. It's use to protect private routes (like /dashboard). It's used in apiClient (/libs/api.js) upon 401 errors from our API
     loginUrl: "/sign-in",
     // REQUIRED — the path you want to redirect users after successfull login (i.e. /dashboard, /private). This is normally a private page for users to manage their accounts. It's used in apiClient (/libs/api.js) upon 401 errors from our API & in ButtonSignin.js
-    callbackUrl: "/recipes",
+    callbackUrl: "/sign-in",
   },
 } as ConfigProps;
 
