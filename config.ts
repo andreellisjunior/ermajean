@@ -18,7 +18,7 @@ const config = {
     // Create multiple plans in your Stripe dashboard, then add them here. You can add as many plans as you want, just make sure to add the priceId
     plans: [
       {
-        priceId: "price_1QBHF8El9PRnOeq5JerI2gKw",
+        priceId: "price_1QVfRnEl9PRnOeq5u1G8LuQR",
         // This plan will look different on the pricing page, it will be highlighted. You can only have one plan with isFeatured: true
         isFeatured: true,
         name: "Premium",
