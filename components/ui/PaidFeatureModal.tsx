@@ -1,3 +1,4 @@
+"use client";
 import { Dispatch, SetStateAction, useState } from "react";
 import {
   ExclamationTriangleIcon,
@@ -12,6 +13,7 @@ import {
 import { Button } from "./button";
 import apiClient from "@/libs/api";
 import config from "@/config";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function PaidFeatureModal({
   open,
@@ -20,6 +22,7 @@ export default function PaidFeatureModal({
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
 }) {
+  const [loading, setLoading] = useState(false);
   return (
     <Dialog open={open} onClose={setOpen} className="relative z-10">
       <DialogBackdrop
@@ -63,51 +66,56 @@ export default function PaidFeatureModal({
                 </div>
               </div>
             </div>
-            <div className="bg-gray-50 px-4 py-6 flex items-center justify-center gap-4">
-              <Button
-                type="button"
-                size="sm"
-                onClick={async () => {
-                  const data = (await apiClient.get("/user")) as {
-                    access: boolean;
-                  };
-                  if (data.access) {
-                    const { url }: { url: string } = await apiClient.post(
-                      "/stripe/create-portal",
-                      {
-                        returnUrl: window.location.href,
-                      },
-                    );
+            <div className="bg-white px-4 py-6 flex items-center justify-center gap-4">
+              {loading ? (
+                <LoadingSpinner />
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={async () => {
+                      setLoading(true);
+                      const data = (await apiClient.get("/user")) as {
+                        access: boolean;
+                      };
+                      if (data.access) {
+                        const { url }: { url: string } = await apiClient.post(
+                          "/stripe/create-portal",
+                          {
+                            returnUrl: window.location.href,
+                          },
+                        );
 
-                    window.location.href = url;
-                  } else {
-                    const { url }: { url: string } = await apiClient.post(
-                      "/stripe/create-checkout",
-                      {
-                        priceId: config.stripe.plans[0].priceId,
-                        successUrl: window.location.href,
-                        cancelUrl: window.location.href,
-                        mode: "subscription",
-                      },
-                    );
+                        window.location.href = url;
+                      } else {
+                        const { url }: { url: string } = await apiClient.post(
+                          "/stripe/create-checkout",
+                          {
+                            priceId: config.stripe.plans[0].priceId,
+                            successUrl: window.location.href,
+                            cancelUrl: window.location.href,
+                            mode: "subscription",
+                          },
+                        );
 
-                    window.location.href = url;
-                  }
-                }}
-              >
-                Start 7-Day Free Trial
-              </Button>
-              {
-                <Button
-                  type="button"
-                  data-autofocus
-                  onClick={() => setOpen(false)}
-                  variant="outline"
-                  size="sm"
-                >
-                  Go Back
-                </Button>
-              }
+                        window.location.href = url;
+                      }
+                    }}
+                  >
+                    Start 7-Day Free Trial
+                  </Button>
+                  <Button
+                    type="button"
+                    data-autofocus
+                    onClick={() => setOpen(false)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Go Back
+                  </Button>
+                </>
+              )}
             </div>
           </DialogPanel>
         </div>
