@@ -21,6 +21,7 @@ import apiClient from "@/libs/api";
 import { DeleteWarning } from "./DeleteWarning";
 import { SubmitButton } from "./ui/submit-button";
 import config from "@/config";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function ProfileSettings({
   open,
@@ -32,6 +33,7 @@ export default function ProfileSettings({
   profile: { name: string; email: string; has_access: boolean }[] | null;
 }) {
   const [dangerOpen, setDangerOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   return (
     <>
@@ -124,37 +126,45 @@ export default function ProfileSettings({
                           Review your subscription and billing information.
                         </p>
                       </h5>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        type="button"
-                        className="text-xs"
-                        onClick={async () => {
-                          const data = (await apiClient.get("/user")) as {
-                            access: boolean;
-                          };
-                          if (data.access) {
-                            const { url }: { url: string } =
-                              await apiClient.post("/stripe/create-portal", {
-                                returnUrl: window.location.href,
-                              });
+                      {loading ? (
+                        <LoadingSpinner />
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          type="button"
+                          className="text-xs"
+                          onClick={async () => {
+                            setLoading(true);
+                            const data = (await apiClient.get("/user")) as {
+                              access: boolean;
+                            };
+                            if (data.access) {
+                              const { url }: { url: string } =
+                                await apiClient.post("/stripe/create-portal", {
+                                  returnUrl: window.location.href,
+                                });
 
-                            window.location.href = url;
-                          } else {
-                            const { url }: { url: string } =
-                              await apiClient.post("/stripe/create-checkout", {
-                                priceId: config.stripe.plans[0].priceId,
-                                successUrl: window.location.href,
-                                cancelUrl: window.location.href,
-                                mode: "subscription",
-                              });
+                              window.location.href = url;
+                            } else {
+                              const { url }: { url: string } =
+                                await apiClient.post(
+                                  "/stripe/create-checkout",
+                                  {
+                                    priceId: config.stripe.plans[0].priceId,
+                                    successUrl: window.location.href,
+                                    cancelUrl: window.location.href,
+                                    mode: "subscription",
+                                  },
+                                );
 
-                            window.location.href = url;
-                          }
-                        }}
-                      >
-                        Subscription
-                      </Button>
+                              window.location.href = url;
+                            }
+                          }}
+                        >
+                          Subscription
+                        </Button>
+                      )}
                     </div>
                     <div className="border-b-2 border-gray-200 py-8">
                       <h5 className="text-lg font-semibold">Application</h5>
