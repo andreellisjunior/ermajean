@@ -135,25 +135,19 @@ export default function ProfileSettings({
                           };
                           if (data.access) {
                             const { url }: { url: string } =
-                              await apiClient.post(
-                                "/api/stripe/create-portal",
-                                {
-                                  returnUrl: window.location.href,
-                                },
-                              );
+                              await apiClient.post("/stripe/create-portal", {
+                                returnUrl: window.location.href,
+                              });
 
                             window.location.href = url;
                           } else {
                             const { url }: { url: string } =
-                              await apiClient.post(
-                                "/api/stripe/create-checkout",
-                                {
-                                  priceId: config.stripe.plans[0].priceId,
-                                  successUrl: window.location.href,
-                                  cancelUrl: window.location.href,
-                                  mode: "subscription",
-                                },
-                              );
+                              await apiClient.post("/stripe/create-checkout", {
+                                priceId: config.stripe.plans[0].priceId,
+                                successUrl: window.location.href,
+                                cancelUrl: window.location.href,
+                                mode: "subscription",
+                              });
 
                             window.location.href = url;
                           }

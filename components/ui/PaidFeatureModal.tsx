@@ -73,7 +73,7 @@ export default function PaidFeatureModal({
                   };
                   if (data.access) {
                     const { url }: { url: string } = await apiClient.post(
-                      "/api/stripe/create-portal",
+                      "/stripe/create-portal",
                       {
                         returnUrl: window.location.href,
                       },
@@ -82,7 +82,7 @@ export default function PaidFeatureModal({
                     window.location.href = url;
                   } else {
                     const { url }: { url: string } = await apiClient.post(
-                      "/api/stripe/create-checkout",
+                      "/stripe/create-checkout",
                       {
                         priceId: config.stripe.plans[0].priceId,
                         successUrl: window.location.href,
