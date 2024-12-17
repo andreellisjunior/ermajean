@@ -102,22 +102,28 @@ const AddNewRecipe = ({
         </div>
         <div className="mt-5 py-3 flex items-center gap-4 sticky bottom-0 right-0">
           <div className="flex flex-col w-full gap-4">
-            <SubmitButton
-              className="bg-gradient-to-r from-purple-600 to-teal-500 w-full hover:opacity-90 transition-opacity"
-              type="submit"
-              pendingText="Generating..."
-              disabled={loading}
-            >
-              GENERATE
-              <SparklesIcon className="h-6 w-6" />
-            </SubmitButton>
-            <Button
-              variant={"ghost"}
-              type="button"
-              onClick={() => setAiOpen(false)}
-            >
-              Go Back
-            </Button>
+            {loading ? (
+              <LoadingSpinner />
+            ) : (
+              <>
+                <SubmitButton
+                  className="bg-gradient-to-r from-purple-600 to-teal-500 w-full hover:opacity-90 transition-opacity"
+                  type="submit"
+                  pendingText="Generating..."
+                  disabled={loading}
+                >
+                  GENERATE
+                  <SparklesIcon className="h-6 w-6" />
+                </SubmitButton>
+                <Button
+                  variant={"ghost"}
+                  type="button"
+                  onClick={() => setAiOpen(false)}
+                >
+                  Go Back
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </>
@@ -207,18 +213,24 @@ const AddNewRecipe = ({
             required
           />
         </div>
-        <div className="mt-5 py-3 flex items-center gap-4 sticky bottom-0 right-0">
-          <Button
-            className="w-full"
-            variant={"secondary"}
-            onClick={() => setDefaultOpen(false)}
-            type="button"
-          >
-            Cancel
-          </Button>
-          <Button variant={"default"} className="w-full" type="submit">
-            Save
-          </Button>
+        <div className="mt-5 py-3 flex items-center justify-center gap-4 sticky bottom-0 right-0">
+          {loading ? (
+            <LoadingSpinner />
+          ) : (
+            <>
+              <Button
+                className="w-full"
+                variant={"secondary"}
+                onClick={() => setDefaultOpen(false)}
+                type="button"
+              >
+                Cancel
+              </Button>
+              <Button variant={"default"} className="w-full" type="submit">
+                Save
+              </Button>
+            </>
+          )}
         </div>
       </>
     );
