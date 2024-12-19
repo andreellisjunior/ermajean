@@ -8,11 +8,7 @@ const tiers = [
     priceMonthly: "$0",
     description:
       "Perfect for getting started. Get all the basics you need to start saving your favorite recipes.",
-    features: [
-      "Save your own recipes",
-      "Unlimited recipe notes",
-      "Unlimited shares",
-    ],
+    features: ["Save your own recipes"],
     featured: false,
   },
   {
@@ -22,7 +18,12 @@ const tiers = [
     priceMonthly: "$7.99",
     description:
       "Unlock the power of AI and take your recipes to the next level.",
-    features: ["All of Free", "AI recipe creation"],
+    features: [
+      "Save your own recipes",
+      "Craft new recipes with AI",
+      "Share your recipes with friends and loved ones",
+      "Take notes so you can keep track of your findings",
+    ],
     featured: true,
   },
 ];
