@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { DeleteWarning } from "../DeleteWarning";
 import RecipeNotes from "../RecipeNotes";
 import EditRecipe from "@/components/EditRecipe";
+import PaidFeatureModal from "@/components/ui/PaidFeatureModal";
 
 export default function RecipeSettings({
   recipeId,
@@ -15,6 +16,9 @@ export default function RecipeSettings({
   setDeleteModal,
   searchParams,
   recipeName,
+  profiles,
+  paid,
+  setPaid,
 }: {
   recipeId: string;
   setOpen: Dispatch<SetStateAction<boolean>>;
@@ -22,6 +26,9 @@ export default function RecipeSettings({
   setDeleteModal: Dispatch<SetStateAction<boolean>>;
   searchParams: Message;
   recipeName: string;
+  profiles: { has_access: boolean }[];
+  paid: boolean;
+  setPaid: Dispatch<SetStateAction<boolean>>;
 }) {
   const shareOptions = {
     title: recipeName,
@@ -41,14 +48,18 @@ export default function RecipeSettings({
           >
             <div className="p-3">
               <EditRecipe recipeId={recipeId} />
-              <RecipeNotes {...{ recipeName, recipeId }} />
+              <RecipeNotes {...{ recipeName, recipeId, profiles }} />
               <button
                 onClick={async () => {
-                  try {
-                    await navigator.share(shareOptions);
-                    await shareRecipeAction(recipeId);
-                  } catch (error) {
-                    console.error(error);
+                  if (profiles[0].has_access) {
+                    try {
+                      await navigator.share(shareOptions);
+                      await shareRecipeAction(recipeId);
+                    } catch (error) {
+                      console.error(error);
+                    }
+                  } else {
+                    setPaid(true);
                   }
                 }}
                 className="block rounded-lg py-2 px-3 transition hover:bg-primary/5 text-xs text-start w-full"
@@ -83,6 +94,7 @@ export default function RecipeSettings({
           await deleteRecipeAction(recipeId);
         }}
       />
+      <PaidFeatureModal open={paid} setOpen={setPaid} />
     </div>
   );
 }

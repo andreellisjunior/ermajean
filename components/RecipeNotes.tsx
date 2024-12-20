@@ -7,14 +7,18 @@ import { Button } from "./ui/button";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import Note from "./Note";
 import { set } from "zod";
+import PaidFeatureModal from "@/components/ui/PaidFeatureModal";
 
 const RecipeNotes = ({
   recipeName,
   recipeId,
+  profiles,
 }: {
   recipeName: string;
   recipeId: string;
+  profiles: { has_access: boolean }[];
 }) => {
+  const [paid, setPaid] = useState(false);
   const [open, setOpen] = useState(false);
   const [openNote, setOpenNote] = useState(false);
   const [edit, setEdit] = useState(false);
@@ -75,8 +79,12 @@ const RecipeNotes = ({
     <>
       <button
         onClick={async () => {
-          setOpen(true);
-          await getNotes();
+          if (profiles[0].has_access) {
+            setOpen(true);
+            await getNotes();
+          } else {
+            setPaid(true);
+          }
         }}
         className="block rounded-lg py-2 px-3 transition hover:bg-primary/5 text-xs text-start w-full"
       >
@@ -180,6 +188,7 @@ const RecipeNotes = ({
           deleteNote,
         }}
       />
+      <PaidFeatureModal open={paid} setOpen={setPaid} />
     </>
   );
 };
