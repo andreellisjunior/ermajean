@@ -1,10 +1,10 @@
 "use server";
 
-import { encodedRedirect } from "../libs/utils";
-import { createClient } from "../libs/supabase/server";
+import { encodedRedirect } from "@/libs/utils";
+import { createClient } from "@/libs/supabase/server";
 import { headers } from "next/headers";
-import { aiPrompt } from "../libs/openai";
-import { Recipe } from "../types/config";
+import { aiPrompt } from "@/libs/openai";
+import { Recipe } from "@/types";
 import { redirect } from "next/navigation";
 import { createClassGroupUtils } from "tailwind-merge/src/lib/class-group-utils";
 
@@ -74,7 +74,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
   }
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?redirect_to=/recipes/reset-password`,
+    redirectTo: `${origin}/api/auth/callback?redirect_to=/recipes/reset-password`,
   });
 
   if (error) {
@@ -160,18 +160,6 @@ export const addNewRecipeAction = async (formData: FormData) => {
   const ingredients = formData.get("ingredients")?.toString();
   const instructions = formData.get("instructions")?.toString();
 
-  console.log({
-    recipe_name,
-    description,
-    prep_time,
-    cook_time,
-    total_time,
-    servings,
-    difficulty_level,
-    course,
-    ingredients,
-    instructions,
-  });
   if (id) {
     const { data, error } = await supabase
       .from("recipes")
