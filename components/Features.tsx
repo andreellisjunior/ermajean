@@ -65,7 +65,7 @@ export default function Features() {
                   Add your own recipes
                 </p>
                 <p className="mt-2 max-w-lg text-sm/6 text-gray-600 max-lg:text-center">
-                  A new recipe you've found or an family secret, add them all to
+                  A new recipe you've found or a family secret, add them all to
                   your collection.
                 </p>
               </div>

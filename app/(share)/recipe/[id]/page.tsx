@@ -32,7 +32,7 @@ const ShareRecipe = async ({ params }: { params: { id: string } }) => {
     .maybeSingle()) as { data: Recipe };
 
   return (
-    <div className="flex flex-col gap-4 relative h-screen overflow-y-scroll">
+    <div className="flex flex-col gap-4 relative h-auto">
       <h1 className="text-2xl md:text-4xl text-center font-bold">
         {recipes.recipe_name}
       </h1>

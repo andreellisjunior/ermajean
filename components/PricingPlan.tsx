@@ -54,8 +54,8 @@ export default function PricingPlan() {
         </p>
       </div>
       <p className="mx-auto mt-6 max-w-2xl text-pretty text-center text-lg font-medium text-gray-600 sm:text-xl/8">
-        The app is free to use, but we also offer premium plans with additional
-        features.
+        The app is free to use, but you can take advantage of more with
+        additional features in Premium.
       </p>
       <div className="mx-auto mt-16 grid max-w-lg grid-cols-1 items-center gap-y-6 sm:mt-20 sm:gap-y-0 lg:max-w-4xl lg:grid-cols-2">
         {tiers.map((tier, tierIdx) => (
