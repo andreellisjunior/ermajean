@@ -101,6 +101,7 @@ export default function Header() {
                       key={item.name}
                       href={item.href}
                       className="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-primary hover:text-primary-foreground transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
                     >
                       {item.name}
                     </a>
@@ -135,7 +136,7 @@ export default function Header() {
                   Create, Save and Share the Recipes you love!
                 </h1>
                 <p className="mt-4 text-xl text-gray-500">
-                  ErmaJean is a personal recipe management and creation tool.
+                  ermajean is a personal recipe management and creation tool.
                   Create, save and share your recipes with family and friends!
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 my-4 justify-center lg:justify-start">
