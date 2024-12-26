@@ -252,7 +252,7 @@ export const aiRecipeCreation = async (formData: FormData) => {
     restrictions,
   );
 
-  const result = JSON.parse(aiData.choices[0].message.content!).map(
+  return JSON.parse(aiData.choices[0].message.content!).map(
     (recipe: Recipe & { ingredients: string[]; instructions: string[] }) => ({
       recipe_name: recipe.recipe_name,
       description: recipe.description,
@@ -266,10 +266,6 @@ export const aiRecipeCreation = async (formData: FormData) => {
       instructions: recipe.instructions.join("\n"),
     }),
   );
-
-  console.log(result);
-
-  return result;
 };
 
 export const saveAIRecipe = async (recipe: Recipe) => {
