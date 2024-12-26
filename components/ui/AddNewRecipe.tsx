@@ -20,6 +20,7 @@ import { BookIcon } from "lucide-react";
 import { Recipe } from "@/types";
 import RecipeCard from "@/components/ui/RecipeCard";
 import { DeleteWarning } from "@/components/DeleteWarning";
+import apiClient from "@/libs/api";
 
 const AddNewRecipe = ({
   searchParams,

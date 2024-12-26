@@ -233,9 +233,6 @@ export const addNewRecipeAction = async (formData: FormData) => {
 };
 
 export const aiRecipeCreation = async (formData: FormData) => {
-  const supabase = createClient();
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-
   const taste = formData.get("taste")?.toString();
   const ingredients = formData.get("ingredients")?.toString();
   const serving = formData.get("serving")?.toString();
@@ -252,7 +249,7 @@ export const aiRecipeCreation = async (formData: FormData) => {
     restrictions,
   );
 
-  return JSON.parse(aiData.choices[0].message.content!).map(
+  const result = JSON.parse(aiData.choices[0].message.content!).map(
     (recipe: Recipe & { ingredients: string[]; instructions: string[] }) => ({
       recipe_name: recipe.recipe_name,
       description: recipe.description,
@@ -266,6 +263,7 @@ export const aiRecipeCreation = async (formData: FormData) => {
       instructions: recipe.instructions.join("\n"),
     }),
   );
+  return result;
 };
 
 export const saveAIRecipe = async (recipe: Recipe) => {
