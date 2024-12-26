@@ -291,7 +291,7 @@ const AddNewRecipe = ({
         </button>
       </div>
       <Modal {...{ open, setOpen }} height="h-auto">
-        {aiOptions.length ? (
+        {aiOptions?.length ? (
           <>
             <DialogTitle
               as="h3"

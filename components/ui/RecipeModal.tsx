@@ -32,7 +32,7 @@ const RecipeModal = ({
   const [paid, setPaid] = useState(false);
   const [loading, setLoading] = useState(false);
   return (
-    <Modal open={openModal} setOpen={setOpenModal}>
+    <Modal open={openModal} setOpen={setOpenModal} height="h-auto">
       <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-auto">
         <DialogTitle
           as="h3"
