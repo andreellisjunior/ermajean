@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import TemplateImage from "../../app/assets/food-placeholder.png";
 import RecipeModal from "./RecipeModal";
 import { Recipe } from "../../types";
@@ -10,17 +10,21 @@ const RecipeCard = ({
   recipe,
   searchParams,
   profiles,
+  setOpen,
+  setAiOptions,
 }: {
   recipe: Recipe;
-  searchParams: Message;
-  profiles: { name: string; email: string; has_access: boolean }[];
+  searchParams?: Message;
+  profiles?: { name: string; email: string; has_access: boolean }[];
+  setOpen?: Dispatch<SetStateAction<boolean>>;
+  setAiOptions?: Dispatch<SetStateAction<[]>>;
 }) => {
-  const [open, setOpen] = React.useState(false);
+  const [openModal, setOpenModal] = React.useState(false);
   return (
     <>
       <div
-        onClick={() => setOpen(true)}
-        className="w-full rounded-xl border border-gray-400 mb-8 overflow-hidden bg-white hover:shadow-xl hover:cursor-pointer hover:-translate-y-2 transition-all"
+        onClick={() => setOpenModal(true)}
+        className="w-full rounded-xl border border-gray-400 mb-8 overflow-hidden bg-white hover:shadow-xl hover:cursor-pointer hover:-translate-y-1 transition-all"
       >
         <div
           className="h-40 w-full"
@@ -43,7 +47,11 @@ const RecipeCard = ({
           </p>
         </div>
       </div>
-      <RecipeModal {...{ recipe, open, setOpen, searchParams, profiles }} />
+      <RecipeModal
+        openModal={openModal}
+        setOpenModal={setOpenModal}
+        {...{ recipe, searchParams, profiles, setOpen, setAiOptions }}
+      />
     </>
   );
 };

@@ -232,7 +232,7 @@ export const addNewRecipeAction = async (formData: FormData) => {
   }
 };
 
-export const addAIRecipeAction = async (formData: FormData) => {
+export const aiRecipeCreation = async (formData: FormData) => {
   const supabase = createClient();
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
@@ -252,22 +252,44 @@ export const addAIRecipeAction = async (formData: FormData) => {
     restrictions,
   );
 
-  const result = JSON.parse(aiData.choices[0].message.content!);
+  const result = JSON.parse(aiData.choices[0].message.content!).map(
+    (recipe: Recipe & { ingredients: string[]; instructions: string[] }) => ({
+      recipe_name: recipe.recipe_name,
+      description: recipe.description,
+      prep_time: recipe.prep_time,
+      cook_time: recipe.cook_time,
+      total_time: recipe.total_time,
+      servings: recipe.servings,
+      difficulty_level: recipe.difficulty_level,
+      course: recipe.course,
+      ingredients: recipe.ingredients.join("\n"),
+      instructions: recipe.instructions.join("\n"),
+    }),
+  );
+
+  console.log(result);
+
+  return result;
+};
+
+export const saveAIRecipe = async (recipe: Recipe) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
 
   const { data, error } = await supabase
     .from("recipes")
     .insert([
       {
-        recipe_name: result.recipe_name,
-        description: result.description,
-        prep_time: result.prep_time,
-        cook_time: result.cook_time,
-        total_time: result.total_time,
-        servings: result.servings,
-        difficulty_level: result.difficulty_level,
-        course: result.course,
-        ingredients: result.ingredients.join("\n"),
-        instructions: result.instructions.join("\n"),
+        recipe_name: recipe.recipe_name,
+        description: recipe.description,
+        prep_time: recipe.prep_time,
+        cook_time: recipe.cook_time,
+        total_time: recipe.total_time,
+        servings: recipe.servings,
+        difficulty_level: recipe.difficulty_level,
+        course: recipe.course,
+        ingredients: recipe.ingredients,
+        instructions: recipe.instructions,
         user_id: userId,
       },
     ])

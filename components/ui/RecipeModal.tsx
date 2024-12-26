@@ -8,24 +8,31 @@ import { Recipe } from "@/types/config";
 import { Button } from "@/components/ui/button";
 import RecipeSettings from "./RecipeSettings";
 import { Message } from "./form-message";
+import { saveAIRecipe } from "@/app/actions";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const RecipeModal = ({
   recipe,
-  open,
-  setOpen,
+  openModal,
+  setOpenModal,
   searchParams,
   profiles,
+  setAiOptions,
+  setOpen,
 }: {
   recipe: Recipe;
-  open: boolean;
-  setOpen: Dispatch<SetStateAction<boolean>>;
+  openModal: boolean;
+  setOpenModal: Dispatch<SetStateAction<boolean>>;
+  setAiOptions?: Dispatch<SetStateAction<[]>>;
   searchParams: Message;
   profiles: { name: string; email: string; has_access: boolean }[];
+  setOpen: Dispatch<SetStateAction<boolean>>;
 }) => {
   const [deleteModal, setDeleteModal] = useState(false);
   const [paid, setPaid] = useState(false);
+  const [loading, setLoading] = useState(false);
   return (
-    <Modal {...{ open, setOpen }}>
+    <Modal open={openModal} setOpen={setOpenModal}>
       <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-auto">
         <DialogTitle
           as="h3"
@@ -33,7 +40,7 @@ const RecipeModal = ({
         >
           {recipe.recipe_name}
           <XMarkIcon
-            onClick={() => setOpen(false)}
+            onClick={() => setOpenModal(false)}
             className="h-6 w-6 text-primary"
           />
         </DialogTitle>
@@ -96,28 +103,63 @@ const RecipeModal = ({
             </ul>
           </div>
           <div className="mt-5 py-3 flex items-center gap-4">
-            <RecipeSettings
-              recipeId={recipe.id}
-              setOpen={setOpen}
-              setDeleteModal={setDeleteModal}
-              deleteModal={deleteModal}
-              searchParams={searchParams}
-              recipeName={recipe.recipe_name}
-              profiles={profiles}
-              paid={paid}
-              setPaid={setPaid}
-            />
-            <Button
-              variant={"outline"}
-              className="w-full gap-2"
-              onClick={() => setOpen(false)}
-              type="button"
-            >
-              Close
-            </Button>
-            {/* <Button variant={'default'} className='w-full' type='submit'>
-              Save
-            </Button> */}
+            {profiles ? (
+              <>
+                <RecipeSettings
+                  recipeId={recipe.id}
+                  setOpen={setOpenModal}
+                  setDeleteModal={setDeleteModal}
+                  deleteModal={deleteModal}
+                  searchParams={searchParams}
+                  recipeName={recipe.recipe_name}
+                  profiles={profiles}
+                  paid={paid}
+                  setPaid={setPaid}
+                />
+                <Button
+                  variant={"outline"}
+                  className="w-full gap-2"
+                  onClick={() => setOpenModal(false)}
+                  type="button"
+                >
+                  Close
+                </Button>
+              </>
+            ) : (
+              <div className="mt-5 py-3 flex items-center justify-center gap-4 sticky bottom-0 right-0">
+                <>
+                  {loading ? (
+                    <LoadingSpinner />
+                  ) : (
+                    <>
+                      <Button
+                        variant={"outline"}
+                        className="w-full gap-2"
+                        onClick={() => setOpenModal(false)}
+                        type="button"
+                      >
+                        Go Back
+                      </Button>
+                      <Button
+                        onClick={async () => {
+                          setLoading(true);
+                          await saveAIRecipe(recipe);
+                          setOpenModal(false);
+                          setOpen(false);
+                          setAiOptions([]);
+                          setLoading(false);
+                        }}
+                        variant={"default"}
+                        className="w-full"
+                        type="submit"
+                      >
+                        Save
+                      </Button>
+                    </>
+                  )}
+                </>
+              </div>
+            )}
           </div>
         </div>
       </div>

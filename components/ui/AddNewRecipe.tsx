@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Modal from "./Modal";
 import { DialogTitle } from "@headlessui/react";
 
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { addAIRecipeAction, addNewRecipeAction } from "@/app/actions";
+import { addNewRecipeAction, aiRecipeCreation } from "@/app/actions";
 import ComboInput from "./ComboInput";
 import DropdownInput from "./DropdownInput";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -17,6 +17,9 @@ import { SubmitButton } from "./submit-button";
 import { toast } from "react-toastify";
 import PaidFeatureModal from "./PaidFeatureModal";
 import { BookIcon } from "lucide-react";
+import { Recipe } from "@/types";
+import RecipeCard from "@/components/ui/RecipeCard";
+import { DeleteWarning } from "@/components/DeleteWarning";
 
 const AddNewRecipe = ({
   searchParams,
@@ -30,6 +33,8 @@ const AddNewRecipe = ({
   const [defaultOpen, setDefaultOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [paidModal, setPaidModal] = useState(false);
+  const [aiOptions, setAiOptions] = useState<Recipe[]>([]);
+  const [cancel, setCancel] = useState(false);
 
   const aiForm = () => {
     return (
@@ -38,7 +43,7 @@ const AddNewRecipe = ({
           as="h3"
           className="text-xl font-semibold leading-6 text-rose-900 capitalize mb-3"
         >
-          Add New Recipe AI
+          Add New Recipe (AI)
           <XMarkIcon
             onClick={() => {
               setOpen(false);
@@ -58,6 +63,7 @@ const AddNewRecipe = ({
             name="taste"
             placeholder="Balanced chicken meal with a lot of veggies"
             required
+            disabled={loading}
           />
         </div>
         <div className="mt-4 text-left">
@@ -68,11 +74,17 @@ const AddNewRecipe = ({
           <Input
             name="ingredients"
             placeholder="Chicken, broccoli, rice, salt, pepper, garlic, etc."
+            disabled={loading}
           />
         </div>
         <div className="mt-4 text-left">
           <Label htmlFor="serving">How many are eating?</Label>
-          <Input name="serving" placeholder="5 people, just me" required />
+          <Input
+            name="serving"
+            placeholder="5 people, just me"
+            required
+            disabled={loading}
+          />
         </div>
         <div className="mt-4 text-left">
           <Label htmlFor="total_time">How much total time do you have?</Label>
@@ -80,6 +92,7 @@ const AddNewRecipe = ({
             name="total_time"
             placeholder="1 hour?, 2 hours?, 30 min.?"
             required
+            disabled={loading}
           />
         </div>
         <div className="mt-4 text-left">
@@ -90,6 +103,7 @@ const AddNewRecipe = ({
           <Input
             name="restrictions"
             placeholder="Vegan, keto, gluten-free, etc."
+            disabled={loading}
           />
         </div>
         <div className="mt-4 text-left">
@@ -98,6 +112,7 @@ const AddNewRecipe = ({
             name="course"
             placeholder="Breakfast, lunch, dinner, or snack"
             required
+            disabled={loading}
           />
         </div>
         <div className="mt-5 py-3 flex items-center gap-4 sticky bottom-0 right-0">
@@ -150,11 +165,21 @@ const AddNewRecipe = ({
         </p>
         <div className="mt-4 text-left">
           <Label htmlFor="recipeName">Name:</Label>
-          <Input name="recipeName" placeholder="Recipe Name" required />
+          <Input
+            name="recipeName"
+            placeholder="Recipe Name"
+            required
+            disabled={loading}
+          />
         </div>
         <div className="mt-4 text-left">
           <Label htmlFor="desc">Description:</Label>
-          <Input name="desc" placeholder="Description" required />
+          <Input
+            name="desc"
+            placeholder="Description"
+            required
+            disabled={loading}
+          />
         </div>
         <div className="mt-4 text-left">
           <Label htmlFor="prepTime">Prep Time:</Label>
@@ -170,7 +195,12 @@ const AddNewRecipe = ({
         </div>
         <div className="mt-4 text-left">
           <Label htmlFor="servings">Servings:</Label>
-          <Input name="servings" placeholder="2 - 4 Servings" required />
+          <Input
+            name="servings"
+            placeholder="2 - 4 Servings"
+            required
+            disabled={loading}
+          />
         </div>
         <div className="mt-4 text-left">
           <Label htmlFor="level">Difficulty Level:</Label>
@@ -203,6 +233,7 @@ const AddNewRecipe = ({
             name="ingredients"
             placeholder="List all ingredients"
             required
+            disabled={loading}
           />
         </div>
         <div className="mt-4 text-left">
@@ -211,6 +242,7 @@ const AddNewRecipe = ({
             name="instructions"
             placeholder="List your instructions, your way"
             required
+            disabled={loading}
           />
         </div>
         <div className="mt-5 py-3 flex items-center justify-center gap-4 sticky bottom-0 right-0">
@@ -259,59 +291,101 @@ const AddNewRecipe = ({
         </button>
       </div>
       <Modal {...{ open, setOpen }} height="h-auto">
-        <form
-          onSubmit={async (event: React.FormEvent<HTMLFormElement>) => {
-            event.preventDefault();
-            const formData = new FormData(event.currentTarget);
-            setLoading(true);
-            aiOpen
-              ? await addAIRecipeAction(formData)
-              : await addNewRecipeAction(formData);
-            setOpen(false);
-            setLoading(false);
-            setAiOpen(false);
-            toast.success("Recipe saved successfully");
-          }}
-          className="h-full"
-        >
-          <div className="mt-3 text-center sm:mt-0 sm:text-left h-full">
-            {!aiOpen && !defaultOpen ? (
-              <div className="flex flex-wrap items-center justify-center gap-4 h-auto">
-                <div
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (!profiles[0].has_access) {
-                      setPaidModal(true);
-                    } else {
-                      setDefaultOpen(false);
-                      setAiOpen(true);
-                    }
-                  }}
-                  className="w-full border border-gray-200 flex flex-col items-center justify-center p-12 rounded-lg gap-4 h-full hover:shadow-md hover:cursor-pointer transition"
-                >
-                  <SparklesIcon className="w-12 h-auto text-primary" />
-                  <h5 className="text-2xl">Generate a New One!</h5>
+        {aiOptions.length ? (
+          <>
+            <DialogTitle
+              as="h3"
+              className="text-xl font-semibold leading-6 text-rose-900 capitalize mb-3 flex items-center justify-between text-left gap-2"
+            >
+              Add New Recipe (AI)
+              <XMarkIcon
+                onClick={() => {
+                  setCancel(true);
+                }}
+                className="h-6 w-6 text-primary"
+              />
+            </DialogTitle>
+            <p className="text-gray-500 text-sm text-left mb-4">
+              Select a recipe to view more details.
+            </p>
+            {aiOptions.map((recipe, i) => (
+              <RecipeCard key={i} {...{ setOpen, recipe, setAiOptions }} />
+            ))}
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setCancel(true)}
+            >
+              Cancel
+            </Button>
+          </>
+        ) : (
+          <form
+            onSubmit={async (event: React.FormEvent<HTMLFormElement>) => {
+              event.preventDefault();
+              const formData = new FormData(event.currentTarget);
+              setLoading(true);
+              aiOpen
+                ? setAiOptions(await aiRecipeCreation(formData))
+                : await addNewRecipeAction(formData);
+              // setOpen(false);
+              setLoading(false);
+              setAiOpen(false);
+            }}
+            className="h-full"
+          >
+            <div className="mt-3 text-center sm:mt-0 sm:text-left h-full">
+              {!aiOpen && !defaultOpen ? (
+                <div className="flex flex-wrap items-center justify-center gap-4 h-auto">
+                  <div
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (!profiles[0].has_access) {
+                        setPaidModal(true);
+                      } else {
+                        setDefaultOpen(false);
+                        setAiOpen(true);
+                      }
+                    }}
+                    className="w-full border border-gray-200 flex flex-col items-center justify-center p-12 rounded-lg gap-4 h-full hover:shadow-md hover:cursor-pointer transition"
+                  >
+                    <SparklesIcon className="w-12 h-auto text-primary" />
+                    <h5 className="text-2xl">Generate a New One!</h5>
+                  </div>
+                  <div
+                    onClick={() => {
+                      setAiOpen(false);
+                      setDefaultOpen(true);
+                    }}
+                    className="w-full border border-gray-200 flex flex-col items-center justify-center p-12 rounded-lg gap-4 h-full hover:shadow-md hover:cursor-pointer transition"
+                  >
+                    <BookIcon className="w-12 h-auto text-primary" />
+                    <h5 className="text-2xl">Add My Own!</h5>
+                  </div>
                 </div>
-                <div
-                  onClick={() => {
-                    setAiOpen(false);
-                    setDefaultOpen(true);
-                  }}
-                  className="w-full border border-gray-200 flex flex-col items-center justify-center p-12 rounded-lg gap-4 h-full hover:shadow-md hover:cursor-pointer transition"
-                >
-                  <BookIcon className="w-12 h-auto text-primary" />
-                  <h5 className="text-2xl">Add My Own!</h5>
-                </div>
-              </div>
-            ) : aiOpen ? (
-              aiForm()
-            ) : (
-              regularForm()
-            )}
-          </div>
-        </form>
+              ) : aiOpen ? (
+                aiForm()
+              ) : (
+                regularForm()
+              )}
+            </div>
+          </form>
+        )}
       </Modal>
       <PaidFeatureModal open={paidModal} setOpen={setPaidModal} />
+      <DeleteWarning
+        open={cancel}
+        setOpen={setCancel}
+        title={"AI Creation"}
+        desc={
+          "You are about to cancel the AI creation. This action cannot be undone"
+        }
+        action={() => {
+          setOpen(false);
+          setCancel(false);
+          setAiOptions([]);
+        }}
+      />
     </>
   );
 };
