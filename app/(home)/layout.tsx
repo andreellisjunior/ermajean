@@ -5,6 +5,7 @@ import config from "@/config";
 import { Comfortaa } from "next/font/google";
 import "../globals.css";
 import Head from "next/head";
+import { CSPostHogProvider } from "@/app/providers";
 
 const comfortaa = Comfortaa({
   subsets: ["latin"],
@@ -55,7 +56,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </Head>
       <body className="text-foreground bg-[#F7F7ED]">
-        <div className="mx-auto">{children}</div>
+        <CSPostHogProvider>
+          <div className="mx-auto">{children}</div>
+        </CSPostHogProvider>
       </body>
     </html>
   );

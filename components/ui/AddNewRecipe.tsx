@@ -38,7 +38,7 @@ const AddNewRecipe = ({
           as="h3"
           className="text-xl font-semibold leading-6 text-rose-900 capitalize mb-3"
         >
-          Add New Recipe AI
+          Add New Recipe (AI)
           <XMarkIcon
             onClick={() => {
               setOpen(false);
@@ -58,6 +58,7 @@ const AddNewRecipe = ({
             name="taste"
             placeholder="Balanced chicken meal with a lot of veggies"
             required
+            disabled={loading}
           />
         </div>
         <div className="mt-4 text-left">
@@ -68,11 +69,17 @@ const AddNewRecipe = ({
           <Input
             name="ingredients"
             placeholder="Chicken, broccoli, rice, salt, pepper, garlic, etc."
+            disabled={loading}
           />
         </div>
         <div className="mt-4 text-left">
           <Label htmlFor="serving">How many are eating?</Label>
-          <Input name="serving" placeholder="5 people, just me" required />
+          <Input
+            name="serving"
+            placeholder="5 people, just me"
+            required
+            disabled={loading}
+          />
         </div>
         <div className="mt-4 text-left">
           <Label htmlFor="total_time">How much total time do you have?</Label>
@@ -80,6 +87,7 @@ const AddNewRecipe = ({
             name="total_time"
             placeholder="1 hour?, 2 hours?, 30 min.?"
             required
+            disabled={loading}
           />
         </div>
         <div className="mt-4 text-left">
@@ -90,6 +98,7 @@ const AddNewRecipe = ({
           <Input
             name="restrictions"
             placeholder="Vegan, keto, gluten-free, etc."
+            disabled={loading}
           />
         </div>
         <div className="mt-4 text-left">
@@ -98,6 +107,7 @@ const AddNewRecipe = ({
             name="course"
             placeholder="Breakfast, lunch, dinner, or snack"
             required
+            disabled={loading}
           />
         </div>
         <div className="mt-5 py-3 flex items-center gap-4 sticky bottom-0 right-0">
@@ -150,11 +160,21 @@ const AddNewRecipe = ({
         </p>
         <div className="mt-4 text-left">
           <Label htmlFor="recipeName">Name:</Label>
-          <Input name="recipeName" placeholder="Recipe Name" required />
+          <Input
+            name="recipeName"
+            placeholder="Recipe Name"
+            required
+            disabled={loading}
+          />
         </div>
         <div className="mt-4 text-left">
           <Label htmlFor="desc">Description:</Label>
-          <Input name="desc" placeholder="Description" required />
+          <Input
+            name="desc"
+            placeholder="Description"
+            required
+            disabled={loading}
+          />
         </div>
         <div className="mt-4 text-left">
           <Label htmlFor="prepTime">Prep Time:</Label>
@@ -170,7 +190,12 @@ const AddNewRecipe = ({
         </div>
         <div className="mt-4 text-left">
           <Label htmlFor="servings">Servings:</Label>
-          <Input name="servings" placeholder="2 - 4 Servings" required />
+          <Input
+            name="servings"
+            placeholder="2 - 4 Servings"
+            required
+            disabled={loading}
+          />
         </div>
         <div className="mt-4 text-left">
           <Label htmlFor="level">Difficulty Level:</Label>
@@ -203,6 +228,7 @@ const AddNewRecipe = ({
             name="ingredients"
             placeholder="List all ingredients"
             required
+            disabled={loading}
           />
         </div>
         <div className="mt-4 text-left">
@@ -211,6 +237,7 @@ const AddNewRecipe = ({
             name="instructions"
             placeholder="List your instructions, your way"
             required
+            disabled={loading}
           />
         </div>
         <div className="mt-5 py-3 flex items-center justify-center gap-4 sticky bottom-0 right-0">
