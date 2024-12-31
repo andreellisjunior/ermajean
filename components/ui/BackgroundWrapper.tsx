@@ -12,7 +12,7 @@ const BackgroundWrapper = ({ children }: { children: ReactNode }) => {
     <div
       className="bg-background w-full"
       style={
-        innerWidth > 767
+        window.innerWidth > 767
           ? {
               backgroundImage: `url(${background.src})`,
               position: "fixed",
