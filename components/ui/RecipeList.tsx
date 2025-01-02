@@ -4,10 +4,10 @@ import AddNewRecipe from "@/components/ui/AddNewRecipe";
 import { Input } from "@/components/ui/input";
 import RecipeCard from "@/components/ui/RecipeCard";
 import WelcomeModal from "@/components/ui/WelcomeModal";
-import { Cog8ToothIcon } from "@heroicons/react/24/solid";
 import { useEffect, useState } from "react";
 import { Message } from "./form-message";
 import ProfileSettings from "../ProfileSettings";
+import { UserCogIcon } from "lucide-react";
 
 const RecipeList = ({
   profiles,
@@ -37,26 +37,26 @@ const RecipeList = ({
   return (
     <div className="flex-1 w-full flex flex-col h-screen">
       {/* Header and Search */}
-      <div className="min-h-60 flex flex-col w-full items-center gap-4 justify-center">
+      <div className="min-h-60 flex flex-col w-full items-center gap-4 justify-center bg-primary md:bg-transparent rounded-b-[40%] md:rounded-none mb-6 px-12 text-center text-white md:text-black">
         <div
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => setProfile(true)}
         >
           <h1 className="text-3xl italic">
             Hi,{" "}
-            <span className="text-primary">
+            <span className="text-white md:text-primary">
               {profiles![0].name ?? "Friend"}
             </span>
             !
           </h1>
-          <Cog8ToothIcon className="h-6 w-auto text-primary" />
+          <UserCogIcon className="h-6 w-auto text-white md:text-primary" />
         </div>
         <p>What would you like to make today?</p>
         <div className="flex gap-4 w-full max-w-sm">
           <Input
             name="search"
             placeholder="Search Saved Recipes"
-            className="w-full rounded-xl text-center"
+            className="w-full rounded-xl text-center text-black"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
@@ -64,7 +64,7 @@ const RecipeList = ({
       </div>
 
       {/* Content section */}
-      <div className="min-h-44 overflow-y-auto px-4">
+      <div className="min-h-44 overflow-y-auto px-4 max-w-xl mx-auto">
         {/* TODO: Filtering categories */}
         <div className="pb-12">
           {/* Recipes */}

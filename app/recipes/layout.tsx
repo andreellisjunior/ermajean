@@ -48,7 +48,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="bg-background text-foreground bg-[#F7F7ED]">
         <CSPostHogProvider>
           <BackgroundWrapper>
-            <div className="p-4 max-w-xl mx-auto">{children}</div>
+            <div className="p-0 md:p-4 md:max-w-xl mx-auto">{children}</div>
           </BackgroundWrapper>
         </CSPostHogProvider>
       </body>

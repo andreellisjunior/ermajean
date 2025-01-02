@@ -35,7 +35,14 @@ const Footer = () => {
           </div>
           <div className="flex-grow flex flex-wrap flex-col gap-8 justify-center -mb-10 md:mt-0 mt-10 text-center">
             <div className="flex flex-col md:flex-row gap-4 md:justify-end">
-              {navigation.map((item) => (
+              {[
+                ...navigation,
+                { name: "Terms", href: "/tos" },
+                {
+                  name: "Privacy Policy",
+                  href: "/privacy-policy",
+                },
+              ].map((item) => (
                 <a
                   key={item.name}
                   href={item.href}
