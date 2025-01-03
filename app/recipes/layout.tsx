@@ -1,53 +1,56 @@
-import BackgroundWrapper from '@/components/ui/BackgroundWrapper';
-import { Comfortaa } from 'next/font/google';
-import Head from 'next/head';
-import '../globals.css';
-import 'react-toastify/dist/ReactToastify.css';
-import { ReactNode } from 'react';
+import BackgroundWrapper from "@/components/ui/BackgroundWrapper";
+import { Comfortaa } from "next/font/google";
+import Head from "next/head";
+import "../globals.css";
+import "react-toastify/dist/ReactToastify.css";
+import { ReactNode } from "react";
+import { CSPostHogProvider } from "@/app/providers";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
-  : 'http://localhost:3000';
+  : "http://localhost:3000";
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
-  title: 'Recipes | ErmaJean',
-  description: 'A collection of recipes from ErmaJean',
+  title: "Recipes | ErmaJean",
+  description: "A collection of recipes from ErmaJean",
 };
 
 const comfortaa = Comfortaa({
-  subsets: ['latin'],
+  subsets: ["latin"],
 });
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang='en' className={comfortaa.className} suppressHydrationWarning>
+    <html lang="en" className={comfortaa.className} suppressHydrationWarning>
       <Head>
         <link
-          rel='icon'
-          type='image/png'
-          href='/favicon-48x48.png'
-          sizes='48x48'
+          rel="icon"
+          type="image/png"
+          href="/favicon-48x48.png"
+          sizes="48x48"
         />
-        <link rel='icon' type='image/svg+xml' href='./favicon.svg' />
-        <link rel='shortcut icon' href='./favicon.ico' />
+        <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+        <link rel="shortcut icon" href="./favicon.ico" />
         <link
-          rel='apple-touch-icon'
-          sizes='180x180'
-          href='/apple-touch-icon.png'
+          rel="apple-touch-icon"
+          sizes="180x180"
+          href="/apple-touch-icon.png"
         />
-        <meta name='apple-mobile-web-app-title' content='ermajean' />
-        <link rel='manifest' href='/site.webmanifest' />
-        <meta name='apple-mobile-web-app-capable' content='yes' />
+        <meta name="apple-mobile-web-app-title" content="ermajean" />
+        <link rel="manifest" href="/site.webmanifest" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta
-          name='apple-mobile-web-app-status-bar-style'
-          content='black-translucent'
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
         />
       </Head>
-      <body className='bg-background text-foreground bg-[#F7F7ED]'>
-        <BackgroundWrapper>
-          <div className='p-4 max-w-xl mx-auto'>{children}</div>
-        </BackgroundWrapper>
+      <body className="bg-background text-foreground bg-[#F7F7ED]">
+        <CSPostHogProvider>
+          <BackgroundWrapper>
+            <div className="p-0 md:p-4 md:max-w-xl mx-auto">{children}</div>
+          </BackgroundWrapper>
+        </CSPostHogProvider>
       </body>
     </html>
   );

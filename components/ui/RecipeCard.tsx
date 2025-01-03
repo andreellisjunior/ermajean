@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import TemplateImage from "../../app/assets/food-placeholder.png";
 import RecipeModal from "./RecipeModal";
 import { Recipe } from "../../types";

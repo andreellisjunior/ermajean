@@ -25,8 +25,8 @@ const RecipeModal = ({
   const [deleteModal, setDeleteModal] = useState(false);
   const [paid, setPaid] = useState(false);
   return (
-    <Modal {...{ open, setOpen }}>
-      <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-auto">
+    <Modal {...{ open, setOpen }} height="h-auto">
+      <div className="mt-3 text-center sm:mt-0 sm:text-left w-auto">
         <DialogTitle
           as="h3"
           className="text-xl font-semibold leading-6 text-gray-900 capitalize mb-3 flex items-center justify-between text-left gap-4"

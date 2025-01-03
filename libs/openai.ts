@@ -28,7 +28,7 @@ export const aiPrompt = async (
           restrictions
             ? `Please note the dietary restrictions: ${restrictions}`
             : "I have no dietary restrictions"
-        }. The output of the recipe should include the following details in json format (make sure ingredients and instructions return an array of strings and each ingredient and instruction is a new line): recipe_name, description, prep_time, cook_time, total_time, servings, difficulty_level, course, ingredients, instructions. It's imperative the ingredients are accurate to the recipe. Only give me my output. I don't need any extra information or the code formatting.`,
+        }. Give me the best, most accurate option to my preferences as possible. The output should include the following details in json format (make sure ingredients and instructions return an array of strings and each ingredient and instruction is a new line): recipe_name, description, prep_time, cook_time, total_time, servings, difficulty_level, course, ingredients, instructions. It's imperative the ingredients are accurate to the recipe. Only give me my output. I don't need any extra information or the code formatting.`,
       },
     ],
   });

@@ -5,6 +5,7 @@ import config from "@/config";
 import { Comfortaa } from "next/font/google";
 import "../globals.css";
 import Head from "next/head";
+import { CSPostHogProvider } from "@/app/providers";
 
 const comfortaa = Comfortaa({
   subsets: ["latin"],
@@ -19,11 +20,11 @@ export const viewport: Viewport = {
 
 // This adds default SEO tags to all pages in our app.
 // You can override them in each page passing params to getSOTags() function.
-export const metadata = getSEOTags({
+export const metadata = {
   title: "Personal Recipe Management | ermajean",
   description:
     "ErmaJean is a personal recipe management and creation tool. Create, save and share your recipes with family and friends!",
-});
+};
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -55,7 +56,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </Head>
       <body className="text-foreground bg-[#F7F7ED]">
-        <div className="mx-auto">{children}</div>
+        <CSPostHogProvider>
+          <div className="mx-auto">{children}</div>
+        </CSPostHogProvider>
       </body>
     </html>
   );
