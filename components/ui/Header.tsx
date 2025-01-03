@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Dialog, DialogPanel } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
-import Logo from "../../app/assets/Logo.svg";
+import Logo from "../../app/assets/logo-color.png";
 import { Button } from "./button";
 import Multiscreen from "../../app/assets/multiscreen.png";
 import HomeBG from "../../app/assets/home-background-image.jpg";

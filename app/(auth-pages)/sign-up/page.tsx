@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import Image from "next/image";
-import Logo from "../../assets/Logo.svg";
+import Logo from "../../assets/logo-color.png";
 import { Button } from "@/components/ui/button";
 
 export default function Signup({ searchParams }: { searchParams: Message }) {
@@ -40,12 +40,6 @@ export default function Signup({ searchParams }: { searchParams: Message }) {
           ) : (
             <form className="flex flex-col min-w-64">
               <h1 className="text-2xl font-medium">Sign up</h1>
-              <p className="text-sm text text-foreground self-end">
-                Already have an account?{" "}
-                <Link className="text-primary font-medium underline" href="/">
-                  Sign in
-                </Link>
-              </p>
               <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
                 <Label htmlFor="email">Email</Label>
                 <Input name="email" placeholder="you@example.com" required />
@@ -64,6 +58,15 @@ export default function Signup({ searchParams }: { searchParams: Message }) {
                   Sign up
                 </SubmitButton>
               </div>
+              <p className="text-sm text text-foreground self-center mt-4">
+                Already have an account?{" "}
+                <Link
+                  className="text-primary font-medium underline"
+                  href="/sign-in"
+                >
+                  Sign in
+                </Link>
+              </p>
             </form>
           )}
         </div>

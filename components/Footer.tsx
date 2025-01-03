@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import config from "@/config";
-import Logo from "@/app/assets/Logo.svg";
+import Logo from "@/app/assets/logo-color.png";
 
 const navigation = [
   { name: "Pricing", href: "#pricing" },
