@@ -92,13 +92,15 @@ export default function ProfileSettings({
                             defaultValue={profile![0].name}
                           />
                         </div>
-                        {/* <div className='mt-4 text-left'>
-                          <Label htmlFor='email'>Email:</Label>
+                        <div className="mt-4 text-left">
+                          <Label htmlFor="email">Email:</Label>
                           <Input
-                            name='email'
-                            placeholder={profile![0].email || 'Your email'}
+                            name="email"
+                            value={profile![0].email}
+                            disabled
+                            title="Updating your email coming soon!"
                           />
-                        </div> */}
+                        </div>
                         <div className="mt-5 py-3 w-fit ml-auto">
                           {/* <Button
                           variant={'destructive'}
