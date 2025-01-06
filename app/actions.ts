@@ -6,7 +6,10 @@ import { headers } from "next/headers";
 import { aiPrompt } from "@/libs/openai";
 import { Recipe } from "@/types";
 import { redirect } from "next/navigation";
-import { createClassGroupUtils } from "tailwind-merge/src/lib/class-group-utils";
+
+const defaultUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : "http://localhost:3000";
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
@@ -60,6 +63,21 @@ export const signInAction = async (formData: FormData) => {
         return redirect("/recipes?refresh=true");
       }
     });
+  }
+};
+
+export const googleAuth = async () => {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${defaultUrl}/api/auth/callback`,
+    },
+  });
+
+  if (data.url) {
+    redirect(data.url); // use the redirect API for your server framework
   }
 };
 
