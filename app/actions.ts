@@ -8,7 +8,7 @@ import { Recipe } from "@/types";
 import { redirect } from "next/navigation";
 
 const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
+  ? `https://ermajean.com`
   : "http://localhost:3000";
 
 export const signUpAction = async (formData: FormData) => {
