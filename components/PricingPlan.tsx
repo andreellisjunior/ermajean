@@ -15,7 +15,7 @@ const tiers = [
     name: "Premium",
     id: "premium",
     href: "/sign-up",
-    priceMonthly: "$7.99",
+    priceMonthly: "$5.99",
     description:
       "Unlock the power of AI and take your recipes to the next level.",
     features: [
