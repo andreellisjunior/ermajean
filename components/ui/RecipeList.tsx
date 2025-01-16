@@ -70,7 +70,7 @@ const RecipeList = ({
           {/* Recipes */}
           {filteredRecipes?.length === 0 ? (
             <div className="absolute left-1/2 bottom-0 transform -translate-x-1/2 -translate-y-1/4 w-full">
-              <div className="flex flex-col h-[50vh] text-center max-w-72 mx-auto w-full">
+              <div className="flex flex-col h-[50vh] text-center max-w-72 mx-auto w-full justify-center">
                 <p className="text-xl text-gray-600">
                   Doesn’t look like you have any recipes saved yet.
                 </p>
