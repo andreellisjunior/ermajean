@@ -47,7 +47,7 @@ export default function Features() {
             Create & Save
           </h2>
           <p className="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl lg:text-balance">
-            Everything you need to for the best recipe
+            Everything you need for the best recipe management
           </p>
           <p className="mt-6 text-lg/8 text-gray-600">
             Our platform is designed to help you get the most out of your

@@ -7,7 +7,7 @@ import Image from "next/image";
 import Logo from "../../app/assets/logo-color.png";
 import { Button } from "./button";
 import Multiscreen from "../../app/assets/multiscreen.png";
-import HomeBG from "../../app/assets/home-background-image.jpg";
+import HomeBG from "../../app/assets/hero-background.jpg";
 
 const navigation = [
   { name: "Pricing", href: "#pricing" },
@@ -21,7 +21,7 @@ export default function Header() {
   return (
     <div
       style={{ backgroundImage: `url(${HomeBG.src})` }}
-      className="bg-cover bg-no-repeat bg-center shadow-md"
+      className="bg-cover bg-no-repeat bg-center shadow-md max-h-[800px] md:h-[75vh] overflow-hidden"
     >
       <header className="absolute inset-x-0 top-0 z-50">
         <nav
@@ -127,19 +127,21 @@ export default function Header() {
         </Dialog>
       </header>
 
-      <div className="relative isolate px-6 py-32 md:px-8">
+      <div className="relative isolate px-6 py-32 md:px-8 mt-0 lg:mt-16">
         <div className="relative overflow-hidden">
           <div className="md:pb-4 md:pt-4">
-            <div className="relative flex flex-col gap-4 lg:flex-row items-center mx-auto lg:max-w-5xl px-4 sm:static sm:px-6 md:px-8">
-              <div className="text-center lg:text-start lg:w-1/2">
-                <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">
-                  Create, Save and Share the Recipes you love!
+            <div className="relative flex flex-col gap-4 items-center mx-auto lg:max-w-5xl px-4 sm:static sm:px-6 md:px-8">
+              <div className="flex flex-col gap-4 text-center capitalize">
+                <h1 className="text-4xl font-bold text-primary md:text-7xl">
+                  Create What you Have Taste for...
                 </h1>
+                <h2 className="text-2xl font-bold text-gray-900 md:text-3xl">
+                  With What you already have!
+                </h2>
                 <p className="mt-4 text-xl text-gray-500">
-                  ermajean is a personal recipe management and creation tool.
                   Create, save and share your recipes with family and friends!
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 my-4 justify-center lg:justify-start">
+                <div className="flex flex-col sm:flex-row gap-4 my-4 justify-center">
                   <a href="/sign-up">
                     <Button size="lg">Get Started For Free</Button>
                   </a>
@@ -150,7 +152,7 @@ export default function Header() {
                   </a>
                 </div>
               </div>
-              <div className="max-w-4xl mx-auto w-auto">
+              <div className="max-w-4xl mx-auto w-auto block lg:hidden">
                 <Image src={Multiscreen} alt="" width={300} height={500} />
               </div>
             </div>
