@@ -158,7 +158,7 @@ const RecipeModal = ({
           >
             Tip
             <XMarkIcon
-              onClick={() => setOpen(false)}
+              onClick={() => setTip(false)}
               className="hover:cursor-pointer h-6 w-6 text-primary"
             />
           </DialogTitle>
