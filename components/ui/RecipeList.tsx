@@ -14,7 +14,9 @@ const RecipeList = ({
   recipes,
   searchParams,
 }: {
-  profiles: { name: string; email: string; has_access: boolean }[] | null;
+  profiles:
+    | { name: string; email: string; location?: string; has_access: boolean }[]
+    | null;
   recipes: Recipe[];
   searchParams: Message;
 }) => {

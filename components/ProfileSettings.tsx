@@ -30,7 +30,9 @@ export default function ProfileSettings({
 }: {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
-  profile: { name: string; email: string; has_access: boolean }[] | null;
+  profile:
+    | { name: string; email: string; location?: string; has_access: boolean }[]
+    | null;
 }) {
   const [dangerOpen, setDangerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -90,6 +92,18 @@ export default function ProfileSettings({
                             name="name"
                             placeholder="Your name"
                             defaultValue={profile![0].name}
+                          />
+                        </div>
+                        <div className="mt-4 text-left">
+                          <Label htmlFor="location">Location:</Label>
+                          <p className="text-xs text-gray-600 italic">
+                            This is only used to calculate more accurate cost
+                            estimates.
+                          </p>
+                          <Input
+                            name="location"
+                            defaultValue={profile![0].location ?? `USA`}
+                            title="Enter your state, city, or country (default USA)"
                           />
                         </div>
                         <div className="mt-4 text-left">

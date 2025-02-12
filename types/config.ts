@@ -1,26 +1,26 @@
 export type Theme =
-  | 'light'
-  | 'dark'
-  | 'cupcake'
-  | 'bumblebee'
-  | 'emerald'
-  | 'corporate'
-  | 'synthwave'
-  | 'retro'
-  | 'cyberpunk'
-  | 'valentine'
-  | 'halloween'
-  | 'garden'
-  | 'forest'
-  | 'aqua'
-  | 'lofi'
-  | 'pastel'
-  | 'fantasy'
-  | 'wireframe'
-  | 'black'
-  | 'luxury'
-  | 'dracula'
-  | '';
+  | "light"
+  | "dark"
+  | "cupcake"
+  | "bumblebee"
+  | "emerald"
+  | "corporate"
+  | "synthwave"
+  | "retro"
+  | "cyberpunk"
+  | "valentine"
+  | "halloween"
+  | "garden"
+  | "forest"
+  | "aqua"
+  | "lofi"
+  | "pastel"
+  | "fantasy"
+  | "wireframe"
+  | "black"
+  | "luxury"
+  | "dracula"
+  | "";
 
 export interface ConfigProps {
   appName: string;
@@ -77,4 +77,6 @@ export type Recipe = {
   course: string;
   ingredients: string;
   instructions: string;
+  est_cost?: string;
+  est_savings?: string;
 };

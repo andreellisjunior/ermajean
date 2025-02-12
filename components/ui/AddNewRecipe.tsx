@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import React, { useState } from "react";
 import Modal from "./Modal";
 import { DialogTitle } from "@headlessui/react";
 
@@ -23,7 +23,7 @@ const AddNewRecipe = ({
   profiles,
 }: {
   searchParams: Message;
-  profiles: { has_access: boolean }[];
+  profiles: { location?: string; has_access: boolean }[];
 }) => {
   const [open, setOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
@@ -110,6 +110,11 @@ const AddNewRecipe = ({
             disabled={loading}
           />
         </div>
+        <Input
+          type="hidden"
+          name="location"
+          value={profiles[0].location ?? `USA`}
+        />
         <div className="mt-5 py-3 flex items-center gap-4 sticky bottom-0 right-0">
           <div className="flex flex-col w-full gap-4">
             {loading ? (

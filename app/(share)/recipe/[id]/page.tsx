@@ -2,6 +2,7 @@ import { createClient } from "@/libs/supabase/server";
 import TemplateImage from "@/app/assets/food-placeholder.png";
 import type { Recipe } from "@/types/config";
 import { Metadata } from "next";
+import React from "react";
 
 export async function generateMetadata({
   params,
@@ -71,6 +72,22 @@ const ShareRecipe = async ({ params }: { params: { id: string } }) => {
             Course:{" "}
             <span className="font-bold capitalize">{recipes.course}</span>
           </p>
+          {recipes.est_cost && (
+            <>
+              <p>
+                Est. Cost/serv:{" "}
+                <span className="font-bold text-green-600">
+                  ${recipes.est_cost}
+                </span>
+              </p>
+              <p>
+                Est. Savings/serv:{" "}
+                <span className="font-bold text-green-600">
+                  +${recipes.est_savings}
+                </span>
+              </p>
+            </>
+          )}
         </div>
         <hr />
         <div className="text-left flex flex-col gap-4">
