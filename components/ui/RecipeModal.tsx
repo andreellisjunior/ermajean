@@ -72,6 +72,22 @@ const RecipeModal = ({
               Course:{" "}
               <span className="font-bold capitalize">{recipe.course}</span>
             </p>
+            {recipe.est_cost && (
+              <>
+                <p>
+                  Est. Cost/serv:{" "}
+                  <span className="font-bold text-green-600">
+                    ${recipe.est_cost}
+                  </span>
+                </p>
+                <p>
+                  Est. Savings/serv:{" "}
+                  <span className="font-bold text-green-600">
+                    +${recipe.est_savings}
+                  </span>
+                </p>
+              </>
+            )}
           </div>
           <hr />
           <div className="text-left flex flex-col gap-4">

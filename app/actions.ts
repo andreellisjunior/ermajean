@@ -260,6 +260,7 @@ export const addAIRecipeAction = async (formData: FormData) => {
   const total_time = formData.get("totalTime")?.toString();
   const course = formData.get("course")?.toString();
   const restrictions = formData.get("restrictions")?.toString();
+  const location = formData.get("location")?.toString();
 
   const aiData = await aiPrompt(
     taste,
@@ -268,10 +269,11 @@ export const addAIRecipeAction = async (formData: FormData) => {
     total_time,
     course,
     restrictions,
+    location,
   );
 
   const result = JSON.parse(aiData.choices[0].message.content!);
-
+  console.log(result);
   const { data, error } = await supabase
     .from("recipes")
     .insert([
@@ -286,6 +288,8 @@ export const addAIRecipeAction = async (formData: FormData) => {
         course: result.course,
         ingredients: result.ingredients.join("\n"),
         instructions: result.instructions.join("\n"),
+        est_cost: result.estimated_cost_per_serving,
+        est_savings: result.estimated_savings_per_serving,
         user_id: userId,
       },
     ])
@@ -389,6 +393,7 @@ export const updateProfileAction = async (formData: FormData) => {
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
   const name = formData.get("name")?.toString();
+  const location = formData.get("location")?.toString();
   // const email = formData.get('email')?.toString();
 
   // const { data: userEmail, error: userError } = await supabase.auth.updateUser({
@@ -402,7 +407,7 @@ export const updateProfileAction = async (formData: FormData) => {
 
   const { error } = await supabase
     .from("profiles")
-    .update({ name })
+    .update({ name, location })
     .eq("id", userId);
 
   if (error) {
