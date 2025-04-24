@@ -130,10 +130,20 @@ export async function POST(req: NextRequest) {
           stripeObject.id
         );
 
-        await supabase
+        // First get the profile using customer_id
+        const { data: profile } = await supabase
           .from('profiles')
-          .update({ has_access: false })
-          .eq('customer_id', subscription.customer);
+          .select('*')
+          .eq('customer_id', subscription.customer)
+          .single();
+
+        if (profile) {
+          // Then update using the profile id
+          await supabase
+            .from('profiles')
+            .update({ has_access: false })
+            .eq('id', profile.id);
+        }
         break;
       }
 
