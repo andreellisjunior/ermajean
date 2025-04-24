@@ -1,7 +1,7 @@
 import BackgroundWrapper from "@/components/ui/BackgroundWrapper";
 import { Comfortaa } from "next/font/google";
 import Head from "next/head";
-import "../globals.css";
+import "../../globals.css";
 import "react-toastify/dist/ReactToastify.css";
 import { ReactNode } from "react";
 import { CSPostHogProvider } from "@/app/providers";

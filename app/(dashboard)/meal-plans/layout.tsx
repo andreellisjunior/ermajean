@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { Viewport } from "next";
 import { Comfortaa } from "next/font/google";
 import Head from "next/head";
-import "../globals.css"; // Ensure global styles are imported
+import "../../globals.css"; // Ensure global styles are imported
 import { CSPostHogProvider } from "@/app/providers"; // Assuming you use this
 import BackgroundWrapper from "@/components/ui/BackgroundWrapper"; // Assuming path
 import ClientLayout from "@/components/LayoutClient"; // Assuming path for Toaster, Tooltip etc.
