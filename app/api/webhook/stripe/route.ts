@@ -122,27 +122,35 @@ export async function POST(req: NextRequest) {
       }
 
       case 'customer.subscription.deleted': {
-        // The customer subscription stopped
-        // ❌ Revoke access to the product
-        const stripeObject: Stripe.Subscription = event.data
-          .object as Stripe.Subscription;
-        const subscription = await stripe.subscriptions.retrieve(
-          stripeObject.id
-        );
+        try {
+          const stripeObject: Stripe.Subscription = event.data
+            .object as Stripe.Subscription;
 
-        // First get the profile using customer_id
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('customer_id', subscription.customer)
-          .single();
+          const subscription = await stripe.subscriptions.retrieve(
+            stripeObject.id
+          );
 
-        if (profile) {
-          // Then update using the profile id
-          await supabase
+          if (!subscription.customer) {
+            console.error('No customer ID found in subscription');
+            break;
+          }
+
+          // First get the profile using customer_id
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .update({ has_access: false })
-            .eq('id', profile.id);
+            .select('*')
+            .eq('customer_id', subscription.customer)
+            .single();
+
+          if (profile) {
+            // Then update using the profile id
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ has_access: false })
+              .eq('id', profile.id);
+          }
+        } catch (error) {
+          console.error('Error in subscription.deleted webhook:', error);
         }
         break;
       }
