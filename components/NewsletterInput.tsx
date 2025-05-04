@@ -26,7 +26,7 @@ const NewsletterInput = () => {
         await emailSubscription(e);
         setIsLoading(false);
       }}
-      className='seva-form formkit-form flex gap-x-4 mx-auto md:mx-0'
+      className='seva-form formkit-form mx-auto md:mx-0 w-full max-w-lg'
       data-sv-form='8003968'
       data-uid='41726f4897'
       data-format='inline'
@@ -43,9 +43,9 @@ const NewsletterInput = () => {
         <div
           data-element='fields'
           data-stacked='false'
-          className='seva-fields formkit-fields'
+          className='seva-fields formkit-fields w-full'
         >
-          <div className='flex flex-col items-center justify-center gap-4'>
+          <div className='flex flex-col items-center justify-center gap-4 w-full'>
             <div className='formkit-field w-full'>
               {message ? (
                 <p className='text-primary font-extrabold'>{message}</p>
