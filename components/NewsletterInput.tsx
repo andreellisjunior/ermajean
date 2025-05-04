@@ -46,37 +46,43 @@ const NewsletterInput = () => {
           className='seva-fields formkit-fields'
         >
           <div className='flex flex-col items-center justify-center gap-4'>
-            <div className='formkit-field flex flex-col gap-4 items-stretch justify-center md:flex-row md:items-center w-full'>
-              <input
-                className='formkit-input py-2.5 px-4 rounded-md border border-gray-300 shadow-sm sm:text-sm w-full'
-                name='email_address'
-                aria-label='Enter email for free recipes'
-                placeholder='Enter email for free recipes'
-                required
-                type='email'
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              {isLoading ? (
-                <Loader color='primary' />
+            <div className='formkit-field w-full'>
+              {message ? (
+                <p className='text-primary font-extrabold'>{message}</p>
               ) : (
-                <Button
-                  type='submit'
-                  aria-label='Subscribe'
-                  className='font-bold'
-                >
-                  Subscribe
-                </Button>
+                <div className='flex flex-col gap-4 items-stretch justify-center md:flex-row md:items-center'>
+                  <input
+                    className='formkit-input py-2.5 px-4 rounded-md border border-gray-300 shadow-sm sm:text-sm w-full'
+                    name='email_address'
+                    aria-label='Enter email for free recipes'
+                    placeholder='Enter email for free recipes'
+                    required
+                    type='email'
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+
+                  {isLoading ? (
+                    <Loader color='primary' />
+                  ) : (
+                    <Button
+                      type='submit'
+                      aria-label='Subscribe'
+                      className='font-bold'
+                    >
+                      Subscribe
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
-            <p className='text-sm text-gray-600'>
+            <p className='text-xs text-gray-600'>
               Rest assured, your email will{' '}
               <span className='italic text-primary font-bold underline'>
                 never
               </span>{' '}
               be sold or spammed!
             </p>
-            {message && <p>{message}</p>}
           </div>
         </div>
       </div>
