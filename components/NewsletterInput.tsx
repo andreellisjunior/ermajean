@@ -1,6 +1,7 @@
 'use client';
 import { FormEvent, useState } from 'react';
 import { Button } from './ui/button';
+import Loader from './ui/Loader';
 
 const NewsletterInput = () => {
   const [email, setEmail] = useState('');
@@ -57,7 +58,7 @@ const NewsletterInput = () => {
                 onChange={(e) => setEmail(e.target.value)}
               />
               {isLoading ? (
-                <p>loading...</p>
+                <Loader color='primary' />
               ) : (
                 <Button
                   type='submit'
