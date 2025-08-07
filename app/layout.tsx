@@ -3,9 +3,11 @@ import { Viewport } from "next";
 import { getSEOTags } from "@/libs/seo";
 import config from "@/config";
 import { Comfortaa } from "next/font/google";
-import "../globals.css";
+import "./globals.css";
+import "./mobile.css";
 import Head from "next/head";
 import { CSPostHogProvider } from "@/app/providers";
+import MobileLayout from "@/components/MobileLayout";
 
 const comfortaa = Comfortaa({
   subsets: ["latin"],
@@ -16,6 +18,8 @@ export const viewport: Viewport = {
   themeColor: "#F7F7ED",
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 // This adds default SEO tags to all pages in our app.
@@ -26,7 +30,7 @@ export const metadata = {
     "ErmaJean is a personal recipe management and creation tool. Create, save and share your recipes with family and friends!",
 };
 
-export default function HomeLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
@@ -54,12 +58,18 @@ export default function HomeLayout({ children }: { children: ReactNode }) {
           name="apple-mobile-web-app-status-bar-style"
           content="black-translucent"
         />
+        {/* Capacitor-specific meta tags */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
       </Head>
       <body className="text-foreground bg-[#F7F7ED]">
         <CSPostHogProvider>
-          <div className="mx-auto">{children}</div>
+          <MobileLayout>
+            <div className="mx-auto">{children}</div>
+          </MobileLayout>
         </CSPostHogProvider>
       </body>
     </html>
   );
-}
+} 

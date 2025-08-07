@@ -4,6 +4,19 @@ import type { Recipe } from "@/types/config";
 import { Metadata } from "next";
 import React from "react";
 
+// Generate static params for static export
+export async function generateStaticParams() {
+  const supabase = createClient();
+  const { data: recipes } = await supabase
+    .from("share_recipes")
+    .select("recipe_id")
+    .limit(10); // Limit to first 10 recipes for static generation
+
+  return recipes?.map((recipe) => ({
+    id: recipe.recipe_id,
+  })) || [];
+}
+
 export async function generateMetadata({
   params,
 }: {
