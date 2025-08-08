@@ -295,6 +295,19 @@ export const addAIRecipeAction = async (formData: FormData) => {
     ])
     .select();
 
+    const { error: usageError } = await supabase.from('recipe_usage').insert([
+      {
+        user_id: userId,
+        recipe_id: data[0].id,
+        source: 'free',
+      }
+    ])
+
+    if (usageError) {
+      console.error(usageError.message);
+      return encodedRedirect("error", "/recipes", "Could not add recipe usage");
+    }
+
   if (error) {
     console.error(error.message);
     return encodedRedirect("error", "/recipes", "Could not add recipe");

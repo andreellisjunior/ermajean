@@ -8,17 +8,20 @@ import { useEffect, useState } from "react";
 import { Message } from "./form-message";
 import ProfileSettings from "../ProfileSettings";
 import { UserCogIcon } from "lucide-react";
+import AIRecipesCount from "../AIRecipesCount";
 
 const RecipeList = ({
   profiles,
   recipes,
   searchParams,
+  count,
 }: {
   profiles:
     | { name: string; email: string; location?: string; has_access: boolean }[]
     | null;
   recipes: Recipe[];
   searchParams: Message;
+  count: number;
 }) => {
   const [searchInput, setSearchInput] = useState("");
   const [filteredRecipes, setFilteredRecipes] = useState(recipes);
@@ -66,6 +69,7 @@ const RecipeList = ({
       </div>
 
       {/* Content section */}
+      <AIRecipesCount {...{ count }} />
       <div className="min-h-44 overflow-y-auto px-4 max-w-xl mx-auto">
         {/* TODO: Filtering categories */}
         <div className="pb-12">

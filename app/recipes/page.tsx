@@ -38,5 +38,14 @@ export default async function ProtectedPage({
     error: any;
   };
 
-  return <RecipeList {...{ profiles, recipes, searchParams }} />;
+  // Format date properly for Supabase comparison
+  const THIRTY_DAYS_AGO = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
+  const { count, error: countError } = await supabase
+    .from('recipe_usage')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user?.id)
+    .gte('created_at', THIRTY_DAYS_AGO);
+
+  return <RecipeList {...{ profiles, recipes, searchParams, count }} />;
 }
