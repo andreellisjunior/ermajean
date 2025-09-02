@@ -1,6 +1,6 @@
-import { createCheckout } from "@/libs/stripe";
-import { createClient } from "@/libs/supabase/server";
-import { NextRequest, NextResponse } from "next/server";
+import { createCheckout } from '@/libs/stripe';
+import { createClient } from '@/libs/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 // This function is used to create a Stripe Checkout Session (one-time payment or subscription)
 // It's called by the <ButtonCheckout /> component
@@ -8,14 +8,14 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
-  if (!body.priceId) {
+  if (!body.priceId || body.priceId.trim() === '') {
     return NextResponse.json(
-      { error: "Price ID is required" },
+      { error: 'Price ID is required' },
       { status: 400 }
     );
   } else if (!body.successUrl || !body.cancelUrl) {
     return NextResponse.json(
-      { error: "Success and cancel URLs are required" },
+      { error: 'Success and cancel URLs are required' },
       { status: 400 }
     );
   } else if (!body.mode) {
@@ -35,25 +35,46 @@ export async function POST(req: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
+    // Require authentication before checkout
+    if (!user?.id) {
+      return NextResponse.json(
+        {
+          error:
+            'Authentication required. Please sign in or create an account first.',
+        },
+        { status: 401 }
+      );
+    }
+
     const { priceId, mode, successUrl, cancelUrl } = body;
 
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user?.id)
+    // Get user profile data
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
       .single();
+
+    if (!profileData) {
+      return NextResponse.json(
+        {
+          error: 'User profile not found. Please complete your account setup.',
+        },
+        { status: 400 }
+      );
+    }
 
     const stripeSessionURL = await createCheckout({
       priceId,
       mode,
       successUrl,
       cancelUrl,
-      // If user is logged in, it will pass the user ID to the Stripe Session so it can be retrieved in the webhook later
-      clientReferenceId: user?.id,
+      // Pass the authenticated user ID to Stripe
+      clientReferenceId: user.id,
       user: {
-        email: data?.email,
-        // If the user has already purchased, it will automatically prefill it's credit card
-        customerId: data?.customer_id,
+        email: profileData.email,
+        // If the user has already purchased, prefill their credit card
+        customerId: profileData.customer_id || null,
       },
       // If you send coupons from the frontend, you can pass it here
       // couponId: body.couponId,

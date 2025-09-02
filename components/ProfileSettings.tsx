@@ -1,27 +1,28 @@
-"use client";
+'use client';
 
-import { Dispatch, SetStateAction, useState } from "react";
+import {
+  deleteUserAction,
+  signOutAction,
+  updateProfileAction,
+} from '@/app/actions';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import config from '@/config';
+import apiClient from '@/libs/api';
 import {
   Dialog,
   DialogBackdrop,
   DialogPanel,
   DialogTitle,
   TransitionChild,
-} from "@headlessui/react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
-import {
-  updateProfileAction,
-  signOutAction,
-  deleteUserAction,
-} from "@/app/actions";
-import { Button } from "./ui/button";
-import { Label } from "./ui/label";
-import { Input } from "./ui/input";
-import apiClient from "@/libs/api";
-import { DeleteWarning } from "./DeleteWarning";
-import { SubmitButton } from "./ui/submit-button";
-import config from "@/config";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+} from '@headlessui/react';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import { Dispatch, SetStateAction, useState } from 'react';
+import { DeleteWarning } from './DeleteWarning';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import PaidFeatureModal from './ui/PaidFeatureModal';
+import { SubmitButton } from './ui/submit-button';
 
 export default function ProfileSettings({
   open,
@@ -36,6 +37,7 @@ export default function ProfileSettings({
 }) {
   const [dangerOpen, setDangerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [paidModal, setPaidModal] = useState(false);
 
   return (
     <>
@@ -152,29 +154,27 @@ export default function ProfileSettings({
                           className="text-xs"
                           onClick={async () => {
                             setLoading(true);
-                            const data = (await apiClient.get("/user")) as {
-                              access: boolean;
-                            };
-                            if (data.access) {
-                              const { url }: { url: string } =
-                                await apiClient.post("/stripe/create-portal", {
-                                  returnUrl: window.location.href,
-                                });
+                            try {
+                              const data = (await apiClient.get('/user')) as {
+                                access: boolean;
+                              };
+                              if (data.access) {
+                                const { url }: { url: string } =
+                                  await apiClient.post(
+                                    '/stripe/create-portal',
+                                    {
+                                      returnUrl: window.location.href,
+                                    }
+                                  );
 
-                              window.location.href = url;
-                            } else {
-                              const { url }: { url: string } =
-                                await apiClient.post(
-                                  "/stripe/create-checkout",
-                                  {
-                                    priceId: config.stripe.plans[0].priceId,
-                                    successUrl: window.location.href,
-                                    cancelUrl: window.location.href,
-                                    mode: "subscription",
-                                  },
-                                );
-
-                              window.location.href = url;
+                                window.location.href = url;
+                              } else {
+                                // For free users, show the paidModal instead
+                                setLoading(false);
+                                setPaidModal(true);
+                              }
+                            } catch (error) {
+                              setLoading(false);
                             }
                           }}
                         >
@@ -250,11 +250,17 @@ export default function ProfileSettings({
       <DeleteWarning
         open={dangerOpen}
         setOpen={setDangerOpen}
-        title={"Delete Account"}
+        title={'Delete Account'}
         desc={
-          "Are you sure you want to delete your account? All of your data (including all shared recipes) will be permanently removed. This action cannot be undone."
+          'Are you sure you want to delete your account? All of your data (including all shared recipes) will be permanently removed. This action cannot be undone.'
         }
         action={deleteUserAction}
+      />
+      <PaidFeatureModal
+        open={paidModal}
+        setOpen={setPaidModal}
+        title="Choose Your Plan"
+        description="Upgrade to unlock unlimited AI recipes, plus sharing and notes features. Choose the plan that works best for you."
       />
     </>
   );

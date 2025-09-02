@@ -58,10 +58,9 @@ export const createCheckout = async ({
       extraParams.tax_id_collection = { enabled: true };
     }
 
-    const stripeSession = await stripe.checkout.sessions.create({
+    const sessionParams: any = {
       mode,
       allow_promotion_codes: true,
-      client_reference_id: clientReferenceId,
       line_items: [
         {
           price: priceId,
@@ -77,16 +76,20 @@ export const createCheckout = async ({
         : [],
       success_url: successUrl,
       cancel_url: cancelUrl,
-      subscription_data: {
-        trial_period_days: 7,
-      },
       ...extraParams,
-    });
+    };
+
+    // Only include client_reference_id if we have a valid user ID
+    if (clientReferenceId) {
+      sessionParams.client_reference_id = clientReferenceId;
+    }
+
+    const stripeSession = await stripe.checkout.sessions.create(sessionParams);
 
     return stripeSession.url;
   } catch (e) {
-    console.error(e);
-    return null;
+    console.error('Stripe checkout creation error:', e);
+    throw new Error(`Failed to create checkout session: ${e.message}`);
   }
 };
 

@@ -1,37 +1,46 @@
-"use client";
-import { Recipe } from "@/types/config";
-import AddNewRecipe from "@/components/ui/AddNewRecipe";
-import { Input } from "@/components/ui/input";
-import RecipeCard from "@/components/ui/RecipeCard";
-import WelcomeModal from "@/components/ui/WelcomeModal";
-import { useEffect, useState } from "react";
-import { Message } from "./form-message";
-import ProfileSettings from "../ProfileSettings";
-import { UserCogIcon } from "lucide-react";
+'use client';
+import AddNewRecipe from '@/components/ui/AddNewRecipe';
+import { Input } from '@/components/ui/input';
+import RecipeCard from '@/components/ui/RecipeCard';
+import WelcomeModal from '@/components/ui/WelcomeModal';
+import { Recipe } from '@/types/config';
+import { UserCogIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import AIRecipesCount from '../AIRecipesCount';
+import ProfileSettings from '../ProfileSettings';
+import { Message } from './form-message';
 
 const RecipeList = ({
   profiles,
   recipes,
   searchParams,
+  count,
 }: {
   profiles:
-    | { name: string; email: string; location?: string; has_access: boolean }[]
+    | {
+        name: string;
+        email: string;
+        location?: string;
+        has_access: boolean;
+        price_id?: string;
+      }[]
     | null;
   recipes: Recipe[];
   searchParams: Message;
+  count: number;
 }) => {
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState('');
   const [filteredRecipes, setFilteredRecipes] = useState(recipes);
   const [profile, setProfile] = useState(false);
 
   useEffect(() => {
-    if (searchInput === "") {
+    if (searchInput === '') {
       setFilteredRecipes(recipes);
     } else {
       setFilteredRecipes(
         recipes.filter((recipe) =>
-          recipe.recipe_name.toLowerCase().includes(searchInput.toLowerCase()),
-        ),
+          recipe.recipe_name.toLowerCase().includes(searchInput.toLowerCase())
+        )
       );
     }
   }, [searchInput, recipes]);
@@ -45,9 +54,9 @@ const RecipeList = ({
           onClick={() => setProfile(true)}
         >
           <h1 className="text-3xl italic">
-            Hi,{" "}
+            Hi,{' '}
             <span className="text-white md:text-primary">
-              {profiles![0].name ?? "Friend"}
+              {profiles![0].name ?? 'Friend'}
             </span>
             !
           </h1>
@@ -66,6 +75,13 @@ const RecipeList = ({
       </div>
 
       {/* Content section */}
+      <AIRecipesCount
+        count={count}
+        userPlan={{
+          has_access: profiles![0].has_access,
+          price_id: profiles![0].price_id,
+        }}
+      />
       <div className="min-h-44 overflow-y-auto px-4 max-w-xl mx-auto">
         {/* TODO: Filtering categories */}
         <div className="pb-12">
@@ -101,7 +117,7 @@ const RecipeList = ({
         </div>
       </div>
       {!profiles![0].name && <WelcomeModal />}
-      <AddNewRecipe {...{ searchParams, profiles }} />
+      <AddNewRecipe {...{ searchParams, profiles, count }} />
       <ProfileSettings open={profile} setOpen={setProfile} profile={profiles} />
     </div>
   );
