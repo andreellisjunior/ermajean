@@ -8,8 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const sessionId = searchParams.get('session_id');
+    const sessionId = req.nextUrl.searchParams.get('session_id');
 
     if (!sessionId) {
       return NextResponse.json(
