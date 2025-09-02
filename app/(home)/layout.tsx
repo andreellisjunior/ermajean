@@ -58,9 +58,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </Head>
       <body className="text-foreground bg-[#F7F7ED]">
         <CSPostHogProvider>
-          <UpgradeModalProvider>
             <div className="mx-auto">{children}</div>
-          </UpgradeModalProvider>
         </CSPostHogProvider>
       </body>
     </html>
