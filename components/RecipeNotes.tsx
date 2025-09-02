@@ -1,13 +1,13 @@
-"use client";
-import React, { useEffect, useState } from "react";
-import Modal from "./ui/Modal";
-import { DialogTitle } from "@headlessui/react";
-import { FaceFrownIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Button } from "./ui/button";
-import LoadingSpinner from "./ui/LoadingSpinner";
-import Note from "./Note";
-import { set } from "zod";
-import PaidFeatureModal from "@/components/ui/PaidFeatureModal";
+'use client';
+
+import { DialogTitle } from '@headlessui/react';
+import { FaceFrownIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import React, { useEffect, useState } from 'react';
+import { set } from 'zod';
+import Note from './Note';
+import { Button } from './ui/button';
+import LoadingSpinner from './ui/LoadingSpinner';
+import Modal from './ui/Modal';
 
 const RecipeNotes = ({
   recipeName,
@@ -18,15 +18,14 @@ const RecipeNotes = ({
   recipeId: string;
   profiles: { has_access: boolean }[];
 }) => {
-  const [paid, setPaid] = useState(false);
   const [open, setOpen] = useState(false);
   const [openNote, setOpenNote] = useState(false);
   const [edit, setEdit] = useState(false);
   const [deleteWarn, setDeleteWarn] = useState(false);
   const [formFields, setFormFields] = useState({
     id: 0,
-    titleText: "",
-    noteText: "",
+    titleText: '',
+    noteText: '',
   });
   const [notes, setNotes] = useState<
     { id: number; title: string; note: string; updated_at: string }[]
@@ -47,9 +46,9 @@ const RecipeNotes = ({
     note: string;
   }) => {
     const res = await fetch(`/api/notes`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         ...newNote,
@@ -62,9 +61,9 @@ const RecipeNotes = ({
 
   const deleteNote = async (id: number) => {
     const res = await fetch(`/api/notes`, {
-      method: "DELETE",
+      method: 'DELETE',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         id,
@@ -79,12 +78,8 @@ const RecipeNotes = ({
     <>
       <button
         onClick={async () => {
-          if (profiles[0].has_access) {
-            setOpen(true);
-            await getNotes();
-          } else {
-            setPaid(true);
-          }
+          setOpen(true);
+          await getNotes();
         }}
         className="block rounded-lg py-2 px-3 transition hover:bg-primary/5 text-xs text-start w-full"
       >
@@ -127,9 +122,9 @@ const RecipeNotes = ({
                 >
                   <div key={note?.id} className="mb-2 flex flex-col gap-1">
                     <p className="text-xs opacity-40 italic font-bold">
-                      {new Date(note?.updated_at).toLocaleString("en", {
-                        dateStyle: "short",
-                        timeStyle: "short",
+                      {new Date(note?.updated_at).toLocaleString('en', {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
                       })}
                     </p>
                     <h2 className="text-lg font-semibold text-primary">
@@ -162,7 +157,7 @@ const RecipeNotes = ({
               Cancel
             </Button>
             <Button
-              variant={"default"}
+              variant={'default'}
               className="w-full"
               type="button"
               onClick={() => setOpenNote(true)}
@@ -188,7 +183,6 @@ const RecipeNotes = ({
           deleteNote,
         }}
       />
-      <PaidFeatureModal open={paid} setOpen={setPaid} />
     </>
   );
 };

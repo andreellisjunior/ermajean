@@ -1,29 +1,32 @@
-"use client";
-import React, { useState } from "react";
-import Modal from "./Modal";
-import { DialogTitle } from "@headlessui/react";
+'use client';
+import { DialogTitle } from '@headlessui/react';
+import React, { useState } from 'react';
+import Modal from './Modal';
 
-import { SparklesIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { addAIRecipeAction, addNewRecipeAction } from "@/app/actions";
-import ComboInput from "./ComboInput";
-import DropdownInput from "./DropdownInput";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Message } from "./form-message";
-import { SubmitButton } from "./submit-button";
-import { toast } from "react-toastify";
-import PaidFeatureModal from "./PaidFeatureModal";
-import { BookIcon } from "lucide-react";
+import { addAIRecipeAction, addNewRecipeAction } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { Textarea } from '@/components/ui/textarea';
+import { getPlanType, getRecipeLimit } from '@/libs/planUtils';
+import { SparklesIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { BookIcon } from 'lucide-react';
+import { toast } from 'react-toastify';
+import ComboInput from './ComboInput';
+import DropdownInput from './DropdownInput';
+import { Message } from './form-message';
+import PaidFeatureModal from './PaidFeatureModal';
+import { SubmitButton } from './submit-button';
 
 const AddNewRecipe = ({
   searchParams,
   profiles,
+  count,
 }: {
   searchParams: Message;
-  profiles: { location?: string; has_access: boolean }[];
+  profiles: { location?: string; has_access: boolean; price_id?: string }[];
+  count: number;
 }) => {
   const [open, setOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
@@ -63,7 +66,7 @@ const AddNewRecipe = ({
         </div>
         <div className="mt-4 text-left">
           <Label htmlFor="ingredients">
-            What ingredients do you have to work with?{" "}
+            What ingredients do you have to work with?{' '}
             <span className="text-xs italic text-gray-500">(optional)</span>
           </Label>
           <Input
@@ -92,7 +95,7 @@ const AddNewRecipe = ({
         </div>
         <div className="mt-4 text-left">
           <Label htmlFor="restrictions">
-            List dietary restrictions{" "}
+            List dietary restrictions{' '}
             <span className="text-xs italic text-gray-500">(optional)</span>:
           </Label>
           <Input
@@ -131,7 +134,7 @@ const AddNewRecipe = ({
                   <SparklesIcon className="h-6 w-6" />
                 </SubmitButton>
                 <Button
-                  variant={"ghost"}
+                  variant={'ghost'}
                   type="button"
                   onClick={() => setAiOpen(false)}
                 >
@@ -207,11 +210,11 @@ const AddNewRecipe = ({
           <DropdownInput
             name="level"
             items={[
-              { id: 1, name: "Beginner" },
-              { id: 2, name: "Easy" },
-              { id: 3, name: "Medium" },
-              { id: 4, name: "Hard" },
-              { id: 5, name: "Yes Chef!" },
+              { id: 1, name: 'Beginner' },
+              { id: 2, name: 'Easy' },
+              { id: 3, name: 'Medium' },
+              { id: 4, name: 'Hard' },
+              { id: 5, name: 'Yes Chef!' },
             ]}
           />
         </div>
@@ -220,10 +223,10 @@ const AddNewRecipe = ({
           <DropdownInput
             name="course"
             items={[
-              { id: 1, name: "Breakfast" },
-              { id: 2, name: "Lunch" },
-              { id: 3, name: "Dinner" },
-              { id: 4, name: "Snack" },
+              { id: 1, name: 'Breakfast' },
+              { id: 2, name: 'Lunch' },
+              { id: 3, name: 'Dinner' },
+              { id: 4, name: 'Snack' },
             ]}
           />
         </div>
@@ -252,13 +255,13 @@ const AddNewRecipe = ({
             <>
               <Button
                 className="w-full"
-                variant={"secondary"}
+                variant={'secondary'}
                 onClick={() => setDefaultOpen(false)}
                 type="button"
               >
                 Cancel
               </Button>
-              <Button variant={"default"} className="w-full" type="submit">
+              <Button variant={'default'} className="w-full" type="submit">
                 Save
               </Button>
             </>
@@ -302,7 +305,7 @@ const AddNewRecipe = ({
             setOpen(false);
             setLoading(false);
             setAiOpen(false);
-            toast.success("Recipe saved successfully");
+            toast.success('Recipe saved successfully');
           }}
           className="h-full"
         >
@@ -312,17 +315,72 @@ const AddNewRecipe = ({
                 <div
                   onClick={(e) => {
                     e.preventDefault();
-                    if (!profiles[0].has_access) {
+                    const planType = getPlanType(
+                      profiles[0].has_access,
+                      profiles[0].price_id
+                    );
+                    const recipeLimit = getRecipeLimit(planType);
+
+                    const isAtLimit =
+                      recipeLimit !== null && count >= recipeLimit;
+
+                    if (isAtLimit) {
                       setPaidModal(true);
                     } else {
                       setDefaultOpen(false);
                       setAiOpen(true);
                     }
                   }}
-                  className="w-full border border-gray-200 flex flex-col items-center justify-center p-12 rounded-lg gap-4 h-full hover:shadow-md hover:cursor-pointer transition"
+                  className={`w-full border border-gray-200 flex flex-col items-center justify-center p-12 rounded-lg gap-4 h-full transition ${(() => {
+                    const planType = getPlanType(
+                      profiles[0].has_access,
+                      profiles[0].price_id
+                    );
+                    const recipeLimit = getRecipeLimit(planType);
+                    return recipeLimit !== null && count >= recipeLimit
+                      ? 'opacity-50 cursor-not-allowed'
+                      : 'hover:shadow-md hover:cursor-pointer';
+                  })()}`}
                 >
                   <SparklesIcon className="w-12 h-auto text-primary" />
                   <h5 className="text-2xl">Generate a New One!</h5>
+                  {(() => {
+                    const planType = getPlanType(
+                      profiles[0].has_access,
+                      profiles[0].price_id
+                    );
+                    const recipeLimit = getRecipeLimit(planType);
+
+                    if (planType === 'unlimited') {
+                      return (
+                        <p className="text-sm text-green-600 text-center font-semibold">
+                          Unlimited AI recipes
+                        </p>
+                      );
+                    }
+
+                    if (planType === 'monthly' && recipeLimit) {
+                      return (
+                        <p className="text-sm text-gray-500 text-center">
+                          {count >= recipeLimit
+                            ? 'Monthly limit reached - Upgrade for unlimited'
+                            : `${recipeLimit - count} monthly recipes remaining`}
+                        </p>
+                      );
+                    }
+
+                    if (planType === 'free' && recipeLimit) {
+                      return (
+                        <p className="text-sm text-gray-500 text-center">
+                          {count >= recipeLimit
+                            ? 'Limit reached - Upgrade for unlimited'
+                            : `${recipeLimit - count} free recipes remaining`}
+                        </p>
+                      );
+                    }
+
+                    return null;
+                  })()}
                 </div>
                 <div
                   onClick={() => {
