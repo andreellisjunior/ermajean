@@ -2,6 +2,90 @@ import OpenAI from 'openai';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// Define the JSON schema for structured outputs
+const recipeSchema = {
+  type: 'object',
+  properties: {
+    recipe_name: {
+      type: 'string',
+      description: 'The name of the recipe',
+    },
+    description: {
+      type: 'string',
+      description: 'A 2-3 sentence description of the dish',
+    },
+    prep_time: {
+      type: 'string',
+      description: "Preparation time (e.g., '15 minutes')",
+    },
+    cook_time: {
+      type: 'string',
+      description: "Cooking time (e.g., '30 minutes')",
+    },
+    total_time: {
+      type: 'string',
+      description: "Total time including prep and cook (e.g., '45 minutes')",
+    },
+    servings: {
+      type: 'string',
+      description: "Number of servings (e.g., '4')",
+    },
+    difficulty_level: {
+      type: 'string',
+      enum: ['Easy', 'Medium', 'Hard'],
+      description: 'Difficulty level of the recipe',
+    },
+    course: {
+      type: 'string',
+      description: "Type of meal (e.g., 'dinner', 'breakfast', 'lunch')",
+    },
+    ingredients: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+      description: 'List of ingredients with precise measurements',
+    },
+    instructions: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+      description: 'Step-by-step cooking instructions',
+    },
+    estimated_cost_per_serving: {
+      type: 'string',
+      description: "Estimated cost per serving with currency (e.g., '$3.50')",
+    },
+    dining_out_cost_per_serving: {
+      type: 'string',
+      description:
+        "Estimated restaurant cost per serving with currency (e.g., '$12.00')",
+    },
+    estimated_savings_per_serving: {
+      type: 'string',
+      description:
+        "Estimated savings per serving with currency (e.g., '$8.50')",
+    },
+  },
+  required: [
+    'recipe_name',
+    'description',
+    'prep_time',
+    'cook_time',
+    'total_time',
+    'servings',
+    'difficulty_level',
+    'course',
+    'ingredients',
+    'instructions',
+    'estimated_cost_per_serving',
+    'dining_out_cost_per_serving',
+    'estimated_savings_per_serving',
+  ],
+  additionalProperties: false,
+} as const;
+
 export const aiPrompt = async (
   taste: string = `something savory`,
   ingredients?: string,
@@ -11,39 +95,44 @@ export const aiPrompt = async (
   restrictions?: string,
   location?: string
 ) => {
-  console.log(
-    `Generate a detailed and cost effective recipe tailored to my preferences. I am craving ${taste}, ${
-      ingredients
-        ? `I have the following available ingredients: ${ingredients}`
-        : `I do not have specific ingredients so I am open to suggestions`
-    }. I am serving ${serving} people. and my total time (prep + cooking) is limited to ${totalTime}. This meal is intended for ${course}. ${
-      restrictions
-        ? `Please note the dietary restrictions: ${restrictions}`
-        : 'I have no dietary restrictions'
-    }. My location is the ${location ?? `USA`}, so make sure you gather an estimate cost per serving and estimated savings. Give me the best, most accurate option to my preferences as possible. The output should include the following details in json format (make sure ingredients and instructions return an array of strings and each ingredient and instruction is a new line): recipe_name, description, prep_time, cook_time, total_time, servings, difficulty_level, course, ingredients, instructions, estimated_cost_per_serving, dining_out_cost_per_serving, estimated_savings_per_serving(subtract estimated_cost from dining_out_cost_per_serving). It's imperative the ingredients are accurate to the recipe. Only give me my output. I don't need any extra information or the code formatting.`
-  );
   const response = await openai.chat.completions.create({
     model: 'gpt-4.1-nano',
     messages: [
       {
         role: 'system',
-        content:
-          'You are an intelligent culinary assistant, capable of crafting personalized recipes, suggesting creative ingredient combinations, and providing expert cooking guidance tailored to any dietary preference or skill level.',
+        content: `You are a professional chef and culinary expert. You create detailed, practical recipes that are easy to follow and cost-effective. Be precise with measurements, cooking times, and instructions. Always provide realistic cost estimates based on the user's location.`,
       },
       {
         role: 'user',
-        content: `Generate a detailed and cost effective recipe tailored to my preferences. I am craving ${taste}, ${
-          ingredients
-            ? `I have the following available ingredients: ${ingredients}`
-            : `I do not have specific ingredients so I am open to suggestions`
-        }. I am serving ${serving} people. and I only have ${totalTime} to make this meal. This meal is intended for ${course}. ${
-          restrictions
-            ? `Please note the dietary restrictions: ${restrictions}`
-            : 'I have no dietary restrictions'
-        }. My location is ${location ?? `USA`}, so make sure you gather an accurate estimated cost per serving and accurate estimated savings per serving based on my location. Give me the best, most accurate option to my preferences as possible. The output should include the following details in JSON format (make sure ingredients and instructions return an array of strings and each ingredient and instruction is a new line): recipe_name, description, prep_time, cook_time, total_time, servings, difficulty_level, course, ingredients(do not include cost), instructions, estimated_cost_per_serving(include dollars and cents), dining_out_cost_per_serving(include dollars and cents), estimated_savings_per_serving(subtract estimated_cost from dining_out_cost_per_serving - include dollars and cents). It's imperative the ingredients are accurate to the recipe. Only give me my output. I don't need any extra information or the code formatting`,
+        content: `Create a detailed recipe based on these preferences:
+
+**What I'm craving:** ${taste}
+**Available ingredients:** ${ingredients || 'Open to suggestions'}
+**Serving size:** ${serving}
+**Time available:** ${totalTime}
+**Meal type:** ${course}
+**Dietary restrictions:** ${restrictions || 'None'}
+**Location:** ${location || 'USA'}
+
+Requirements:
+- Create a recipe that matches the taste preference and fits within the time constraint
+- Use available ingredients when provided, or suggest appropriate ones
+- Include precise measurements for all ingredients
+- Provide clear, step-by-step instructions
+- Calculate realistic cost estimates based on ${location || 'USA'} grocery prices
+- Ensure the recipe serves the requested number of people
+- Consider any dietary restrictions mentioned`,
       },
     ],
-    temperature: 1,
+    temperature: 0.7,
+    response_format: {
+      type: 'json_schema',
+      json_schema: {
+        name: 'recipe_response',
+        schema: recipeSchema,
+        strict: true,
+      },
+    },
   });
   return response;
 };

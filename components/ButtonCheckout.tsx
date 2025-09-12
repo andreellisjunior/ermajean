@@ -1,10 +1,11 @@
 'use client';
 
 import config from '@/config';
+import { useAuth } from '@/hooks/useAuth';
 import apiClient from '@/libs/api';
 import { createClient } from '@/libs/supabase/client';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 // This component is used to create Stripe Checkout Sessions
 // It calls the /api/stripe/create-checkout route with the priceId, successUrl and cancelUrl
@@ -18,28 +19,19 @@ const ButtonCheckout = ({
   mode?: 'payment' | 'subscription';
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const supabase = createClient();
 
   const isFeatured =
     config.stripe.plans.find((plan) => plan.priceId === priceId)?.isFeatured ||
     false;
 
-  // Check authentication status on component mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setIsAuthenticated(!!user);
-    };
-    checkAuth();
-  }, [supabase]);
+  const isAuthenticated = !!user;
+  const isLoadingAuth = authLoading;
 
   const handlePayment = async () => {
     // If not authenticated, redirect to sign-up
-    if (isAuthenticated === false) {
+    if (!isAuthenticated) {
       router.push(
         '/sign-up?message=Please create an account to continue with your purchase'
       );
@@ -47,7 +39,7 @@ const ButtonCheckout = ({
     }
 
     // If auth status is still loading, wait
-    if (isAuthenticated === null) {
+    if (isLoadingAuth) {
       return;
     }
     setIsLoading(true);
@@ -108,11 +100,11 @@ const ButtonCheckout = ({
       )}
       onClick={() => handlePayment()}
     >
-      {isLoading || isAuthenticated === null ? (
+      {isLoading || isLoadingAuth ? (
         <span className="loading loading-spinner loading-xs">
           loading life change...
         </span>
-      ) : isAuthenticated === false ? (
+      ) : !isAuthenticated ? (
         'Sign Up to Get Started'
       ) : (
         'Get Started'

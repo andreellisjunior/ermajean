@@ -3,7 +3,7 @@
 import { aiPrompt } from '@/libs/openai';
 import { getPlanType, getRecipeLimit } from '@/libs/planUtils';
 import { createClient } from '@/libs/supabase/server';
-import { encodedRedirect } from '@/libs/utils';
+import { encodedRedirect, formatStructuredRecipe } from '@/libs/utils';
 import { Recipe } from '@/types';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -320,8 +320,26 @@ export const addAIRecipeAction = async (formData: FormData) => {
     location
   );
 
-  const result = JSON.parse(aiData.choices[0].message.content!);
-  console.log(result);
+  let result;
+  try {
+    const content = aiData.choices[0].message.content;
+    if (!content) {
+      throw new Error('No content received from AI');
+    }
+
+    // With structured outputs, we're guaranteed valid JSON that matches our schema
+    const structuredResult = JSON.parse(content);
+    result = formatStructuredRecipe(structuredResult);
+  } catch (parseError) {
+    console.error('Failed to parse AI response:', parseError);
+    console.error('Raw AI response:', aiData.choices[0].message.content);
+    return encodedRedirect(
+      'error',
+      '/recipes',
+      'Failed to generate recipe. Please try again with different preferences.'
+    );
+  }
+
   const { data, error } = await supabase
     .from('recipes')
     .insert([
