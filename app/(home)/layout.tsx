@@ -1,6 +1,6 @@
 import { CSPostHogProvider } from '@/app/providers';
-import UpgradeModalProvider from '@/components/providers/UpgradeModalProvider';
 import config from '@/config';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { getSEOTags } from '@/libs/seo';
 import { Viewport } from 'next';
 import { Comfortaa } from 'next/font/google';
@@ -58,7 +58,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </Head>
       <body className="text-foreground bg-[#F7F7ED]">
         <CSPostHogProvider>
+          <AuthProvider>
             <div className="mx-auto">{children}</div>
+          </AuthProvider>
         </CSPostHogProvider>
       </body>
     </html>

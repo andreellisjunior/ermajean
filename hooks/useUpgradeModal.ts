@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const MODAL_STORAGE_KEY = 'upgrade_modal_last_shown';
 const MODAL_INTERVAL_DAYS = 7;
@@ -44,7 +44,7 @@ export function useUpgradeModal() {
     }
   }, []);
 
-  const shouldShowModal = () => {
+  const shouldShowModal = useCallback(() => {
     if (typeof window === 'undefined') return false;
 
     const lastShown = localStorage.getItem(MODAL_STORAGE_KEY);
@@ -61,7 +61,7 @@ export function useUpgradeModal() {
     );
 
     return daysSinceLastShown >= MODAL_INTERVAL_DAYS;
-  };
+  }, []);
 
   const markModalAsShown = () => {
     if (typeof window !== 'undefined') {
@@ -69,7 +69,7 @@ export function useUpgradeModal() {
     }
   };
 
-  const triggerModal = () => {
+  const triggerModal = useCallback(() => {
     console.log('triggerModal called');
     console.log('shouldShowModal():', shouldShowModal());
     if (shouldShowModal()) {
@@ -79,7 +79,7 @@ export function useUpgradeModal() {
     } else {
       console.log('Modal not shown - localStorage timer not ready');
     }
-  };
+  }, [shouldShowModal]);
 
   const forceShowModal = () => {
     setShowModal(true);

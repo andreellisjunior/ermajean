@@ -1,6 +1,7 @@
 import { CSPostHogProvider } from '@/app/providers';
 import UpgradeModalProvider from '@/components/providers/UpgradeModalProvider';
 import BackgroundWrapper from '@/components/ui/BackgroundWrapper';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { Comfortaa } from 'next/font/google';
 import Head from 'next/head';
 import { ReactNode } from 'react';
@@ -48,11 +49,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </Head>
       <body className="bg-background text-foreground bg-[#F7F7ED]">
         <CSPostHogProvider>
-          <UpgradeModalProvider>
-            <BackgroundWrapper>
-              <div className="p-0 md:p-4 md:max-w-xl mx-auto">{children}</div>
-            </BackgroundWrapper>
-          </UpgradeModalProvider>
+          <AuthProvider>
+            <UpgradeModalProvider>
+              <BackgroundWrapper>
+                <div className="p-0 md:p-4 md:max-w-xl mx-auto">{children}</div>
+              </BackgroundWrapper>
+            </UpgradeModalProvider>
+          </AuthProvider>
         </CSPostHogProvider>
       </body>
     </html>

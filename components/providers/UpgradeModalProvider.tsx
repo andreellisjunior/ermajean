@@ -2,7 +2,7 @@
 
 import { createClient } from '@/libs/supabase/client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import UpgradeModalContext from '../../contexts/UpgradeModalContext';
 import { useUpgradeModal } from '../../hooks/useUpgradeModal';
 import PaidFeatureModal from '../ui/PaidFeatureModal';
@@ -12,77 +12,97 @@ export default function UpgradeModalProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const {
-    showModal,
-    closeModal,
-    triggerModal,
-    forceShowModal,
-    shouldShowModal,
-  } = useUpgradeModal();
+  const { showModal, closeModal, triggerModal, forceShowModal } =
+    useUpgradeModal();
   const [user, setUser] = useState<any>(null);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   const supabase = createClient();
+  const profileCache = useRef<{
+    [userId: string]: { hasAccess: boolean; createdAt: string };
+  }>({});
+
+  const checkUserProfile = useCallback(
+    async (userId: string) => {
+      // Check cache first
+      if (profileCache.current[userId]) {
+        return profileCache.current[userId];
+      }
+
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('has_access, created_at')
+          .eq('id', userId)
+          .single();
+
+        const profileData = {
+          hasAccess: profile?.has_access || false,
+          createdAt: profile?.created_at || new Date().toISOString(),
+        };
+
+        // Cache the result
+        profileCache.current[userId] = profileData;
+        return profileData;
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        return { hasAccess: false, createdAt: new Date().toISOString() };
+      }
+    },
+    [supabase]
+  );
 
   // Check user authentication and access status
   useEffect(() => {
+    let isMounted = true;
+
     const checkUserStatus = async () => {
+      if (isInitialized) return; // Prevent multiple initializations
+
       try {
         const {
           data: { user },
         } = await supabase.auth.getUser();
 
+        if (!isMounted) return;
         setUser(user);
 
         if (user) {
-          // Check if user has premium access
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('has_access, created_at')
-            .eq('id', user.id)
-            .single();
+          const profileData = await checkUserProfile(user.id);
 
-          const userHasAccess = profile?.has_access || false;
-          setHasAccess(userHasAccess);
+          if (!isMounted) return;
+          setHasAccess(profileData.hasAccess);
 
           // If user doesn't have premium access, check if we should show modal
-          if (!userHasAccess) {
-            const createdAt = new Date(profile?.created_at || new Date());
+          if (!profileData.hasAccess) {
+            const createdAt = new Date(profileData.createdAt);
             const now = new Date();
             const minutesSinceCreation =
               (now.getTime() - createdAt.getTime()) / (1000 * 60);
 
-            console.log('User created:', createdAt);
-            console.log('Minutes since creation:', minutesSinceCreation);
-            console.log(
-              'Should show modal (localStorage check):',
-              shouldShowModal()
-            );
-
             // Check if localStorage was cleared (immediate trigger)
-            if (
-              shouldShowModal() &&
-              !localStorage.getItem('upgrade_modal_last_shown')
-            ) {
-              console.log('localStorage cleared - showing modal immediately');
+            const lastShown = localStorage.getItem('upgrade_modal_last_shown');
+            if (!lastShown) {
               triggerModal();
             }
             // If account was created in the last 5 minutes, it's a new signup
             else if (minutesSinceCreation < 5) {
-              console.log('New user - showing modal immediately');
               setTimeout(() => {
-                triggerModal();
+                if (isMounted) triggerModal();
               }, 2000);
             } else {
               // For existing free tier users, trigger modal based on 7-day timer
-              console.log('Existing user - checking 7-day timer');
               setTimeout(() => {
-                triggerModal();
+                if (isMounted) triggerModal();
               }, 1000);
             }
           }
         }
+
+        setIsInitialized(true);
       } catch (error) {
         console.error('Error checking user status:', error);
+        setIsInitialized(true);
       }
     };
 
@@ -92,22 +112,22 @@ export default function UpgradeModalProvider({
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isMounted) return;
+
       if (event === 'SIGNED_IN' && session?.user) {
         setUser(session.user);
 
-        // Check if this is a new signup (user just created)
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('has_access, created_at')
-          .eq('id', session.user.id)
-          .single();
+        // Clear cache for this user to get fresh data
+        delete profileCache.current[session.user.id];
 
-        const userHasAccess = profile?.has_access || false;
-        setHasAccess(userHasAccess);
+        const profileData = await checkUserProfile(session.user.id);
 
-        // If user doesn't have premium access, trigger modal
-        if (profile && !userHasAccess) {
-          const createdAt = new Date(profile.created_at);
+        if (!isMounted) return;
+        setHasAccess(profileData.hasAccess);
+
+        // Only trigger modal for new signups
+        if (!profileData.hasAccess) {
+          const createdAt = new Date(profileData.createdAt);
           const now = new Date();
           const minutesSinceCreation =
             (now.getTime() - createdAt.getTime()) / (1000 * 60);
@@ -115,36 +135,29 @@ export default function UpgradeModalProvider({
           // If account was created in the last 5 minutes, consider it a new signup
           if (minutesSinceCreation < 5) {
             setTimeout(() => {
-              triggerModal();
-            }, 2000); // Show modal 2 seconds after signup
+              if (isMounted) triggerModal();
+            }, 2000);
           }
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setHasAccess(null);
+        // Clear cache on sign out
+        profileCache.current = {};
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, [supabase, triggerModal]);
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [checkUserProfile, triggerModal, isInitialized]);
 
   // Show modal if localStorage was cleared (immediate) or if user doesn't have premium access
   const localStorageCleared =
     typeof window !== 'undefined' &&
     !localStorage.getItem('upgrade_modal_last_shown');
   const userNeedsUpgrade = user && hasAccess === false;
-
-  console.log('Modal state debug:', {
-    showModal,
-    localStorageCleared,
-    userNeedsUpgrade,
-    user: !!user,
-    hasAccess,
-    localStorageValue:
-      typeof window !== 'undefined'
-        ? localStorage.getItem('upgrade_modal_last_shown')
-        : 'server',
-  });
 
   const shouldShowModalToUser =
     showModal && (localStorageCleared || userNeedsUpgrade);
