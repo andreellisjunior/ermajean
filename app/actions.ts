@@ -1,10 +1,10 @@
 'use server';
 
-import { encodedRedirect } from '@/libs/utils';
-import { createClient } from '@/libs/supabase/server';
-import { headers } from 'next/headers';
 import { aiPrompt } from '@/libs/openai';
+import { createClient } from '@/libs/supabase/server';
+import { encodedRedirect } from '@/libs/utils';
 import { Recipe } from '@/types';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 const defaultUrl = process.env.VERCEL_URL
@@ -427,4 +427,131 @@ export const deleteUserAction = async () => {
   supabase.auth.signOut();
 
   return redirect('/');
+};
+
+// Meal Plan Actions
+export const addMealToPlanAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const recipeId = formData.get('recipeId')?.toString();
+  const date = formData.get('date')?.toString();
+  const mealType = formData.get('mealType')?.toString();
+
+  if (!recipeId || !date || !mealType) {
+    return encodedRedirect('error', '/meal-plans', 'Missing required fields');
+  }
+
+  // Check if meal already exists for this slot
+  const { data: existingMeal } = await supabase
+    .from('meal_plans')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('date', date)
+    .eq('meal_type', mealType)
+    .single();
+
+  if (existingMeal) {
+    // Update existing meal
+    const { error } = await supabase
+      .from('meal_plans')
+      .update({ recipe_id: recipeId })
+      .eq('user_id', userId)
+      .eq('date', date)
+      .eq('meal_type', mealType);
+
+    if (error) {
+      console.error(error.message);
+      return encodedRedirect(
+        'error',
+        '/meal-plans',
+        'Could not update meal plan'
+      );
+    }
+  } else {
+    // Insert new meal
+    const { error } = await supabase.from('meal_plans').insert([
+      {
+        user_id: userId,
+        recipe_id: recipeId,
+        date,
+        meal_type: mealType,
+      },
+    ]);
+
+    if (error) {
+      console.error(error.message);
+      return encodedRedirect(
+        'error',
+        '/meal-plans',
+        'Could not add meal to plan'
+      );
+    }
+  }
+
+  return encodedRedirect(
+    'success',
+    '/meal-plans',
+    'Meal added to plan successfully'
+  );
+};
+
+export const removeMealFromPlanAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const date = formData.get('date')?.toString();
+  const mealType = formData.get('mealType')?.toString();
+
+  if (!date || !mealType) {
+    return encodedRedirect('error', '/meal-plans', 'Missing required fields');
+  }
+
+  const { error } = await supabase
+    .from('meal_plans')
+    .delete()
+    .eq('user_id', userId)
+    .eq('date', date)
+    .eq('meal_type', mealType);
+
+  if (error) {
+    console.error(error.message);
+    return encodedRedirect(
+      'error',
+      '/meal-plans',
+      'Could not remove meal from plan'
+    );
+  }
+
+  return encodedRedirect(
+    'success',
+    '/meal-plans',
+    'Meal removed from plan successfully'
+  );
+};
+
+export const clearWeekMealPlanAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const weekStart = formData.get('weekStart')?.toString();
+  const weekEnd = formData.get('weekEnd')?.toString();
+
+  if (!weekStart || !weekEnd) {
+    return encodedRedirect('error', '/meal-plans', 'Missing week dates');
+  }
+
+  const { error } = await supabase
+    .from('meal_plans')
+    .delete()
+    .eq('user_id', userId)
+    .gte('date', weekStart)
+    .lte('date', weekEnd);
+
+  if (error) {
+    console.error(error.message);
+    return encodedRedirect('error', '/meal-plans', 'Could not clear week');
+  }
+
+  return encodedRedirect('success', '/meal-plans', 'Week cleared successfully');
 };
