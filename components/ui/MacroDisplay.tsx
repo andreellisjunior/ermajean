@@ -1,12 +1,13 @@
 'use client';
 import { useMacros } from '@/hooks/useMacros';
 import { Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button } from './button';
 
 interface MacroDisplayProps {
   recipeId: string;
   servings: string;
+  readOnly?: boolean;
   existingMacros?: {
     calories?: number;
     protein?: number;
@@ -21,6 +22,7 @@ interface MacroDisplayProps {
 const MacroDisplay = ({
   recipeId,
   servings,
+  readOnly = false,
   existingMacros,
 }: MacroDisplayProps) => {
   const { macros, loading, error, fetchMacros } = useMacros();
@@ -107,6 +109,11 @@ const MacroDisplay = ({
   }
 
   if (!showMacros) {
+    // Don't show generate button on read-only pages (like public share pages)
+    if (readOnly) {
+      return null;
+    }
+
     return (
       <div className="mt-4">
         <Button
@@ -163,22 +170,27 @@ const MacroDisplay = ({
       <div className="text-left flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Nutrition Information</h3>
-          <Button
-            onClick={handleRegenerateMacros}
-            variant="ghost"
-            size="sm"
-            className="text-xs text-muted-foreground hover:text-foreground"
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                Updating...
-              </>
-            ) : (
-              'Update'
+          <div className="flex items-center gap-2">
+            <p className="text-gray-500 text-xs">(All macros are estimated)</p>
+            {!readOnly && (
+              <Button
+                onClick={handleRegenerateMacros}
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground hover:text-foreground"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  'Update'
+                )}
+              </Button>
             )}
-          </Button>
+          </div>
         </div>
         <p className="text-sm text-gray-600">
           Per 1 serving{' '}
