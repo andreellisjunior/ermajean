@@ -334,7 +334,7 @@ export default function MealPlansPage() {
       </div>
 
       {/* Week Navigation */}
-      <div className="bg-card rounded-xl p-6 border shadow-sm space-y-4">
+      <div className="bg-card rounded-xl p-6 border shadow-sm space-y-4 flex flex-col">
         {/* Week Selector */}
         <div className="flex items-center justify-center">
           <div className="relative week-selector">
@@ -342,7 +342,7 @@ export default function MealPlansPage() {
               variant="outline"
               onClick={() => setWeekSelectorOpen(!weekSelectorOpen)}
               onKeyDown={handleKeyDown}
-              className="flex items-center gap-2 min-w-[280px] justify-between"
+              className="flex items-center gap-2 justify-between"
             >
               <Calendar className="h-4 w-4" />
               <span className="font-medium">{currentWeekString}</span>
@@ -374,7 +374,15 @@ export default function MealPlansPage() {
         </div>
 
         {/* Quick Navigation */}
-        <div className="flex items-center justify-between">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleToday}
+          className="text-muted-foreground hover:text-foreground text-center"
+        >
+          Go to This Week
+        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 items-center justify-between">
           <Button
             variant="outline"
             size="sm"
@@ -383,15 +391,6 @@ export default function MealPlansPage() {
           >
             <ChevronLeft className="h-4 w-4" />
             Previous Week
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleToday}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            Go to This Week
           </Button>
 
           <Button
@@ -519,7 +518,7 @@ export default function MealPlansPage() {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-center py-8">
+      <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8 pb-12">
         <Button
           className="flex items-center gap-2 bg-primary hover:bg-primary/90"
           onClick={() => setShoppingListModalOpen(true)}
