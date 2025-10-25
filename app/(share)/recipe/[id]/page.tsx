@@ -1,8 +1,9 @@
-import { createClient } from "@/libs/supabase/server";
-import TemplateImage from "@/app/assets/food-placeholder.png";
-import type { Recipe } from "@/types/config";
-import { Metadata } from "next";
-import React from "react";
+import TemplateImage from '@/app/assets/food-placeholder.png';
+import MacroDisplay from '@/components/ui/MacroDisplay';
+import { createClient } from '@/libs/supabase/server';
+import type { Recipe } from '@/types/config';
+import { Metadata } from 'next';
+import React from 'react';
 
 export async function generateMetadata({
   params,
@@ -12,9 +13,9 @@ export async function generateMetadata({
   const id = (await params).id;
   const supabase = createClient();
   const { data: recipes } = (await supabase
-    .from("share_recipes")
-    .select("*")
-    .eq("recipe_id", id)
+    .from('share_recipes')
+    .select('*')
+    .eq('recipe_id', id)
     .maybeSingle()) as { data: Recipe };
 
   return {
@@ -27,9 +28,9 @@ const ShareRecipe = async ({ params }: { params: { id: string } }) => {
   const supabase = createClient();
 
   const { data: recipes } = (await supabase
-    .from("share_recipes")
-    .select("*")
-    .eq("recipe_id", params.id)
+    .from('share_recipes')
+    .select('*')
+    .eq('recipe_id', params.id)
     .maybeSingle()) as { data: Recipe };
 
   return (
@@ -43,8 +44,8 @@ const ShareRecipe = async ({ params }: { params: { id: string } }) => {
           className="h-48 w-full"
           style={{
             backgroundImage: `url(${TemplateImage.src})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
           }}
         >
           {/* <Image src={TemplateImage} alt='recipes![0]' width={500} height={50} /> */}
@@ -60,7 +61,7 @@ const ShareRecipe = async ({ params }: { params: { id: string } }) => {
             Cook Time: <span className="font-bold">{recipes.cook_time}</span>
           </p>
           <p>
-            Level:{" "}
+            Level:{' '}
             <span className="font-bold capitalize">
               {recipes.difficulty_level}
             </span>
@@ -69,19 +70,19 @@ const ShareRecipe = async ({ params }: { params: { id: string } }) => {
             Total Time: <span className="font-bold">{recipes.total_time}</span>
           </p>
           <p>
-            Course:{" "}
+            Course:{' '}
             <span className="font-bold capitalize">{recipes.course}</span>
           </p>
           {recipes.est_cost && (
             <>
               <p>
-                Est. Cost/serv:{" "}
+                Est. Cost/serv:{' '}
                 <span className="font-bold text-green-600">
                   ${recipes.est_cost}
                 </span>
               </p>
               <p>
-                Est. Savings/serv:{" "}
+                Est. Savings/serv:{' '}
                 <span className="font-bold text-green-600">
                   +${recipes.est_savings}
                 </span>
@@ -93,7 +94,7 @@ const ShareRecipe = async ({ params }: { params: { id: string } }) => {
         <div className="text-left flex flex-col gap-4">
           <h3 className="text-lg font-semibold">Ingredients</h3>
           <ul className="list-disc flex flex-col gap-4">
-            {recipes.ingredients.split("\n").map((ingredients, index) => (
+            {recipes.ingredients.split('\n').map((ingredients, index) => (
               <li key={index} className="ml-4">
                 {ingredients}
               </li>
@@ -104,13 +105,26 @@ const ShareRecipe = async ({ params }: { params: { id: string } }) => {
         <div className="text-left flex flex-col gap-4">
           <h3 className="text-lg font-semibold">Instructions</h3>
           <ul className="list-disc flex flex-col gap-4">
-            {recipes.instructions.split("\n").map((instruction, index) => (
+            {recipes.instructions.split('\n').map((instruction, index) => (
               <li key={index} className="ml-4">
                 {instruction}
               </li>
             ))}
           </ul>
         </div>
+        <MacroDisplay
+          recipeId={params.id}
+          servings={recipes.servings}
+          existingMacros={{
+            calories: recipes.calories,
+            protein: recipes.protein,
+            carbs: recipes.carbs,
+            fat: recipes.fat,
+            fiber: recipes.fiber,
+            sugar: recipes.sugar,
+            sodium: recipes.sodium,
+          }}
+        />
       </div>
     </div>
   );

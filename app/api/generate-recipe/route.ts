@@ -1,6 +1,6 @@
-import { aiPrompt } from "@/libs/openai";
-import { Recipe } from "@/types";
-import { NextRequest, NextResponse } from "next/server";
+import { aiPrompt } from '@/libs/openai';
+import { Recipe } from '@/types';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   const { taste, ingredients, serving, total_time, course, restrictions } =
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     serving,
     total_time,
     course,
-    restrictions,
+    restrictions
   );
 
   const result = JSON.parse(aiData.choices[0].message.content!).map(
@@ -27,9 +27,9 @@ export async function POST(req: NextRequest) {
       servings: recipe.servings,
       difficulty_level: recipe.difficulty_level,
       course: recipe.course,
-      ingredients: recipe.ingredients.join("\n"),
-      instructions: recipe.instructions.join("\n"),
-    }),
+      ingredients: recipe.ingredients.join('\n'),
+      instructions: recipe.instructions.join('\n'),
+    })
   );
   return NextResponse.json(result);
 }

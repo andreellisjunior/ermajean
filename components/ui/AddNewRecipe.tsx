@@ -33,8 +33,68 @@ const AddNewRecipe = ({
   const [defaultOpen, setDefaultOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [paidModal, setPaidModal] = useState(false);
+  const [generatedContent, setGeneratedContent] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const aiForm = () => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const formData = new FormData(event.currentTarget);
+      setLoading(true);
+      setIsGenerating(true);
+      setGeneratedContent('');
+
+      try {
+        const response = await fetch('/api/generate-recipe', {
+          method: 'POST',
+          body: JSON.stringify({
+            taste: formData.get('taste'),
+            ingredients: formData.get('ingredients'),
+            serving: formData.get('serving'),
+            total_time: formData.get('totalTime'),
+            course: formData.get('course'),
+            restrictions: formData.get('restrictions'),
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error('No reader available');
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const text = new TextDecoder().decode(value);
+          const lines = text.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') {
+                setIsGenerating(false);
+                break;
+              }
+
+              try {
+                const content = JSON.parse(data);
+                setGeneratedContent((prev) => prev + content);
+              } catch (e) {
+                console.error('Error parsing chunk:', e);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        toast.error('Failed to generate recipe');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     return (
       <>
         <DialogTitle
@@ -121,7 +181,19 @@ const AddNewRecipe = ({
         <div className="mt-5 py-3 flex items-center gap-4 sticky bottom-0 right-0">
           <div className="flex flex-col w-full gap-4">
             {loading ? (
-              <LoadingSpinner />
+              <div className="flex flex-col items-center gap-4">
+                <LoadingSpinner />
+                {isGenerating && (
+                  <div className="text-sm text-gray-500">
+                    Generating recipe... {generatedContent && '✓'}
+                  </div>
+                )}
+                {generatedContent && (
+                  <pre className="whitespace-pre-wrap text-sm">
+                    {generatedContent}
+                  </pre>
+                )}
+              </div>
             ) : (
               <>
                 <SubmitButton
@@ -248,6 +320,120 @@ const AddNewRecipe = ({
             disabled={loading}
           />
         </div>
+
+        {/* Nutrition Information Toggle */}
+        <div className="mt-6 flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="nutrition-toggle-new"
+            className="rounded"
+            onChange={(e) => {
+              const nutritionSection = document.getElementById(
+                'nutrition-section-new'
+              );
+              if (nutritionSection) {
+                nutritionSection.style.display = e.target.checked
+                  ? 'block'
+                  : 'none';
+              }
+            }}
+          />
+          <Label htmlFor="nutrition-toggle-new" className="text-sm font-medium">
+            Add nutritional information (optional)
+          </Label>
+        </div>
+
+        {/* Nutritional Information Fields */}
+        <div
+          id="nutrition-section-new"
+          style={{ display: 'none' }}
+          className="space-y-4 mt-4"
+        >
+          <div className="border-t pt-4">
+            <h4 className="font-medium text-foreground mb-3">
+              Nutritional Information (per serving)
+            </h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="calories">Calories</Label>
+                <Input
+                  name="calories"
+                  type="number"
+                  placeholder="0"
+                  min="0"
+                  step="1"
+                  disabled={loading}
+                />
+              </div>
+              <div>
+                <Label htmlFor="protein">Protein (g)</Label>
+                <Input
+                  name="protein"
+                  type="number"
+                  placeholder="0"
+                  min="0"
+                  step="0.1"
+                  disabled={loading}
+                />
+              </div>
+              <div>
+                <Label htmlFor="carbs">Carbs (g)</Label>
+                <Input
+                  name="carbs"
+                  type="number"
+                  placeholder="0"
+                  min="0"
+                  step="0.1"
+                  disabled={loading}
+                />
+              </div>
+              <div>
+                <Label htmlFor="fat">Fat (g)</Label>
+                <Input
+                  name="fat"
+                  type="number"
+                  placeholder="0"
+                  min="0"
+                  step="0.1"
+                  disabled={loading}
+                />
+              </div>
+              <div>
+                <Label htmlFor="fiber">Fiber (g)</Label>
+                <Input
+                  name="fiber"
+                  type="number"
+                  placeholder="0"
+                  min="0"
+                  step="0.1"
+                  disabled={loading}
+                />
+              </div>
+              <div>
+                <Label htmlFor="sugar">Sugar (g)</Label>
+                <Input
+                  name="sugar"
+                  type="number"
+                  placeholder="0"
+                  min="0"
+                  step="0.1"
+                  disabled={loading}
+                />
+              </div>
+              <div className="col-span-2">
+                <Label htmlFor="sodium">Sodium (mg)</Label>
+                <Input
+                  name="sodium"
+                  type="number"
+                  placeholder="0"
+                  min="0"
+                  step="1"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
         <div className="mt-5 py-3 flex items-center justify-center gap-4 sticky bottom-0 right-0">
           {loading ? (
             <LoadingSpinner />
@@ -272,10 +458,10 @@ const AddNewRecipe = ({
   };
   return (
     <>
-      <div className="fixed bottom-5 right-5 shadow-lg shadow-gray-600 rounded-full">
+      <div className="fixed bottom-24 right-5 shadow-lg shadow-gray-600 rounded-full">
         <button
           onClick={() => setOpen(!open)}
-          className="bg-primary text-primary-foreground p-2 rounded-full"
+          className="bg-primary text-primary-foreground p-2 rounded-full border-[1px]"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

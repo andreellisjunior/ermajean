@@ -48,7 +48,7 @@ const RecipeList = ({
   return (
     <div className="flex-1 w-full flex flex-col h-screen">
       {/* Header and Search */}
-      <div className="min-h-60 flex flex-col w-full items-center gap-4 justify-center bg-primary md:bg-transparent rounded-b-[40%] md:rounded-none mb-6 px-12 text-center text-white md:text-black">
+      <div className="flex flex-col w-full items-center gap-4 justify-center bg-primary md:bg-transparent rounded-b-[40%] md:rounded-none mb-6 px-12 text-center text-white md:text-black">
         <div
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => setProfile(true)}

@@ -6,6 +6,7 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import { InformationCircleIcon } from '@heroicons/react/24/solid';
 import React, { Dispatch, SetStateAction, useState } from 'react';
 import TemplateImage from '../../app/assets/food-placeholder.png';
+import MacroDisplay from './MacroDisplay';
 import Modal from './Modal';
 import RecipeSettings from './RecipeSettings';
 import { Message } from './form-message';
@@ -80,7 +81,9 @@ const RecipeModal = ({
                   <p>
                     Est. Cost/serv:{' '}
                     <span className="font-bold text-green-600">
-                      ${recipe.est_cost}
+                      {recipe.est_cost.includes('$')
+                        ? recipe.est_cost
+                        : `$${recipe.est_cost}`}
                     </span>
                     <InformationCircleIcon
                       onClick={() => setTip(true)}
@@ -90,7 +93,9 @@ const RecipeModal = ({
                   <p>
                     Est. Savings/serv:{' '}
                     <span className="font-bold text-green-600">
-                      +${recipe.est_savings}
+                      {recipe.est_savings.includes('$')
+                        ? recipe.est_savings
+                        : `$${recipe.est_savings}`}
                     </span>
                     <InformationCircleIcon
                       onClick={() => setTip(true)}
@@ -122,6 +127,19 @@ const RecipeModal = ({
                 ))}
               </ul>
             </div>
+            <MacroDisplay
+              recipeId={recipe.id}
+              servings={recipe.servings}
+              existingMacros={{
+                calories: recipe.calories,
+                protein: recipe.protein,
+                carbs: recipe.carbs,
+                fat: recipe.fat,
+                fiber: recipe.fiber,
+                sugar: recipe.sugar,
+                sodium: recipe.sodium,
+              }}
+            />
             <div className="mt-5 py-3 flex items-center gap-4">
               <RecipeSettings
                 recipeId={recipe.id}

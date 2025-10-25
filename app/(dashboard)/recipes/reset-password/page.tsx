@@ -1,12 +1,12 @@
-import { resetPasswordAction } from "@/app/actions";
-import { FormMessage, Message } from "@/components/ui/form-message";
-import { SubmitButton } from "@/components/ui/submit-button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Image from "next/image";
-import Logo from "../../assets/Logo.svg";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { resetPasswordAction } from '@/app/actions';
+import Logo from '@/app/assets/Logo.svg';
+import { Button } from '@/components/ui/button';
+import { FormMessage, Message } from '@/components/ui/form-message';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { SubmitButton } from '@/components/ui/submit-button';
+import Image from 'next/image';
+import Link from 'next/link';
 
 export default async function ResetPassword({
   searchParams,
@@ -23,7 +23,7 @@ export default async function ResetPassword({
       </div>
       {/* Sign up/Sign in Section */}
       <div className="w-full flex flex-col">
-        {"success" in searchParams ? (
+        {'success' in searchParams ? (
           <div className="text-foreground border-l-2 border-foreground px-4">
             <Link href="/sign-in">
               <Button className="w-full">Sign In</Button>

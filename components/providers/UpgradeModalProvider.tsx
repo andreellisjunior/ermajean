@@ -134,18 +134,6 @@ export default function UpgradeModalProvider({
     !localStorage.getItem('upgrade_modal_last_shown');
   const userNeedsUpgrade = user && hasAccess === false;
 
-  console.log('Modal state debug:', {
-    showModal,
-    localStorageCleared,
-    userNeedsUpgrade,
-    user: !!user,
-    hasAccess,
-    localStorageValue:
-      typeof window !== 'undefined'
-        ? localStorage.getItem('upgrade_modal_last_shown')
-        : 'server',
-  });
-
   const shouldShowModalToUser =
     showModal && (localStorageCleared || userNeedsUpgrade);
 

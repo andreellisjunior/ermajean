@@ -1,20 +1,20 @@
-import { createClient } from "@/libs/supabase/server";
-import { NextRequest, NextResponse } from "next/server";
+import { createClient } from '@/libs/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
   const supabase = createClient();
   const { searchParams } = new URL(req.url);
-  const id = searchParams.get("id");
+  const id = searchParams.get('id');
 
   const { data } = await supabase
-    .from("recipes")
+    .from('recipes')
     .select(
-      "id,recipe_name,description,prep_time,cook_time,total_time,servings,difficulty_level,course,ingredients,instructions",
+      'id,recipe_name,description,prep_time,cook_time,total_time,servings,difficulty_level,course,ingredients,instructions,calories,protein,carbs,fat,fiber,sugar,sodium'
     )
-    .eq("id", id)
+    .eq('id', id)
     .single();
 
   return NextResponse.json(data);
 }
 
-export const runtime = "edge";
+export const runtime = 'edge';

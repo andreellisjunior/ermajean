@@ -179,6 +179,19 @@ export const addNewRecipeAction = async (formData: FormData) => {
   const ingredients = formData.get('ingredients')?.toString();
   const instructions = formData.get('instructions')?.toString();
 
+  // Nutritional information
+  const calories = formData.get('calories')
+    ? Number(formData.get('calories'))
+    : null;
+  const protein = formData.get('protein')
+    ? Number(formData.get('protein'))
+    : null;
+  const carbs = formData.get('carbs') ? Number(formData.get('carbs')) : null;
+  const fat = formData.get('fat') ? Number(formData.get('fat')) : null;
+  const fiber = formData.get('fiber') ? Number(formData.get('fiber')) : null;
+  const sugar = formData.get('sugar') ? Number(formData.get('sugar')) : null;
+  const sodium = formData.get('sodium') ? Number(formData.get('sodium')) : null;
+
   if (id) {
     const { data, error } = await supabase
       .from('recipes')
@@ -193,6 +206,13 @@ export const addNewRecipeAction = async (formData: FormData) => {
         course,
         ingredients,
         instructions,
+        calories,
+        protein,
+        carbs,
+        fat,
+        fiber,
+        sugar,
+        sodium,
       })
       .eq('id', id)
       .eq('user_id', userId);
@@ -210,6 +230,13 @@ export const addNewRecipeAction = async (formData: FormData) => {
         course,
         ingredients,
         instructions,
+        calories,
+        protein,
+        carbs,
+        fat,
+        fiber,
+        sugar,
+        sodium,
       })
       .eq('recipe_id', id);
 
@@ -238,6 +265,13 @@ export const addNewRecipeAction = async (formData: FormData) => {
           course,
           ingredients,
           instructions,
+          calories,
+          protein,
+          carbs,
+          fat,
+          fiber,
+          sugar,
+          sodium,
           user_id: userId,
         },
       ])
@@ -247,7 +281,7 @@ export const addNewRecipeAction = async (formData: FormData) => {
       console.error(error.message);
       return encodedRedirect('error', '/recipes', 'Could not add recipe');
     }
-    return encodedRedirect('success', '/recipes', 'Recipe added successfully');
+    return redirect('/recipes');
   }
 };
 
@@ -369,7 +403,7 @@ export const addAIRecipeAction = async (formData: FormData) => {
     return encodedRedirect('error', '/recipes', 'Could not add recipe');
   }
 
-  return encodedRedirect('success', '/recipes', 'Recipe added successfully');
+  return redirect('/recipes');
 };
 
 // copy the recipe to the share_recipes table
@@ -487,6 +521,81 @@ export const updateProfileAction = async (formData: FormData) => {
   return encodedRedirect('success', '/recipes', 'Profile updated successfully');
 };
 
+export const updateMacroGoalsAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const calorie_goal = formData.get('calorieGoal')
+    ? Number(formData.get('calorieGoal'))
+    : 2000;
+  const protein_goal = formData.get('proteinGoal')
+    ? Number(formData.get('proteinGoal'))
+    : 150;
+  const carb_goal = formData.get('carbGoal')
+    ? Number(formData.get('carbGoal'))
+    : 250;
+  const fat_goal = formData.get('fatGoal')
+    ? Number(formData.get('fatGoal'))
+    : 65;
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      calorie_goal,
+      protein_goal,
+      carb_goal,
+      fat_goal,
+    })
+    .eq('id', userId);
+
+  if (error) {
+    console.error(error.message);
+    return encodedRedirect('error', '/recipes', 'Could not update macro goals');
+  }
+
+  return encodedRedirect(
+    'success',
+    '/recipes',
+    'Macro goals updated successfully'
+  );
+};
+
+// Non-redirecting version for modal usage
+export const updateMacroGoalsModalAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const calorie_goal = formData.get('calorieGoal')
+    ? Number(formData.get('calorieGoal'))
+    : 2000;
+  const protein_goal = formData.get('proteinGoal')
+    ? Number(formData.get('proteinGoal'))
+    : 150;
+  const carb_goal = formData.get('carbGoal')
+    ? Number(formData.get('carbGoal'))
+    : 250;
+  const fat_goal = formData.get('fatGoal')
+    ? Number(formData.get('fatGoal'))
+    : 65;
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      calorie_goal,
+      protein_goal,
+      carb_goal,
+      fat_goal,
+    })
+    .eq('id', userId);
+
+  if (error) {
+    console.error(error.message);
+    return { success: false, message: 'Could not update macro goals' };
+  }
+
+  return { success: true, message: 'Macro goals updated successfully' };
+};
+
 // delete a user
 export const deleteUserAction = async () => {
   const supabase = createClient();
@@ -497,3 +606,641 @@ export const deleteUserAction = async () => {
 
   return redirect('/');
 };
+
+// Meal Plan Actions
+export const addMealToPlanAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const recipeId = formData.get('recipeId')?.toString();
+  const date = formData.get('date')?.toString();
+  const mealType = formData.get('mealType')?.toString();
+
+  if (!recipeId || !date || !mealType) {
+    return encodedRedirect('error', '/meal-plans', 'Missing required fields');
+  }
+
+  // Check if meal already exists for this slot
+  const { data: existingMeal } = await supabase
+    .from('meal_plans')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('date', date)
+    .eq('meal_type', mealType)
+    .single();
+
+  if (existingMeal) {
+    // Update existing meal
+    const { error } = await supabase
+      .from('meal_plans')
+      .update({ recipe_id: recipeId })
+      .eq('user_id', userId)
+      .eq('date', date)
+      .eq('meal_type', mealType);
+
+    if (error) {
+      console.error(error.message);
+      return encodedRedirect(
+        'error',
+        '/meal-plans',
+        'Could not update meal plan'
+      );
+    }
+  } else {
+    // Insert new meal
+    const { error } = await supabase.from('meal_plans').insert([
+      {
+        user_id: userId,
+        recipe_id: recipeId,
+        date,
+        meal_type: mealType,
+      },
+    ]);
+
+    if (error) {
+      console.error(error.message);
+      return encodedRedirect(
+        'error',
+        '/meal-plans',
+        'Could not add meal to plan'
+      );
+    }
+  }
+
+  return encodedRedirect(
+    'success',
+    '/meal-plans',
+    'Meal added to plan successfully'
+  );
+};
+
+export const removeMealFromPlanAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const date = formData.get('date')?.toString();
+  const mealType = formData.get('mealType')?.toString();
+
+  if (!date || !mealType) {
+    return encodedRedirect('error', '/meal-plans', 'Missing required fields');
+  }
+
+  const { error } = await supabase
+    .from('meal_plans')
+    .delete()
+    .eq('user_id', userId)
+    .eq('date', date)
+    .eq('meal_type', mealType);
+
+  if (error) {
+    console.error(error.message);
+    return encodedRedirect(
+      'error',
+      '/meal-plans',
+      'Could not remove meal from plan'
+    );
+  }
+
+  return encodedRedirect(
+    'success',
+    '/meal-plans',
+    'Meal removed from plan successfully'
+  );
+};
+
+export const clearWeekMealPlanAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const weekStart = formData.get('weekStart')?.toString();
+  const weekEnd = formData.get('weekEnd')?.toString();
+
+  if (!weekStart || !weekEnd) {
+    return encodedRedirect('error', '/meal-plans', 'Missing week dates');
+  }
+
+  const { error } = await supabase
+    .from('meal_plans')
+    .delete()
+    .eq('user_id', userId)
+    .gte('date', weekStart)
+    .lte('date', weekEnd);
+
+  if (error) {
+    console.error(error.message);
+    return encodedRedirect('error', '/meal-plans', 'Could not clear week');
+  }
+
+  return encodedRedirect('success', '/meal-plans', 'Week cleared successfully');
+};
+
+// Non-redirecting versions for modal usage
+export const addNewRecipeModalAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const id = formData.get('id') as string;
+
+  const recipe_name = formData.get('recipeName')?.toString();
+  const description = formData.get('desc')?.toString();
+  const prep_time = formData.get('prepTime')?.toString();
+  const cook_time = formData.get('cookTime')?.toString();
+  const total_time = formData.get('estTotalTime')?.toString();
+  const servings = formData.get('servings')?.toString();
+  const difficulty_level =
+    formData.get('level[name]')?.toString() ||
+    formData.get('level')?.toString();
+  const course =
+    formData.get('course[name]')?.toString() ||
+    formData.get('course')?.toString();
+  const ingredients = formData.get('ingredients')?.toString();
+  const instructions = formData.get('instructions')?.toString();
+
+  // Nutritional information
+  const calories = formData.get('calories')
+    ? Number(formData.get('calories'))
+    : null;
+  const protein = formData.get('protein')
+    ? Number(formData.get('protein'))
+    : null;
+  const carbs = formData.get('carbs') ? Number(formData.get('carbs')) : null;
+  const fat = formData.get('fat') ? Number(formData.get('fat')) : null;
+  const fiber = formData.get('fiber') ? Number(formData.get('fiber')) : null;
+  const sugar = formData.get('sugar') ? Number(formData.get('sugar')) : null;
+  const sodium = formData.get('sodium') ? Number(formData.get('sodium')) : null;
+
+  if (id) {
+    const { data, error } = await supabase
+      .from('recipes')
+      .update({
+        recipe_name,
+        description,
+        prep_time,
+        cook_time,
+        total_time,
+        servings,
+        difficulty_level,
+        course,
+        ingredients,
+        instructions,
+        calories,
+        protein,
+        carbs,
+        fat,
+        fiber,
+        sugar,
+        sodium,
+      })
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    const { data: shared, error: err } = await supabase
+      .from('share_recipes')
+      .update({
+        recipe_name,
+        description,
+        prep_time,
+        cook_time,
+        total_time,
+        servings,
+        difficulty_level,
+        course,
+        ingredients,
+        instructions,
+        calories,
+        protein,
+        carbs,
+        fat,
+        fiber,
+        sugar,
+        sodium,
+      })
+      .eq('recipe_id', id);
+
+    if (error || err) {
+      console.error(error?.message || err?.message);
+      return { success: false, message: 'Could not edit recipe' };
+    }
+
+    return { success: true, message: 'Recipe updated successfully' };
+  } else {
+    const { data, error } = await supabase
+      .from('recipes')
+      .insert([
+        {
+          recipe_name,
+          description,
+          prep_time,
+          cook_time,
+          total_time,
+          servings,
+          difficulty_level,
+          course,
+          ingredients,
+          instructions,
+          calories,
+          protein,
+          carbs,
+          fat,
+          fiber,
+          sugar,
+          sodium,
+          user_id: userId,
+        },
+      ])
+      .select();
+
+    if (error) {
+      console.error(error.message);
+      return { success: false, message: 'Could not add recipe' };
+    }
+    return { success: true, message: 'Recipe created successfully', data };
+  }
+};
+
+export const addAIRecipeModalAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  // Get user's plan information
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('has_access, price_id')
+    .eq('id', userId)
+    .single();
+
+  const planType = getPlanType(profile?.has_access || false, profile?.price_id);
+  const recipeLimit = getRecipeLimit(planType);
+
+  // Check limits based on user's plan
+  if (planType === 'free' && recipeLimit) {
+    const { count: freeCount } = await supabase
+      .from('recipe_usage')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('source', 'free');
+
+    if (freeCount >= recipeLimit) {
+      return {
+        success: false,
+        message:
+          "You've reached your limit of 3 free AI recipes. Upgrade to Premium for unlimited AI recipes!",
+      };
+    }
+  } else if (planType === 'monthly' && recipeLimit) {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const { count: monthlyCount } = await supabase
+      .from('recipe_usage')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('source', 'monthly')
+      .gte('created_at', startOfMonth.toISOString());
+
+    if (monthlyCount >= recipeLimit) {
+      return {
+        success: false,
+        message:
+          "You've reached your monthly limit of 8 AI recipes. Your limit will reset next month, or upgrade to unlimited for no limits!",
+      };
+    }
+  }
+  // Unlimited plans have no limits, so no check needed
+
+  const taste = formData.get('taste')?.toString();
+  const ingredients = formData.get('ingredients')?.toString();
+  const serving = formData.get('serving')?.toString();
+  const total_time = formData.get('totalTime')?.toString();
+  const course = formData.get('course')?.toString();
+  const restrictions = formData.get('restrictions')?.toString();
+  const location = formData.get('location')?.toString();
+
+  try {
+    const aiData = await aiPrompt(
+      taste,
+      ingredients,
+      serving,
+      total_time,
+      course,
+      restrictions,
+      location
+    );
+
+    const result = JSON.parse(aiData.choices[0].message.content!);
+    console.log(result);
+
+    const { data, error } = await supabase
+      .from('recipes')
+      .insert([
+        {
+          recipe_name: result.recipe_name,
+          description: result.description,
+          prep_time: result.prep_time,
+          cook_time: result.cook_time,
+          total_time: result.total_time,
+          servings: result.servings,
+          difficulty_level: result.difficulty_level,
+          course: result.course,
+          ingredients: result.ingredients.join('\n'),
+          instructions: result.instructions.join('\n'),
+          est_cost: result.estimated_cost_per_serving,
+          est_savings: result.estimated_savings_per_serving,
+          user_id: userId,
+        },
+      ])
+      .select();
+
+    // Determine source based on user's plan
+    let source = 'free';
+    if (planType === 'monthly') {
+      source = 'monthly';
+    } else if (planType === 'unlimited') {
+      source = 'unlimited';
+    }
+
+    const { error: usageError } = await supabase.from('recipe_usage').insert([
+      {
+        user_id: userId,
+        recipe_id: data[0].id,
+        source: source,
+      },
+    ]);
+
+    if (usageError) {
+      console.error(usageError.message);
+      return { success: false, message: 'Could not add recipe usage' };
+    }
+
+    if (error) {
+      console.error(error.message);
+      return { success: false, message: 'Could not add recipe' };
+    }
+
+    return { success: true, message: 'AI recipe generated successfully', data };
+  } catch (error) {
+    console.error('AI recipe generation failed:', error);
+    return { success: false, message: 'Failed to generate AI recipe' };
+  }
+};
+
+// Generate shopping list from meal plan
+export const generateShoppingListAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const weekStart = formData.get('weekStart')?.toString();
+  const weekEnd = formData.get('weekEnd')?.toString();
+
+  if (!weekStart || !weekEnd) {
+    return { success: false, message: 'Missing week dates' };
+  }
+
+  try {
+    // Get all meals for the week
+    const { data: mealPlans, error: mealError } = await supabase
+      .from('meal_plans')
+      .select(
+        `
+        date,
+        meal_type,
+        recipes (
+          id,
+          recipe_name,
+          ingredients,
+          servings
+        )
+      `
+      )
+      .eq('user_id', userId)
+      .gte('date', weekStart)
+      .lte('date', weekEnd);
+
+    if (mealError) {
+      console.error(mealError.message);
+      return { success: false, message: 'Could not fetch meal plans' };
+    }
+
+    if (!mealPlans || mealPlans.length === 0) {
+      return { success: false, message: 'No meals planned for this week' };
+    }
+
+    // Process ingredients and create shopping list
+    const ingredientMap = new Map<
+      string,
+      { quantity: string; unit: string; recipes: string[] }
+    >();
+
+    mealPlans.forEach((meal: any) => {
+      if (meal.recipes && meal.recipes.ingredients) {
+        const ingredients = meal.recipes.ingredients.split('\n');
+        const recipeName = meal.recipes.recipe_name;
+
+        ingredients.forEach((ingredient: string) => {
+          const trimmedIngredient = ingredient.trim();
+          if (trimmedIngredient) {
+            // Parse ingredient (basic parsing - could be enhanced)
+            const parsed = parseIngredient(trimmedIngredient);
+            const key = parsed.name.toLowerCase();
+
+            if (ingredientMap.has(key)) {
+              const existing = ingredientMap.get(key)!;
+              existing.recipes.push(recipeName);
+              // For now, just combine quantities as strings
+              // In a more sophisticated version, you'd parse and add quantities
+              if (
+                parsed.quantity &&
+                !existing.quantity.includes(parsed.quantity)
+              ) {
+                existing.quantity += ` + ${parsed.quantity}`;
+              }
+            } else {
+              ingredientMap.set(key, {
+                quantity: parsed.quantity || '',
+                unit: parsed.unit || '',
+                recipes: [recipeName],
+              });
+            }
+          }
+        });
+      }
+    });
+
+    // Convert map to array and organize by category
+    const shoppingList = Array.from(ingredientMap.entries()).map(
+      ([name, details]) => ({
+        name: name.charAt(0).toUpperCase() + name.slice(1),
+        quantity: details.quantity,
+        unit: details.unit,
+        recipes: Array.from(new Set(details.recipes)), // Remove duplicates
+        category: categorizeIngredient(name),
+      })
+    );
+
+    // Sort by category
+    shoppingList.sort((a, b) => {
+      if (a.category !== b.category) {
+        return a.category.localeCompare(b.category);
+      }
+      return a.name.localeCompare(b.name);
+    });
+
+    return {
+      success: true,
+      message: 'Shopping list generated successfully',
+      data: {
+        shoppingList,
+        weekStart,
+        weekEnd,
+        totalRecipes: Array.from(
+          new Set(
+            mealPlans.map((m: any) => m.recipes?.recipe_name).filter(Boolean)
+          )
+        ).length,
+      },
+    };
+  } catch (error) {
+    console.error('Shopping list generation failed:', error);
+    return { success: false, message: 'Failed to generate shopping list' };
+  }
+};
+
+// Helper function to parse ingredient strings
+function parseIngredient(ingredient: string): {
+  name: string;
+  quantity: string;
+  unit: string;
+} {
+  // Basic regex to extract quantity, unit, and ingredient name
+  const match = ingredient.match(/^(\d+(?:\/\d+)?(?:\.\d+)?)\s*(\w+)?\s+(.+)$/);
+
+  if (match) {
+    return {
+      quantity: match[1],
+      unit: match[2] || '',
+      name: match[3],
+    };
+  }
+
+  // If no quantity found, treat entire string as ingredient name
+  return {
+    quantity: '',
+    unit: '',
+    name: ingredient,
+  };
+}
+
+// Helper function to categorize ingredients
+function categorizeIngredient(ingredient: string): string {
+  const categories = {
+    Produce: [
+      'onion',
+      'garlic',
+      'tomato',
+      'potato',
+      'carrot',
+      'celery',
+      'bell pepper',
+      'lettuce',
+      'spinach',
+      'broccoli',
+      'cucumber',
+      'mushroom',
+      'lemon',
+      'lime',
+      'apple',
+      'banana',
+      'orange',
+      'avocado',
+      'herbs',
+      'parsley',
+      'cilantro',
+      'basil',
+      'thyme',
+      'rosemary',
+    ],
+    'Meat & Seafood': [
+      'chicken',
+      'beef',
+      'pork',
+      'turkey',
+      'fish',
+      'salmon',
+      'tuna',
+      'shrimp',
+      'crab',
+      'lobster',
+      'bacon',
+      'ham',
+      'sausage',
+      'ground beef',
+      'ground turkey',
+    ],
+    'Dairy & Eggs': [
+      'milk',
+      'cheese',
+      'butter',
+      'yogurt',
+      'cream',
+      'sour cream',
+      'eggs',
+      'egg',
+      'mozzarella',
+      'cheddar',
+      'parmesan',
+    ],
+    Pantry: [
+      'flour',
+      'sugar',
+      'salt',
+      'pepper',
+      'oil',
+      'olive oil',
+      'vinegar',
+      'rice',
+      'pasta',
+      'bread',
+      'oats',
+      'quinoa',
+      'beans',
+      'lentils',
+      'chickpeas',
+      'canned tomatoes',
+      'tomato sauce',
+      'broth',
+      'stock',
+      'soy sauce',
+      'honey',
+      'vanilla',
+      'baking powder',
+      'baking soda',
+    ],
+    'Spices & Seasonings': [
+      'cumin',
+      'paprika',
+      'oregano',
+      'bay leaves',
+      'cinnamon',
+      'nutmeg',
+      'ginger',
+      'turmeric',
+      'chili powder',
+      'red pepper flakes',
+      'black pepper',
+      'garlic powder',
+      'onion powder',
+    ],
+    Frozen: ['frozen vegetables', 'frozen fruit', 'ice cream', 'frozen pizza'],
+    Other: [] as string[],
+  };
+
+  const lowerIngredient = ingredient.toLowerCase();
+
+  for (const [category, items] of Object.entries(categories)) {
+    if (items.some((item) => lowerIngredient.includes(item))) {
+      return category;
+    }
+  }
+
+  return 'Other';
+}

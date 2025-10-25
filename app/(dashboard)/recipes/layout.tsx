@@ -5,7 +5,7 @@ import { Comfortaa } from 'next/font/google';
 import Head from 'next/head';
 import { ReactNode } from 'react';
 import 'react-toastify/dist/ReactToastify.css';
-import '../globals.css';
+import '../../globals.css';
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`

@@ -1,3 +1,4 @@
+import BottomNavigation from '@/components/BottomNavigation';
 import { Message } from '@/components/ui/form-message';
 import RecipeList from '@/components/ui/RecipeList';
 import { getPlanType } from '@/libs/planUtils';
@@ -29,20 +30,28 @@ export default async function ProtectedPage({
 
   const { data: recipes, error } = (await supabase
     .from('recipes')
-    .select('*')
+    .select(
+      'id,recipe_name,description,prep_time,cook_time,total_time,servings,difficulty_level,course,ingredients,instructions,est_cost,est_savings,calories,protein,carbs,fat,fiber,sugar,sodium'
+    )
     .order('created_at', { ascending: false })) as {
     data: Recipe[];
     error: any;
   };
   const { data: profiles, error: profileError } = (await supabase
     .from('profiles')
-    .select('name, email, location, has_access, price_id')) as {
+    .select(
+      'name, email, location, has_access, price_id, calorie_goal, protein_goal, carb_goal, fat_goal'
+    )) as {
     data: {
       name: string;
       email: string;
       location?: string;
       has_access: boolean;
       price_id?: string;
+      calorie_goal?: number;
+      protein_goal?: number;
+      carb_goal?: number;
+      fat_goal?: number;
     }[];
     error: any;
   };
@@ -81,5 +90,10 @@ export default async function ProtectedPage({
     count = 0;
   }
 
-  return <RecipeList {...{ profiles, recipes, searchParams, count }} />;
+  return (
+    <>
+      <RecipeList {...{ profiles, recipes, searchParams, count }} />
+      <BottomNavigation profile={profiles} />
+    </>
+  );
 }

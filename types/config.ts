@@ -1,26 +1,26 @@
 export type Theme =
-  | "light"
-  | "dark"
-  | "cupcake"
-  | "bumblebee"
-  | "emerald"
-  | "corporate"
-  | "synthwave"
-  | "retro"
-  | "cyberpunk"
-  | "valentine"
-  | "halloween"
-  | "garden"
-  | "forest"
-  | "aqua"
-  | "lofi"
-  | "pastel"
-  | "fantasy"
-  | "wireframe"
-  | "black"
-  | "luxury"
-  | "dracula"
-  | "";
+  | 'light'
+  | 'dark'
+  | 'cupcake'
+  | 'bumblebee'
+  | 'emerald'
+  | 'corporate'
+  | 'synthwave'
+  | 'retro'
+  | 'cyberpunk'
+  | 'valentine'
+  | 'halloween'
+  | 'garden'
+  | 'forest'
+  | 'aqua'
+  | 'lofi'
+  | 'pastel'
+  | 'fantasy'
+  | 'wireframe'
+  | 'black'
+  | 'luxury'
+  | 'dracula'
+  | '';
 
 export interface ConfigProps {
   appName: string;
@@ -80,4 +80,42 @@ export type Recipe = {
   instructions: string;
   est_cost?: string;
   est_savings?: string;
+  // Nutritional information per serving
+  calories?: number;
+  protein?: number; // in grams
+  carbs?: number; // in grams
+  fat?: number; // in grams
+  fiber?: number; // in grams
+  sugar?: number; // in grams
+  sodium?: number; // in mg
 };
+
+export interface DayMacros {
+  date: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
+}
+
+export interface MacroGoals {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+export interface Profile {
+  name: string;
+  email: string;
+  location?: string;
+  has_access: boolean;
+  price_id?: string;
+  calorie_goal?: number;
+  protein_goal?: number;
+  carb_goal?: number;
+  fat_goal?: number;
+}
