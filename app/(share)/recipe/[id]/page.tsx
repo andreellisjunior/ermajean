@@ -112,7 +112,7 @@ const ShareRecipe = async ({ params }: { params: { id: string } }) => {
             ))}
           </ul>
         </div>
-        <MacroDisplay
+        {/* <MacroDisplay
           recipeId={params.id}
           servings={recipes.servings}
           existingMacros={{
@@ -124,7 +124,7 @@ const ShareRecipe = async ({ params }: { params: { id: string } }) => {
             sugar: recipes.sugar,
             sodium: recipes.sodium,
           }}
-        />
+        /> */}
       </div>
     </div>
   );
