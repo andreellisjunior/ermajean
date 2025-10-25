@@ -11,14 +11,22 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+if (!webhookSecret) {
+  console.error('STRIPE_WEBHOOK_SECRET is not set');
+}
+
 // This is where we receive Stripe webhook events
 // It used to update the user data, send emails, etc...
 // By default, it'll store the user in the database
 // See more: https://shipfa.st/docs/features/payments
 export async function POST(req: NextRequest) {
+  console.log('Webhook received!');
+
   const body = await req.text();
+  console.log('Body length:', body.length);
 
   const signature = headers().get('stripe-signature');
+  console.log('Signature present:', !!signature);
 
   let eventType;
   let event;
@@ -40,6 +48,8 @@ export async function POST(req: NextRequest) {
   eventType = event.type;
 
   try {
+    console.log(`Processing webhook event: ${eventType}`);
+
     switch (eventType) {
       case 'checkout.session.completed': {
         // First payment is successful and a subscription is created (if mode was set to "subscription" in ButtonCheckout)
@@ -54,11 +64,23 @@ export async function POST(req: NextRequest) {
         const userId = stripeObject.client_reference_id;
         const plan = configFile.stripe.plans.find((p) => p.priceId === priceId);
 
+        console.log(
+          `Processing checkout for customer: ${customerId}, priceId: ${priceId}, userId: ${userId}`
+        );
+
+        if (!customerId) {
+          console.error('No customer ID found in checkout session');
+          break;
+        }
+
         const customer = (await stripe.customers.retrieve(
           customerId as string
         )) as Stripe.Customer;
 
-        if (!plan) break;
+        if (!plan) {
+          console.error(`No plan found for priceId: ${priceId}`);
+          break;
+        }
 
         let user;
         if (!userId) {
@@ -76,7 +98,16 @@ export async function POST(req: NextRequest) {
               email: customer.email,
             });
 
-            user = data?.user;
+            if (data?.user) {
+              // Create or get the profile for the new user
+              const { data: newProfile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', data.user.id)
+                .single();
+
+              user = newProfile;
+            }
           }
         } else {
           // find user by ID
@@ -89,14 +120,16 @@ export async function POST(req: NextRequest) {
           user = profile;
         }
 
-        await supabase
-          .from('profiles')
-          .update({
-            customer_id: customerId,
-            price_id: priceId,
-            has_access: true,
-          })
-          .eq('id', user?.id);
+        if (user?.id) {
+          await supabase
+            .from('profiles')
+            .update({
+              customer_id: customerId,
+              price_id: priceId,
+              has_access: true,
+            })
+            .eq('id', user.id);
+        }
 
         // Extra: send email with user link, product page, etc...
         // try {
@@ -122,27 +155,35 @@ export async function POST(req: NextRequest) {
       }
 
       case 'customer.subscription.deleted': {
-        // The customer subscription stopped
-        // ❌ Revoke access to the product
-        const stripeObject: Stripe.Subscription = event.data
-          .object as Stripe.Subscription;
-        const subscription = await stripe.subscriptions.retrieve(
-          stripeObject.id
-        );
+        try {
+          const stripeObject: Stripe.Subscription = event.data
+            .object as Stripe.Subscription;
 
-        // First get the profile using customer_id
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('customer_id', subscription.customer)
-          .single();
+          const subscription = await stripe.subscriptions.retrieve(
+            stripeObject.id
+          );
 
-        if (profile) {
-          // Then update using the profile id
-          await supabase
+          if (!subscription.customer) {
+            console.error('No customer ID found in subscription');
+            break;
+          }
+
+          // First get the profile using customer_id
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .update({ has_access: false })
-            .eq('id', profile.id);
+            .select('*')
+            .eq('customer_id', subscription.customer)
+            .single();
+
+          if (profile) {
+            // Then update using the profile id
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ has_access: false })
+              .eq('id', profile.id);
+          }
+        } catch (error) {
+          console.error('Error in subscription.deleted webhook:', error);
         }
         break;
       }
@@ -161,6 +202,11 @@ export async function POST(req: NextRequest) {
           .select('*')
           .eq('customer_id', customerId)
           .single();
+
+        if (!profile) {
+          console.error('No profile found for customer:', customerId);
+          break;
+        }
 
         // Make sure the invoice is for the same plan (priceId) the user subscribed to
         if (profile.price_id !== priceId) break;
@@ -187,7 +233,11 @@ export async function POST(req: NextRequest) {
       // Unhandled event type
     }
   } catch (e) {
-    console.error('stripe error: ', e.message);
+    console.error('Stripe webhook error:', e);
+    return NextResponse.json(
+      { error: 'Webhook processing failed' },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({});

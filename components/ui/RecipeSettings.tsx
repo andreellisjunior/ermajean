@@ -1,13 +1,12 @@
-import { deleteRecipeAction, shareRecipeAction } from "@/app/actions";
-import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
-import { Cog6ToothIcon } from "@heroicons/react/24/outline";
-import { Dispatch, SetStateAction } from "react";
-import { Message } from "./form-message";
-import { toast } from "react-toastify";
-import { DeleteWarning } from "../DeleteWarning";
-import RecipeNotes from "../RecipeNotes";
-import EditRecipe from "@/components/EditRecipe";
-import PaidFeatureModal from "@/components/ui/PaidFeatureModal";
+import { deleteRecipeAction, shareRecipeAction } from '@/app/actions';
+import EditRecipe from '@/components/EditRecipe';
+import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
+import { Cog6ToothIcon } from '@heroicons/react/24/outline';
+import { Dispatch, SetStateAction } from 'react';
+import { toast } from 'react-toastify';
+import { DeleteWarning } from '../DeleteWarning';
+import RecipeNotes from '../RecipeNotes';
+import { Message } from './form-message';
 
 export default function RecipeSettings({
   recipeId,
@@ -17,8 +16,6 @@ export default function RecipeSettings({
   searchParams,
   recipeName,
   profiles,
-  paid,
-  setPaid,
 }: {
   recipeId: string;
   setOpen: Dispatch<SetStateAction<boolean>>;
@@ -27,8 +24,6 @@ export default function RecipeSettings({
   searchParams: Message;
   recipeName: string;
   profiles: { has_access: boolean }[];
-  paid: boolean;
-  setPaid: Dispatch<SetStateAction<boolean>>;
 }) {
   const shareOptions = {
     title: recipeName,
@@ -51,15 +46,11 @@ export default function RecipeSettings({
               <RecipeNotes {...{ recipeName, recipeId, profiles }} />
               <button
                 onClick={async () => {
-                  if (profiles[0].has_access) {
-                    try {
-                      await navigator.share(shareOptions);
-                      await shareRecipeAction(recipeId);
-                    } catch (error) {
-                      console.error(error);
-                    }
-                  } else {
-                    setPaid(true);
+                  try {
+                    await shareRecipeAction(recipeId);
+                    await navigator.share(shareOptions);
+                  } catch (error) {
+                    console.error(error);
                   }
                 }}
                 className="block rounded-lg py-2 px-3 transition hover:bg-primary/5 text-xs text-start w-full"
@@ -94,7 +85,6 @@ export default function RecipeSettings({
           await deleteRecipeAction(recipeId);
         }}
       />
-      <PaidFeatureModal open={paid} setOpen={setPaid} />
     </div>
   );
 }

@@ -1,23 +1,24 @@
-import BackgroundWrapper from "@/components/ui/BackgroundWrapper";
-import { Comfortaa } from "next/font/google";
-import Head from "next/head";
-import "../../globals.css";
-import "react-toastify/dist/ReactToastify.css";
-import { ReactNode } from "react";
-import { CSPostHogProvider } from "@/app/providers";
+import { CSPostHogProvider } from '@/app/providers';
+import UpgradeModalProvider from '@/components/providers/UpgradeModalProvider';
+import BackgroundWrapper from '@/components/ui/BackgroundWrapper';
+import { Comfortaa } from 'next/font/google';
+import Head from 'next/head';
+import { ReactNode } from 'react';
+import 'react-toastify/dist/ReactToastify.css';
+import '../../globals.css';
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+  : 'http://localhost:3000';
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Recipes | ErmaJean",
-  description: "A collection of recipes from ErmaJean",
+  title: 'Recipes | ErmaJean',
+  description: 'A collection of recipes from ErmaJean',
 };
 
 const comfortaa = Comfortaa({
-  subsets: ["latin"],
+  subsets: ['latin'],
 });
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -47,9 +48,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </Head>
       <body className="bg-background text-foreground bg-[#F7F7ED]">
         <CSPostHogProvider>
-          <BackgroundWrapper>
-            <div className="p-0 md:p-4 md:max-w-xl mx-auto">{children}</div>
-          </BackgroundWrapper>
+          <UpgradeModalProvider>
+            <BackgroundWrapper>
+              <div className="p-0 md:p-4 md:max-w-xl mx-auto">{children}</div>
+            </BackgroundWrapper>
+          </UpgradeModalProvider>
         </CSPostHogProvider>
       </body>
     </html>

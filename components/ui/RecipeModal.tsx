@@ -1,14 +1,15 @@
-"use client";
-import React, { Dispatch, SetStateAction, useState } from "react";
-import Modal from "./Modal";
-import { DialogTitle } from "@headlessui/react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
-import TemplateImage from "../../app/assets/food-placeholder.png";
-import { Recipe } from "@/types/config";
-import { Button } from "@/components/ui/button";
-import RecipeSettings from "./RecipeSettings";
-import { Message } from "./form-message";
-import { InformationCircleIcon } from "@heroicons/react/24/solid";
+'use client';
+import { Button } from '@/components/ui/button';
+import { Recipe } from '@/types/config';
+import { DialogTitle } from '@headlessui/react';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import { InformationCircleIcon } from '@heroicons/react/24/solid';
+import React, { Dispatch, SetStateAction, useState } from 'react';
+import TemplateImage from '../../app/assets/food-placeholder.png';
+import MacroDisplay from './MacroDisplay';
+import Modal from './Modal';
+import RecipeSettings from './RecipeSettings';
+import { Message } from './form-message';
 
 const RecipeModal = ({
   recipe,
@@ -24,7 +25,6 @@ const RecipeModal = ({
   profiles: { name: string; email: string; has_access: boolean }[];
 }) => {
   const [deleteModal, setDeleteModal] = useState(false);
-  const [paid, setPaid] = useState(false);
   const [tip, setTip] = useState(false);
   return (
     <>
@@ -46,8 +46,8 @@ const RecipeModal = ({
               className="h-48 w-full"
               style={{
                 backgroundImage: `url(${TemplateImage.src})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
               }}
             >
               {/* <Image src={TemplateImage} alt='recipe' width={500} height={50} /> */}
@@ -63,25 +63,27 @@ const RecipeModal = ({
                 Cook Time: <span className="font-bold">{recipe.cook_time}</span>
               </p>
               <p>
-                Level:{" "}
+                Level:{' '}
                 <span className="font-bold capitalize">
                   {recipe.difficulty_level}
                 </span>
               </p>
               <p>
-                Total Time:{" "}
+                Total Time:{' '}
                 <span className="font-bold">{recipe.total_time}</span>
               </p>
               <p>
-                Course:{" "}
+                Course:{' '}
                 <span className="font-bold capitalize">{recipe.course}</span>
               </p>
               {recipe.est_cost && (
                 <>
                   <p>
-                    Est. Cost/serv:{" "}
+                    Est. Cost/serv:{' '}
                     <span className="font-bold text-green-600">
-                      ${recipe.est_cost}
+                      {recipe.est_cost.includes('$')
+                        ? recipe.est_cost
+                        : `$${recipe.est_cost}`}
                     </span>
                     <InformationCircleIcon
                       onClick={() => setTip(true)}
@@ -89,9 +91,11 @@ const RecipeModal = ({
                     />
                   </p>
                   <p>
-                    Est. Savings/serv:{" "}
+                    Est. Savings/serv:{' '}
                     <span className="font-bold text-green-600">
-                      +${recipe.est_savings}
+                      {recipe.est_savings.includes('$')
+                        ? recipe.est_savings
+                        : `$${recipe.est_savings}`}
                     </span>
                     <InformationCircleIcon
                       onClick={() => setTip(true)}
@@ -105,7 +109,7 @@ const RecipeModal = ({
             <div className="text-left flex flex-col gap-4">
               <h3 className="text-lg font-semibold">Ingredients</h3>
               <ul className="list-disc flex flex-col gap-4">
-                {recipe.ingredients.split("\n").map((ingredients, index) => (
+                {recipe.ingredients.split('\n').map((ingredients, index) => (
                   <li key={index} className="ml-4">
                     {ingredients}
                   </li>
@@ -116,13 +120,26 @@ const RecipeModal = ({
             <div className="text-left flex flex-col gap-4">
               <h3 className="text-lg font-semibold">Instructions</h3>
               <ul className="list-disc flex flex-col gap-4">
-                {recipe.instructions.split("\n").map((instruction, index) => (
+                {recipe.instructions.split('\n').map((instruction, index) => (
                   <li key={index} className="ml-4">
                     {instruction}
                   </li>
                 ))}
               </ul>
             </div>
+            <MacroDisplay
+              recipeId={recipe.id}
+              servings={recipe.servings}
+              existingMacros={{
+                calories: recipe.calories,
+                protein: recipe.protein,
+                carbs: recipe.carbs,
+                fat: recipe.fat,
+                fiber: recipe.fiber,
+                sugar: recipe.sugar,
+                sodium: recipe.sodium,
+              }}
+            />
             <div className="mt-5 py-3 flex items-center gap-4">
               <RecipeSettings
                 recipeId={recipe.id}
@@ -132,11 +149,9 @@ const RecipeModal = ({
                 searchParams={searchParams}
                 recipeName={recipe.recipe_name}
                 profiles={profiles}
-                paid={paid}
-                setPaid={setPaid}
               />
               <Button
-                variant={"outline"}
+                variant={'outline'}
                 className="w-full gap-2"
                 onClick={() => setOpen(false)}
                 type="button"

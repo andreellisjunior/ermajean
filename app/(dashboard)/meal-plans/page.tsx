@@ -4,7 +4,10 @@ import {
   clearWeekMealPlanAction,
   removeMealFromPlanAction,
 } from '@/app/actions';
+import BottomNavigation from '@/components/BottomNavigation';
+import ProfileSettings from '@/components/ProfileSettings';
 import AddMealModal from '@/components/ui/AddMealModal';
+import MacroCounter from '@/components/ui/MacroCounter';
 import RecipeModal from '@/components/ui/RecipeModal';
 import { Button } from '@/components/ui/button';
 import { Message } from '@/components/ui/form-message';
@@ -25,6 +28,7 @@ import {
   ChevronRight,
   Clock,
   Plus,
+  Settings,
   ShoppingCart,
   Utensils,
 } from 'lucide-react';
@@ -73,6 +77,27 @@ export default function MealPlansPage() {
   const [loading, setLoading] = useState(true);
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [profiles, setProfiles] = useState<
+    | {
+        name: string;
+        email: string;
+        location?: string;
+        has_access: boolean;
+        price_id?: string;
+        calorie_goal?: number;
+        protein_goal?: number;
+        carb_goal?: number;
+        fat_goal?: number;
+      }[]
+    | null
+  >(null);
+  const [macroGoals, setMacroGoals] = useState<{
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  } | null>(null);
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
@@ -157,9 +182,11 @@ export default function MealPlansPage() {
     if (user) {
       const { data } = await supabase
         .from('recipes')
-        .select('*')
+        .select(
+          'id,recipe_name,description,prep_time,cook_time,total_time,servings,difficulty_level,course,ingredients,instructions,est_cost,est_savings,calories,protein,carbs,fat,fiber,sugar,sodium'
+        )
         .eq('user_id', user.id)
-        .order('recipe_name');
+        .order('created_at', { ascending: false });
 
       if (data) {
         setRecipes(data);
@@ -167,10 +194,37 @@ export default function MealPlansPage() {
     }
   };
 
+  const fetchProfiles = async () => {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      const { data } = await supabase
+        .from('profiles')
+        .select(
+          'name, email, location, has_access, price_id, calorie_goal, protein_goal, carb_goal, fat_goal'
+        )
+        .eq('id', user.id)
+        .single();
+
+      if (data) {
+        setProfiles([data]);
+        setMacroGoals({
+          calories: data.calorie_goal || 2000,
+          protein: data.protein_goal || 150,
+          carbs: data.carb_goal || 250,
+          fat: data.fat_goal || 65,
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([fetchMealPlans(), fetchRecipes()]);
+      await Promise.all([fetchMealPlans(), fetchRecipes(), fetchProfiles()]);
       setLoading(false);
     };
     loadData();
@@ -183,10 +237,28 @@ export default function MealPlansPage() {
     }
   }, [modalOpen]);
 
+  // Refresh profiles when profile modal closes (to update macro goals)
+  useEffect(() => {
+    if (!profileModalOpen) {
+      fetchProfiles();
+    }
+  }, [profileModalOpen]);
+
   return (
     <div className="w-full max-w-6xl mx-auto space-y-8 pb-12">
       {/* Header */}
-      <div className="text-center space-y-4">
+      <div className="text-center space-y-4 relative">
+        <div className="absolute top-0 right-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setProfileModalOpen(true)}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <Settings className="h-4 w-4" />
+            Settings
+          </Button>
+        </div>
         <h1 className="text-4xl font-bold text-foreground">
           Weekly Meal Planner
         </h1>
@@ -330,6 +402,15 @@ export default function MealPlansPage() {
                   );
                 })}
               </div>
+
+              {/* Macro Counter */}
+              <MacroCounter
+                date={format(day, 'yyyy-MM-dd')}
+                plannedMeals={plannedMeals}
+                recipes={recipes}
+                macroGoals={macroGoals || undefined}
+                onOpenSettings={() => setProfileModalOpen(true)}
+              />
             </div>
           </div>
         ))}
@@ -337,20 +418,9 @@ export default function MealPlansPage() {
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-        <Button variant="outline" className="flex items-center gap-2">
-          <Calendar className="h-4 w-4" />
-          Save as Template
-        </Button>
         <Button className="flex items-center gap-2 bg-primary hover:bg-primary/90">
           <ShoppingCart className="h-4 w-4" />
           Generate Shopping List
-        </Button>
-        <Button
-          variant="outline"
-          className="flex items-center gap-2"
-          onClick={handleClearWeek}
-        >
-          Clear Week
         </Button>
       </div>
 
@@ -361,6 +431,9 @@ export default function MealPlansPage() {
         date={selectedDate}
         mealType={selectedMealType}
         recipes={recipes}
+        profiles={[{ location: 'USA', has_access: false, price_id: undefined }]}
+        recipeCount={recipes.length}
+        onRecipeCreated={fetchRecipes}
       />
 
       {/* Recipe Modal */}
@@ -374,9 +447,18 @@ export default function MealPlansPage() {
         />
       )}
 
+      {/* Profile Settings Modal */}
+      {profiles && (
+        <ProfileSettings
+          open={profileModalOpen}
+          setOpen={setProfileModalOpen}
+          profile={profiles}
+        />
+      )}
+
       {/* Loading Overlay */}
       {loading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 !mt-0">
           <div className="bg-white p-6 rounded-lg">
             <div className="flex items-center gap-3">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
@@ -385,6 +467,9 @@ export default function MealPlansPage() {
           </div>
         </div>
       )}
+
+      {/* Bottom Navigation */}
+      <BottomNavigation profile={profiles} />
     </div>
   );
 }

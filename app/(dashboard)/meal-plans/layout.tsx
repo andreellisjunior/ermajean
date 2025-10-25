@@ -1,11 +1,12 @@
 import { CSPostHogProvider } from '@/app/providers'; // Assuming you use this
-import Header from '@/components/Header'; // Assuming standard header path
 import ClientLayout from '@/components/LayoutClient'; // Assuming path for Toaster, Tooltip etc.
 import BackgroundWrapper from '@/components/ui/BackgroundWrapper'; // Assuming path
 import { Viewport } from 'next';
 import { Comfortaa } from 'next/font/google';
 import Head from 'next/head';
 import { ReactNode } from 'react';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import '../../globals.css'; // Ensure global styles are imported
 
 const comfortaa = Comfortaa({
@@ -43,6 +44,17 @@ export default function MealPlansLayout({ children }: { children: ReactNode }) {
                 {children}
               </main>
             </BackgroundWrapper>
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
           </ClientLayout>
         </CSPostHogProvider>
       </body>

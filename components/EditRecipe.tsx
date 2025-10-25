@@ -1,22 +1,24 @@
-"use client";
-import Modal from "@/components/ui/Modal";
-import { DialogTitle } from "@headlessui/react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import ComboInput from "@/components/ui/ComboInput";
-import DropdownInput from "@/components/ui/DropdownInput";
-import { Textarea } from "@/components/ui/textarea";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import { Recipe } from "@/types";
-import { addNewRecipeAction } from "@/app/actions";
+'use client';
+import { addNewRecipeAction } from '@/app/actions';
+import ComboInput from '@/components/ui/ComboInput';
+import DropdownInput from '@/components/ui/DropdownInput';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Modal from '@/components/ui/Modal';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Recipe } from '@/types';
+import { DialogTitle } from '@headlessui/react';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import { useEffect, useState } from 'react';
 
 export default function EditRecipe({ recipeId }: { recipeId: string }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [showNutrition, setShowNutrition] = useState(false);
 
   const getRecipe = async () => {
     setLoading(true);
@@ -25,6 +27,8 @@ export default function EditRecipe({ recipeId }: { recipeId: string }) {
     console.log({ data: data });
 
     setRecipe(data);
+    // Show nutrition section if recipe has nutritional data
+    setShowNutrition(data?.calories && data.calories > 0);
     setLoading(false);
     console.log({ recipe: recipe });
   };
@@ -148,20 +152,127 @@ export default function EditRecipe({ recipeId }: { recipeId: string }) {
                   />
                 </div>
 
+                {/* Nutrition Information Toggle */}
+                <div className="mt-6 flex items-center space-x-2">
+                  <Checkbox
+                    id="nutrition-toggle"
+                    checked={showNutrition}
+                    onCheckedChange={(checked) =>
+                      setShowNutrition(checked as boolean)
+                    }
+                  />
+                  <Label
+                    htmlFor="nutrition-toggle"
+                    className="text-sm font-medium"
+                  >
+                    Edit nutritional information
+                  </Label>
+                </div>
+
+                {/* Nutritional Information Fields */}
+                {showNutrition && (
+                  <div className="space-y-4 mt-4">
+                    <div className="border-t pt-4">
+                      <h4 className="font-medium text-foreground mb-3">
+                        Nutritional Information (per serving)
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="calories">Calories</Label>
+                          <Input
+                            name="calories"
+                            type="number"
+                            placeholder="0"
+                            min="0"
+                            step="1"
+                            defaultValue={recipe?.calories || ''}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="protein">Protein (g)</Label>
+                          <Input
+                            name="protein"
+                            type="number"
+                            placeholder="0"
+                            min="0"
+                            step="0.1"
+                            defaultValue={recipe?.protein || ''}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="carbs">Carbs (g)</Label>
+                          <Input
+                            name="carbs"
+                            type="number"
+                            placeholder="0"
+                            min="0"
+                            step="0.1"
+                            defaultValue={recipe?.carbs || ''}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="fat">Fat (g)</Label>
+                          <Input
+                            name="fat"
+                            type="number"
+                            placeholder="0"
+                            min="0"
+                            step="0.1"
+                            defaultValue={recipe?.fat || ''}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="fiber">Fiber (g)</Label>
+                          <Input
+                            name="fiber"
+                            type="number"
+                            placeholder="0"
+                            min="0"
+                            step="0.1"
+                            defaultValue={recipe?.fiber || ''}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="sugar">Sugar (g)</Label>
+                          <Input
+                            name="sugar"
+                            type="number"
+                            placeholder="0"
+                            min="0"
+                            step="0.1"
+                            defaultValue={recipe?.sugar || ''}
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <Label htmlFor="sodium">Sodium (mg)</Label>
+                          <Input
+                            name="sodium"
+                            type="number"
+                            placeholder="0"
+                            min="0"
+                            step="1"
+                            defaultValue={recipe?.sodium || ''}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {loading ? (
                   <LoadingSpinner />
                 ) : (
                   <div className="mt-5 py-3 flex items-center gap-4 sticky bottom-0 right-0">
                     <Button
                       onClick={() => setOpen(false)}
-                      variant={"secondary"}
+                      variant={'secondary'}
                       className="w-full"
                       type="button"
                     >
                       Cancel
                     </Button>
                     <Button
-                      variant={"default"}
+                      variant={'default'}
                       className="w-full"
                       type="submit"
                     >

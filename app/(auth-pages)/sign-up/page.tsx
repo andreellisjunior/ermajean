@@ -9,13 +9,6 @@ import Logo from "../../assets/logo-color.png";
 import { Button } from "@/components/ui/button";
 
 export default function Signup({ searchParams }: { searchParams: Message }) {
-  if ("message" in searchParams) {
-    return (
-      <div className="w-full flex-1 flex items-center h-screen sm:max-w-md justify-center gap-2 p-4">
-        <FormMessage message={searchParams} />
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col justify-evenly items-center w-full h-screen p-2">

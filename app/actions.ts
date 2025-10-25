@@ -1,6 +1,7 @@
 'use server';
 
 import { aiPrompt } from '@/libs/openai';
+import { getPlanType, getRecipeLimit } from '@/libs/planUtils';
 import { createClient } from '@/libs/supabase/server';
 import { encodedRedirect } from '@/libs/utils';
 import { Recipe } from '@/types';
@@ -178,6 +179,19 @@ export const addNewRecipeAction = async (formData: FormData) => {
   const ingredients = formData.get('ingredients')?.toString();
   const instructions = formData.get('instructions')?.toString();
 
+  // Nutritional information
+  const calories = formData.get('calories')
+    ? Number(formData.get('calories'))
+    : null;
+  const protein = formData.get('protein')
+    ? Number(formData.get('protein'))
+    : null;
+  const carbs = formData.get('carbs') ? Number(formData.get('carbs')) : null;
+  const fat = formData.get('fat') ? Number(formData.get('fat')) : null;
+  const fiber = formData.get('fiber') ? Number(formData.get('fiber')) : null;
+  const sugar = formData.get('sugar') ? Number(formData.get('sugar')) : null;
+  const sodium = formData.get('sodium') ? Number(formData.get('sodium')) : null;
+
   if (id) {
     const { data, error } = await supabase
       .from('recipes')
@@ -192,6 +206,13 @@ export const addNewRecipeAction = async (formData: FormData) => {
         course,
         ingredients,
         instructions,
+        calories,
+        protein,
+        carbs,
+        fat,
+        fiber,
+        sugar,
+        sodium,
       })
       .eq('id', id)
       .eq('user_id', userId);
@@ -209,6 +230,13 @@ export const addNewRecipeAction = async (formData: FormData) => {
         course,
         ingredients,
         instructions,
+        calories,
+        protein,
+        carbs,
+        fat,
+        fiber,
+        sugar,
+        sodium,
       })
       .eq('recipe_id', id);
 
@@ -237,6 +265,13 @@ export const addNewRecipeAction = async (formData: FormData) => {
           course,
           ingredients,
           instructions,
+          calories,
+          protein,
+          carbs,
+          fat,
+          fiber,
+          sugar,
+          sodium,
           user_id: userId,
         },
       ])
@@ -253,6 +288,53 @@ export const addNewRecipeAction = async (formData: FormData) => {
 export const addAIRecipeAction = async (formData: FormData) => {
   const supabase = createClient();
   const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  // Get user's plan information
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('has_access, price_id')
+    .eq('id', userId)
+    .single();
+
+  const planType = getPlanType(profile?.has_access || false, profile?.price_id);
+  const recipeLimit = getRecipeLimit(planType);
+
+  // Check limits based on user's plan
+  if (planType === 'free' && recipeLimit) {
+    const { count: freeCount } = await supabase
+      .from('recipe_usage')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('source', 'free');
+
+    if (freeCount >= recipeLimit) {
+      return encodedRedirect(
+        'error',
+        '/recipes',
+        "You've reached your limit of 3 free AI recipes. Upgrade to Premium for unlimited AI recipes!"
+      );
+    }
+  } else if (planType === 'monthly' && recipeLimit) {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const { count: monthlyCount } = await supabase
+      .from('recipe_usage')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('source', 'monthly')
+      .gte('created_at', startOfMonth.toISOString());
+
+    if (monthlyCount >= recipeLimit) {
+      return encodedRedirect(
+        'error',
+        '/recipes',
+        "You've reached your monthly limit of 8 AI recipes. Your limit will reset next month, or upgrade to unlimited for no limits!"
+      );
+    }
+  }
+  // Unlimited plans have no limits, so no check needed
 
   const taste = formData.get('taste')?.toString();
   const ingredients = formData.get('ingredients')?.toString();
@@ -294,6 +376,27 @@ export const addAIRecipeAction = async (formData: FormData) => {
       },
     ])
     .select();
+
+  // Determine source based on user's plan
+  let source = 'free';
+  if (planType === 'monthly') {
+    source = 'monthly';
+  } else if (planType === 'unlimited') {
+    source = 'unlimited';
+  }
+
+  const { error: usageError } = await supabase.from('recipe_usage').insert([
+    {
+      user_id: userId,
+      recipe_id: data[0].id,
+      source: source,
+    },
+  ]);
+
+  if (usageError) {
+    console.error(usageError.message);
+    return encodedRedirect('error', '/recipes', 'Could not add recipe usage');
+  }
 
   if (error) {
     console.error(error.message);
@@ -416,6 +519,81 @@ export const updateProfileAction = async (formData: FormData) => {
   }
 
   return encodedRedirect('success', '/recipes', 'Profile updated successfully');
+};
+
+export const updateMacroGoalsAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const calorie_goal = formData.get('calorieGoal')
+    ? Number(formData.get('calorieGoal'))
+    : 2000;
+  const protein_goal = formData.get('proteinGoal')
+    ? Number(formData.get('proteinGoal'))
+    : 150;
+  const carb_goal = formData.get('carbGoal')
+    ? Number(formData.get('carbGoal'))
+    : 250;
+  const fat_goal = formData.get('fatGoal')
+    ? Number(formData.get('fatGoal'))
+    : 65;
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      calorie_goal,
+      protein_goal,
+      carb_goal,
+      fat_goal,
+    })
+    .eq('id', userId);
+
+  if (error) {
+    console.error(error.message);
+    return encodedRedirect('error', '/recipes', 'Could not update macro goals');
+  }
+
+  return encodedRedirect(
+    'success',
+    '/recipes',
+    'Macro goals updated successfully'
+  );
+};
+
+// Non-redirecting version for modal usage
+export const updateMacroGoalsModalAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const calorie_goal = formData.get('calorieGoal')
+    ? Number(formData.get('calorieGoal'))
+    : 2000;
+  const protein_goal = formData.get('proteinGoal')
+    ? Number(formData.get('proteinGoal'))
+    : 150;
+  const carb_goal = formData.get('carbGoal')
+    ? Number(formData.get('carbGoal'))
+    : 250;
+  const fat_goal = formData.get('fatGoal')
+    ? Number(formData.get('fatGoal'))
+    : 65;
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      calorie_goal,
+      protein_goal,
+      carb_goal,
+      fat_goal,
+    })
+    .eq('id', userId);
+
+  if (error) {
+    console.error(error.message);
+    return { success: false, message: 'Could not update macro goals' };
+  }
+
+  return { success: true, message: 'Macro goals updated successfully' };
 };
 
 // delete a user
@@ -554,4 +732,254 @@ export const clearWeekMealPlanAction = async (formData: FormData) => {
   }
 
   return encodedRedirect('success', '/meal-plans', 'Week cleared successfully');
+};
+
+// Non-redirecting versions for modal usage
+export const addNewRecipeModalAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const id = formData.get('id') as string;
+
+  const recipe_name = formData.get('recipeName')?.toString();
+  const description = formData.get('desc')?.toString();
+  const prep_time = formData.get('prepTime')?.toString();
+  const cook_time = formData.get('cookTime')?.toString();
+  const total_time = formData.get('estTotalTime')?.toString();
+  const servings = formData.get('servings')?.toString();
+  const difficulty_level =
+    formData.get('level[name]')?.toString() ||
+    formData.get('level')?.toString();
+  const course =
+    formData.get('course[name]')?.toString() ||
+    formData.get('course')?.toString();
+  const ingredients = formData.get('ingredients')?.toString();
+  const instructions = formData.get('instructions')?.toString();
+
+  // Nutritional information
+  const calories = formData.get('calories')
+    ? Number(formData.get('calories'))
+    : null;
+  const protein = formData.get('protein')
+    ? Number(formData.get('protein'))
+    : null;
+  const carbs = formData.get('carbs') ? Number(formData.get('carbs')) : null;
+  const fat = formData.get('fat') ? Number(formData.get('fat')) : null;
+  const fiber = formData.get('fiber') ? Number(formData.get('fiber')) : null;
+  const sugar = formData.get('sugar') ? Number(formData.get('sugar')) : null;
+  const sodium = formData.get('sodium') ? Number(formData.get('sodium')) : null;
+
+  if (id) {
+    const { data, error } = await supabase
+      .from('recipes')
+      .update({
+        recipe_name,
+        description,
+        prep_time,
+        cook_time,
+        total_time,
+        servings,
+        difficulty_level,
+        course,
+        ingredients,
+        instructions,
+        calories,
+        protein,
+        carbs,
+        fat,
+        fiber,
+        sugar,
+        sodium,
+      })
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    const { data: shared, error: err } = await supabase
+      .from('share_recipes')
+      .update({
+        recipe_name,
+        description,
+        prep_time,
+        cook_time,
+        total_time,
+        servings,
+        difficulty_level,
+        course,
+        ingredients,
+        instructions,
+        calories,
+        protein,
+        carbs,
+        fat,
+        fiber,
+        sugar,
+        sodium,
+      })
+      .eq('recipe_id', id);
+
+    if (error || err) {
+      console.error(error?.message || err?.message);
+      return { success: false, message: 'Could not edit recipe' };
+    }
+
+    return { success: true, message: 'Recipe updated successfully' };
+  } else {
+    const { data, error } = await supabase
+      .from('recipes')
+      .insert([
+        {
+          recipe_name,
+          description,
+          prep_time,
+          cook_time,
+          total_time,
+          servings,
+          difficulty_level,
+          course,
+          ingredients,
+          instructions,
+          calories,
+          protein,
+          carbs,
+          fat,
+          fiber,
+          sugar,
+          sodium,
+          user_id: userId,
+        },
+      ])
+      .select();
+
+    if (error) {
+      console.error(error.message);
+      return { success: false, message: 'Could not add recipe' };
+    }
+    return { success: true, message: 'Recipe created successfully', data };
+  }
+};
+
+export const addAIRecipeModalAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  // Get user's plan information
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('has_access, price_id')
+    .eq('id', userId)
+    .single();
+
+  const planType = getPlanType(profile?.has_access || false, profile?.price_id);
+  const recipeLimit = getRecipeLimit(planType);
+
+  // Check limits based on user's plan
+  if (planType === 'free' && recipeLimit) {
+    const { count: freeCount } = await supabase
+      .from('recipe_usage')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('source', 'free');
+
+    if (freeCount >= recipeLimit) {
+      return {
+        success: false,
+        message:
+          "You've reached your limit of 3 free AI recipes. Upgrade to Premium for unlimited AI recipes!",
+      };
+    }
+  } else if (planType === 'monthly' && recipeLimit) {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const { count: monthlyCount } = await supabase
+      .from('recipe_usage')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('source', 'monthly')
+      .gte('created_at', startOfMonth.toISOString());
+
+    if (monthlyCount >= recipeLimit) {
+      return {
+        success: false,
+        message:
+          "You've reached your monthly limit of 8 AI recipes. Your limit will reset next month, or upgrade to unlimited for no limits!",
+      };
+    }
+  }
+  // Unlimited plans have no limits, so no check needed
+
+  const taste = formData.get('taste')?.toString();
+  const ingredients = formData.get('ingredients')?.toString();
+  const serving = formData.get('serving')?.toString();
+  const total_time = formData.get('totalTime')?.toString();
+  const course = formData.get('course')?.toString();
+  const restrictions = formData.get('restrictions')?.toString();
+  const location = formData.get('location')?.toString();
+
+  try {
+    const aiData = await aiPrompt(
+      taste,
+      ingredients,
+      serving,
+      total_time,
+      course,
+      restrictions,
+      location
+    );
+
+    const result = JSON.parse(aiData.choices[0].message.content!);
+    console.log(result);
+
+    const { data, error } = await supabase
+      .from('recipes')
+      .insert([
+        {
+          recipe_name: result.recipe_name,
+          description: result.description,
+          prep_time: result.prep_time,
+          cook_time: result.cook_time,
+          total_time: result.total_time,
+          servings: result.servings,
+          difficulty_level: result.difficulty_level,
+          course: result.course,
+          ingredients: result.ingredients.join('\n'),
+          instructions: result.instructions.join('\n'),
+          est_cost: result.estimated_cost_per_serving,
+          est_savings: result.estimated_savings_per_serving,
+          user_id: userId,
+        },
+      ])
+      .select();
+
+    // Determine source based on user's plan
+    let source = 'free';
+    if (planType === 'monthly') {
+      source = 'monthly';
+    } else if (planType === 'unlimited') {
+      source = 'unlimited';
+    }
+
+    const { error: usageError } = await supabase.from('recipe_usage').insert([
+      {
+        user_id: userId,
+        recipe_id: data[0].id,
+        source: source,
+      },
+    ]);
+
+    if (usageError) {
+      console.error(usageError.message);
+      return { success: false, message: 'Could not add recipe usage' };
+    }
+
+    if (error) {
+      console.error(error.message);
+      return { success: false, message: 'Could not add recipe' };
+    }
+
+    return { success: true, message: 'AI recipe generated successfully', data };
+  } catch (error) {
+    console.error('AI recipe generation failed:', error);
+    return { success: false, message: 'Failed to generate AI recipe' };
+  }
 };
