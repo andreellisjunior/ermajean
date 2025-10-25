@@ -983,3 +983,264 @@ export const addAIRecipeModalAction = async (formData: FormData) => {
     return { success: false, message: 'Failed to generate AI recipe' };
   }
 };
+
+// Generate shopping list from meal plan
+export const generateShoppingListAction = async (formData: FormData) => {
+  const supabase = createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const weekStart = formData.get('weekStart')?.toString();
+  const weekEnd = formData.get('weekEnd')?.toString();
+
+  if (!weekStart || !weekEnd) {
+    return { success: false, message: 'Missing week dates' };
+  }
+
+  try {
+    // Get all meals for the week
+    const { data: mealPlans, error: mealError } = await supabase
+      .from('meal_plans')
+      .select(
+        `
+        date,
+        meal_type,
+        recipes (
+          id,
+          recipe_name,
+          ingredients,
+          servings
+        )
+      `
+      )
+      .eq('user_id', userId)
+      .gte('date', weekStart)
+      .lte('date', weekEnd);
+
+    if (mealError) {
+      console.error(mealError.message);
+      return { success: false, message: 'Could not fetch meal plans' };
+    }
+
+    if (!mealPlans || mealPlans.length === 0) {
+      return { success: false, message: 'No meals planned for this week' };
+    }
+
+    // Process ingredients and create shopping list
+    const ingredientMap = new Map<
+      string,
+      { quantity: string; unit: string; recipes: string[] }
+    >();
+
+    mealPlans.forEach((meal: any) => {
+      if (meal.recipes && meal.recipes.ingredients) {
+        const ingredients = meal.recipes.ingredients.split('\n');
+        const recipeName = meal.recipes.recipe_name;
+
+        ingredients.forEach((ingredient: string) => {
+          const trimmedIngredient = ingredient.trim();
+          if (trimmedIngredient) {
+            // Parse ingredient (basic parsing - could be enhanced)
+            const parsed = parseIngredient(trimmedIngredient);
+            const key = parsed.name.toLowerCase();
+
+            if (ingredientMap.has(key)) {
+              const existing = ingredientMap.get(key)!;
+              existing.recipes.push(recipeName);
+              // For now, just combine quantities as strings
+              // In a more sophisticated version, you'd parse and add quantities
+              if (
+                parsed.quantity &&
+                !existing.quantity.includes(parsed.quantity)
+              ) {
+                existing.quantity += ` + ${parsed.quantity}`;
+              }
+            } else {
+              ingredientMap.set(key, {
+                quantity: parsed.quantity || '',
+                unit: parsed.unit || '',
+                recipes: [recipeName],
+              });
+            }
+          }
+        });
+      }
+    });
+
+    // Convert map to array and organize by category
+    const shoppingList = Array.from(ingredientMap.entries()).map(
+      ([name, details]) => ({
+        name: name.charAt(0).toUpperCase() + name.slice(1),
+        quantity: details.quantity,
+        unit: details.unit,
+        recipes: Array.from(new Set(details.recipes)), // Remove duplicates
+        category: categorizeIngredient(name),
+      })
+    );
+
+    // Sort by category
+    shoppingList.sort((a, b) => {
+      if (a.category !== b.category) {
+        return a.category.localeCompare(b.category);
+      }
+      return a.name.localeCompare(b.name);
+    });
+
+    return {
+      success: true,
+      message: 'Shopping list generated successfully',
+      data: {
+        shoppingList,
+        weekStart,
+        weekEnd,
+        totalRecipes: Array.from(
+          new Set(
+            mealPlans.map((m: any) => m.recipes?.recipe_name).filter(Boolean)
+          )
+        ).length,
+      },
+    };
+  } catch (error) {
+    console.error('Shopping list generation failed:', error);
+    return { success: false, message: 'Failed to generate shopping list' };
+  }
+};
+
+// Helper function to parse ingredient strings
+function parseIngredient(ingredient: string): {
+  name: string;
+  quantity: string;
+  unit: string;
+} {
+  // Basic regex to extract quantity, unit, and ingredient name
+  const match = ingredient.match(/^(\d+(?:\/\d+)?(?:\.\d+)?)\s*(\w+)?\s+(.+)$/);
+
+  if (match) {
+    return {
+      quantity: match[1],
+      unit: match[2] || '',
+      name: match[3],
+    };
+  }
+
+  // If no quantity found, treat entire string as ingredient name
+  return {
+    quantity: '',
+    unit: '',
+    name: ingredient,
+  };
+}
+
+// Helper function to categorize ingredients
+function categorizeIngredient(ingredient: string): string {
+  const categories = {
+    Produce: [
+      'onion',
+      'garlic',
+      'tomato',
+      'potato',
+      'carrot',
+      'celery',
+      'bell pepper',
+      'lettuce',
+      'spinach',
+      'broccoli',
+      'cucumber',
+      'mushroom',
+      'lemon',
+      'lime',
+      'apple',
+      'banana',
+      'orange',
+      'avocado',
+      'herbs',
+      'parsley',
+      'cilantro',
+      'basil',
+      'thyme',
+      'rosemary',
+    ],
+    'Meat & Seafood': [
+      'chicken',
+      'beef',
+      'pork',
+      'turkey',
+      'fish',
+      'salmon',
+      'tuna',
+      'shrimp',
+      'crab',
+      'lobster',
+      'bacon',
+      'ham',
+      'sausage',
+      'ground beef',
+      'ground turkey',
+    ],
+    'Dairy & Eggs': [
+      'milk',
+      'cheese',
+      'butter',
+      'yogurt',
+      'cream',
+      'sour cream',
+      'eggs',
+      'egg',
+      'mozzarella',
+      'cheddar',
+      'parmesan',
+    ],
+    Pantry: [
+      'flour',
+      'sugar',
+      'salt',
+      'pepper',
+      'oil',
+      'olive oil',
+      'vinegar',
+      'rice',
+      'pasta',
+      'bread',
+      'oats',
+      'quinoa',
+      'beans',
+      'lentils',
+      'chickpeas',
+      'canned tomatoes',
+      'tomato sauce',
+      'broth',
+      'stock',
+      'soy sauce',
+      'honey',
+      'vanilla',
+      'baking powder',
+      'baking soda',
+    ],
+    'Spices & Seasonings': [
+      'cumin',
+      'paprika',
+      'oregano',
+      'bay leaves',
+      'cinnamon',
+      'nutmeg',
+      'ginger',
+      'turmeric',
+      'chili powder',
+      'red pepper flakes',
+      'black pepper',
+      'garlic powder',
+      'onion powder',
+    ],
+    Frozen: ['frozen vegetables', 'frozen fruit', 'ice cream', 'frozen pizza'],
+    Other: [] as string[],
+  };
+
+  const lowerIngredient = ingredient.toLowerCase();
+
+  for (const [category, items] of Object.entries(categories)) {
+    if (items.some((item) => lowerIngredient.includes(item))) {
+      return category;
+    }
+  }
+
+  return 'Other';
+}

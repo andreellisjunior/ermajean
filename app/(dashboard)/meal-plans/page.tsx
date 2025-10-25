@@ -9,6 +9,7 @@ import ProfileSettings from '@/components/ProfileSettings';
 import AddMealModal from '@/components/ui/AddMealModal';
 import MacroCounter from '@/components/ui/MacroCounter';
 import RecipeModal from '@/components/ui/RecipeModal';
+import ShoppingListModal from '@/components/ui/ShoppingListModal';
 import { Button } from '@/components/ui/button';
 import { Message } from '@/components/ui/form-message';
 import { createClient } from '@/libs/supabase/client';
@@ -24,6 +25,7 @@ import {
 } from 'date-fns';
 import {
   Calendar,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -78,6 +80,8 @@ export default function MealPlansPage() {
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [shoppingListModalOpen, setShoppingListModalOpen] = useState(false);
+  const [weekSelectorOpen, setWeekSelectorOpen] = useState(false);
   const [profiles, setProfiles] = useState<
     | {
         name: string;
@@ -107,6 +111,64 @@ export default function MealPlansPage() {
   const handlePrev = () => setCurrentDate(subDays(currentDate, 7));
   const handleNext = () => setCurrentDate(addDays(currentDate, 7));
   const handleToday = () => setCurrentDate(new Date());
+
+  // Generate week options (8 weeks back, current week, 8 weeks forward)
+  const generateWeekOptions = () => {
+    const options = [];
+    const today = new Date();
+
+    // Add past weeks (8 weeks back)
+    for (let i = 8; i >= 1; i--) {
+      const weekDate = subDays(today, i * 7);
+      const weekStartDate = startOfWeek(weekDate, { weekStartsOn: 1 });
+      const weekEndDate = endOfWeek(weekDate, { weekStartsOn: 1 });
+      options.push({
+        date: weekDate,
+        label: `${format(weekStartDate, 'MMM d')} - ${format(weekEndDate, 'MMM d, yyyy')}`,
+        isCurrentWeek: false,
+        isPast: true,
+      });
+    }
+
+    // Add current week
+    const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
+    const currentWeekEnd = endOfWeek(today, { weekStartsOn: 1 });
+    options.push({
+      date: today,
+      label: `${format(currentWeekStart, 'MMM d')} - ${format(currentWeekEnd, 'MMM d, yyyy')} (This Week)`,
+      isCurrentWeek: true,
+      isPast: false,
+    });
+
+    // Add future weeks (8 weeks forward)
+    for (let i = 1; i <= 8; i++) {
+      const weekDate = addDays(today, i * 7);
+      const weekStartDate = startOfWeek(weekDate, { weekStartsOn: 1 });
+      const weekEndDate = endOfWeek(weekDate, { weekStartsOn: 1 });
+      options.push({
+        date: weekDate,
+        label: `${format(weekStartDate, 'MMM d')} - ${format(weekEndDate, 'MMM d, yyyy')}`,
+        isCurrentWeek: false,
+        isPast: false,
+      });
+    }
+
+    return options;
+  };
+
+  const weekOptions = generateWeekOptions();
+
+  const handleWeekSelect = (selectedDate: Date) => {
+    setCurrentDate(selectedDate);
+    setWeekSelectorOpen(false);
+  };
+
+  // Handle keyboard navigation for week selector
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      setWeekSelectorOpen(false);
+    }
+  };
 
   const handleAddMeal = (date: Date, mealType: string) => {
     setSelectedDate(format(date, 'yyyy-MM-dd'));
@@ -244,21 +306,25 @@ export default function MealPlansPage() {
     }
   }, [profileModalOpen]);
 
+  // Close week selector when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (weekSelectorOpen && !target.closest('.week-selector')) {
+        setWeekSelectorOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [weekSelectorOpen]);
+
   return (
     <div className="w-full max-w-6xl mx-auto space-y-8 pb-12">
       {/* Header */}
       <div className="text-center space-y-4 relative">
-        <div className="absolute top-0 right-0">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setProfileModalOpen(true)}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
-          >
-            <Settings className="h-4 w-4" />
-            Settings
-          </Button>
-        </div>
         <h1 className="text-4xl font-bold text-foreground">
           Weekly Meal Planner
         </h1>
@@ -268,40 +334,76 @@ export default function MealPlansPage() {
       </div>
 
       {/* Week Navigation */}
-      <div className="flex items-center justify-between bg-card rounded-xl p-6 border shadow-sm">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handlePrev}
-          className="flex items-center gap-2"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Previous
-        </Button>
+      <div className="bg-card rounded-xl p-6 border shadow-sm space-y-4">
+        {/* Week Selector */}
+        <div className="flex items-center justify-center">
+          <div className="relative week-selector">
+            <Button
+              variant="outline"
+              onClick={() => setWeekSelectorOpen(!weekSelectorOpen)}
+              onKeyDown={handleKeyDown}
+              className="flex items-center gap-2 min-w-[280px] justify-between"
+            >
+              <Calendar className="h-4 w-4" />
+              <span className="font-medium">{currentWeekString}</span>
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${weekSelectorOpen ? 'rotate-180' : ''}`}
+              />
+            </Button>
 
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-foreground">
-            {currentWeekString}
-          </h2>
+            {weekSelectorOpen && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border rounded-lg shadow-lg z-10 max-h-64 overflow-y-auto">
+                {weekOptions.map((option, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleWeekSelect(option.date)}
+                    className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b last:border-b-0 ${
+                      option.isCurrentWeek
+                        ? 'bg-primary/10 text-primary font-semibold border-l-4 border-l-primary'
+                        : option.isPast
+                          ? 'text-gray-600'
+                          : 'text-gray-900'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Navigation */}
+        <div className="flex items-center justify-between">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePrev}
+            className="flex items-center gap-2"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Previous Week
+          </Button>
+
           <Button
             variant="ghost"
             size="sm"
             onClick={handleToday}
-            className="mt-1 text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground"
           >
-            Go to Today
+            Go to This Week
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNext}
+            className="flex items-center gap-2"
+          >
+            Next Week
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleNext}
-          className="flex items-center gap-2"
-        >
-          Next
-          <ChevronRight className="h-4 w-4" />
-        </Button>
       </div>
 
       {/* Meal Planning Grid */}
@@ -417,8 +519,11 @@ export default function MealPlansPage() {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-        <Button className="flex items-center gap-2 bg-primary hover:bg-primary/90">
+      <div className="flex flex-col sm:flex-row gap-4 justify-center py-8">
+        <Button
+          className="flex items-center gap-2 bg-primary hover:bg-primary/90"
+          onClick={() => setShoppingListModalOpen(true)}
+        >
           <ShoppingCart className="h-4 w-4" />
           Generate Shopping List
         </Button>
@@ -455,6 +560,14 @@ export default function MealPlansPage() {
           profile={profiles}
         />
       )}
+
+      {/* Shopping List Modal */}
+      <ShoppingListModal
+        open={shoppingListModalOpen}
+        setOpen={setShoppingListModalOpen}
+        weekStart={weekStart}
+        weekEnd={weekEnd}
+      />
 
       {/* Loading Overlay */}
       {loading && (
