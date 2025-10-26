@@ -1,15 +1,14 @@
-import { googleAuth, signUpAction } from "@/app/actions";
-import { FormMessage, Message } from "@/components/ui/form-message";
-import { SubmitButton } from "@/components/ui/submit-button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Link from "next/link";
-import Image from "next/image";
-import Logo from "../../assets/logo-color.png";
-import { Button } from "@/components/ui/button";
+import { googleAuth, signUpAction } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { FormMessage, Message } from '@/components/ui/form-message';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { SubmitButton } from '@/components/ui/submit-button';
+import Image from 'next/image';
+import Link from 'next/link';
+import Logo from '../../assets/logo-color.png';
 
 export default function Signup({ searchParams }: { searchParams: Message }) {
-
   return (
     <div className="flex flex-col justify-evenly items-center w-full h-screen p-2">
       {/* Hero/Logo */}
@@ -22,8 +21,8 @@ export default function Signup({ searchParams }: { searchParams: Message }) {
       </div>
 
       {/* Sign Up Section */}
-      <div className="w-full flex flex-col">
-        {"success" in searchParams ? (
+      <div className="w-full flex flex-col -mt-32">
+        {'success' in searchParams ? (
           <div className="text-foreground flex flex-col gap-4">
             <FormMessage message={searchParams} />
             <Link href="/sign-in">
@@ -32,7 +31,7 @@ export default function Signup({ searchParams }: { searchParams: Message }) {
           </div>
         ) : (
           <>
-            <form className="flex flex-col min-w-64" action={signUpAction}>
+            {/* <form className="flex flex-col min-w-64" action={signUpAction}>
               <h1 className="text-2xl font-medium">Sign up</h1>
               <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
                 <Label htmlFor="email">Email</Label>
@@ -47,19 +46,8 @@ export default function Signup({ searchParams }: { searchParams: Message }) {
                 />
                 <SubmitButton pendingText="Signing up...">Sign up</SubmitButton>
               </div>
-              <p className="text-sm text-foreground self-center mt-4">
-                Already have an account?{" "}
-                <Link
-                  className="text-primary font-medium underline"
-                  href="/sign-in"
-                >
-                  Sign in
-                </Link>
-              </p>
-            </form>
-
-            <div className="w-full h-[1px] bg-gray-300 my-6" />
-
+             
+            </form> */}
             <form action={googleAuth}>
               <button
                 type="submit"
@@ -90,6 +78,16 @@ export default function Signup({ searchParams }: { searchParams: Message }) {
                 Continue with Google
               </button>
             </form>
+            <div className="w-full h-[1px] bg-gray-300 my-6" />
+            <p className="text-sm text-foreground self-center mt-4">
+              Already have an account?{' '}
+              <Link
+                className="text-primary font-medium underline"
+                href="/sign-in"
+              >
+                Sign in
+              </Link>
+            </p>
           </>
         )}
       </div>
