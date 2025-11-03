@@ -1,5 +1,6 @@
 import { CSPostHogProvider } from '@/app/providers';
 import UpgradeModalProvider from '@/components/providers/UpgradeModalProvider';
+import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
 import config from '@/config';
 import { getSEOTags } from '@/libs/seo';
 import { Viewport } from 'next';
@@ -49,16 +50,21 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           href="/apple-touch-icon.png"
         />
         <meta name="apple-mobile-web-app-title" content="ermajean" />
-        <link rel="manifest" href="/site.webmanifest" />
+        <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta
           name="apple-mobile-web-app-status-bar-style"
           content="black-translucent"
         />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#4A7C59" />
+        <meta name="msapplication-TileColor" content="#4A7C59" />
+        <meta name="msapplication-tap-highlight" content="no" />
       </Head>
       <body className="text-foreground bg-[#F7F7ED]">
+        <ServiceWorkerRegistration />
         <CSPostHogProvider>
-            <div className="mx-auto">{children}</div>
+          <div className="mx-auto">{children}</div>
         </CSPostHogProvider>
       </body>
     </html>
