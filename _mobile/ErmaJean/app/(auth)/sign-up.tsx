@@ -9,15 +9,15 @@ import { makeRedirectUri } from "expo-auth-session";
 
 WebBrowser.maybeCompleteAuthSession();
 
-export default function SignIn() {
+export default function SignUp() {
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
 
     function getErrorMessage(error: AuthError): string {
-        // Handle specific error types with user-friendly messages
         if (error.message.includes("Invalid login credentials")) {
             return "Invalid email or password. Please try again.";
         }
@@ -43,12 +43,10 @@ export default function SignIn() {
             return "An account with this email already exists. Please sign in instead.";
         }
         
-        // Default to the original error message if no specific match
         return error.message || "An unexpected error occurred. Please try again.";
     }
 
-    async function signInWithEmail() {
-        // Clear previous errors
+    async function signUpWithEmail() {
         setErrorMessage("");
         
         // Validate inputs
@@ -60,45 +58,59 @@ export default function SignIn() {
             setErrorMessage("Please enter your password.");
             return;
         }
+        if (password.length < 6) {
+            setErrorMessage("Password must be at least 6 characters long.");
+            return;
+        }
+        if (password !== confirmPassword) {
+            setErrorMessage("Passwords do not match.");
+            return;
+        }
 
         setLoading(true);
         try {
-            const { error } = await supabase.auth.signInWithPassword({
+            const { error } = await supabase.auth.signUp({
                 email: email.trim(),
                 password,
             });
 
             if (error) {
                 setErrorMessage(getErrorMessage(error));
+            } else {
+                Alert.alert(
+                    "Success!",
+                    "Check your inbox for email verification!",
+                    [{ 
+                        text: "OK",
+                        onPress: () => router.replace("/sign-in")
+                    }]
+                );
             }
         } catch (err) {
             setErrorMessage("An unexpected error occurred. Please try again.");
-            console.error("Sign in error:", err);
+            console.error("Sign up error:", err);
         } finally {
             setLoading(false);
         }
     }
-
-
 
     async function signInWithGoogle() {
         setLoading(true);
         setErrorMessage("");
         
         try {
-            // For Expo Go, use the exp:// scheme
             const redirectUrl = makeRedirectUri({
-                scheme: undefined, // Let Expo handle the scheme automatically
+                scheme: undefined,
                 path: 'auth/callback'
             });
 
-            console.log('Redirect URL:', redirectUrl); // Debug log
+            console.log('Redirect URL:', redirectUrl);
 
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
                     redirectTo: redirectUrl,
-                    skipBrowserRedirect: true, // Important for mobile
+                    skipBrowserRedirect: true,
                 }
             });
 
@@ -115,13 +127,11 @@ export default function SignIn() {
                 );
 
                 if (result.type === 'success' && result.url) {
-                    // Extract the tokens from the URL
                     const url = new URL(result.url);
                     const access_token = url.searchParams.get('access_token');
                     const refresh_token = url.searchParams.get('refresh_token');
 
                     if (access_token && refresh_token) {
-                        // Set the session with the tokens
                         const { error: sessionError } = await supabase.auth.setSession({
                             access_token,
                             refresh_token,
@@ -131,7 +141,6 @@ export default function SignIn() {
                             setErrorMessage("Failed to establish session. Please try again.");
                             console.error("Session error:", sessionError);
                         }
-                        // Session is set, auth state listener will handle navigation
                     } else {
                         setErrorMessage("Authentication failed. Please try again.");
                     }
@@ -196,10 +205,10 @@ export default function SignIn() {
                             }}>
                                 <View style={{ marginBottom: 24 }}>
                                     <Text style={{ fontSize: 24, fontWeight: '600', color: '#1f2937', marginBottom: 8 }}>
-                                        Welcome back
+                                        Create your account
                                     </Text>
                                     <Text style={{ fontSize: 14, color: '#6b7280' }}>
-                                        Sign in to continue to your recipes
+                                        Start managing your recipes today
                                     </Text>
                                 </View>
 
@@ -241,7 +250,7 @@ export default function SignIn() {
                                     />
                                 </View>
 
-                                <View style={{ marginBottom: 24 }}>
+                                <View style={{ marginBottom: 16 }}>
                                     <Text style={{ color: '#374151', fontWeight: '500', marginBottom: 8 }}>Password</Text>
                                     <TextInput
                                         style={{ 
@@ -253,7 +262,7 @@ export default function SignIn() {
                                             borderColor: '#d1d5db',
                                             fontSize: 16
                                         }}
-                                        placeholder="Enter your password"
+                                        placeholder="At least 6 characters"
                                         placeholderTextColor="#9ca3af"
                                         value={password}
                                         onChangeText={(text) => {
@@ -265,8 +274,32 @@ export default function SignIn() {
                                     />
                                 </View>
 
+                                <View style={{ marginBottom: 24 }}>
+                                    <Text style={{ color: '#374151', fontWeight: '500', marginBottom: 8 }}>Confirm Password</Text>
+                                    <TextInput
+                                        style={{ 
+                                            backgroundColor: '#f9fafb', 
+                                            color: '#111827', 
+                                            padding: 16, 
+                                            borderRadius: 12,
+                                            borderWidth: 1,
+                                            borderColor: '#d1d5db',
+                                            fontSize: 16
+                                        }}
+                                        placeholder="Re-enter your password"
+                                        placeholderTextColor="#9ca3af"
+                                        value={confirmPassword}
+                                        onChangeText={(text) => {
+                                            setConfirmPassword(text);
+                                            setErrorMessage("");
+                                        }}
+                                        secureTextEntry
+                                        editable={!loading}
+                                    />
+                                </View>
+
                                 <TouchableOpacity
-                                    onPress={signInWithEmail}
+                                    onPress={signUpWithEmail}
                                     disabled={loading}
                                     style={{ 
                                         borderRadius: 12, 
@@ -288,7 +321,7 @@ export default function SignIn() {
                                                 color: '#ffffff', 
                                                 fontSize: 16 
                                             }}>
-                                                Sign In
+                                                Sign Up
                                             </Text>
                                         )}
                                     </LinearGradient>
@@ -340,14 +373,14 @@ export default function SignIn() {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    onPress={() => router.push('/sign-up')}
+                                    onPress={() => router.push('/sign-in')}
                                     disabled={loading}
                                     style={{ opacity: loading ? 0.5 : 1 }}
                                 >
                                     <Text style={{ textAlign: 'center', color: '#6b7280', fontSize: 14 }}>
-                                        Don't have an account?{' '}
+                                        Already have an account?{' '}
                                         <Text style={{ color: '#5B7396', fontWeight: '600' }}>
-                                            Sign Up
+                                            Sign In
                                         </Text>
                                     </Text>
                                 </TouchableOpacity>

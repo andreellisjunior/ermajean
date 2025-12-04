@@ -8,10 +8,46 @@
     "scheme": "ermajean",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "intentFilters": [
+      {
+        "action": "VIEW",
+        "autoVerify": true,
+        "data": [
+          {
+            "scheme": "https",
+            "host": "ermajean.com",
+            "pathPrefix": "/recipe"
+          }
+        ],
+        "category": [
+          "BROWSABLE",
+          "DEFAULT"
+        ]
+      },
+      {
+        "action": "VIEW",
+        "data": [
+          {
+            "scheme": "ermajean",
+            "pathPrefix": "/auth/callback"
+          }
+        ],
+        "category": [
+          "BROWSABLE",
+          "DEFAULT"
+        ]
+      }
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "associatedDomains": [
+        "applinks:ermajean.com",
+        "applinks:www.ermajean.com"
+      ],
+      "bundleIdentifier": "com.ermajean.app"
     },
     "android": {
+      "package": "com.ermajean.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -38,7 +74,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,

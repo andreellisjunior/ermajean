@@ -1,30 +1,45 @@
 import { useEffect, useState } from "react";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, Text } from "react-native";
 import { Redirect } from "expo-router";
 import { supabase } from "@/libs/supabase";
 import { Session } from "@supabase/supabase-js";
 
 export default function Index() {
     const [session, setSession] = useState<Session | null | undefined>(undefined);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        // Check for existing session
+        supabase.auth.getSession().then(({ data: { session }, error }) => {
+            if (error) {
+                console.error("Error getting session:", error);
+            }
             setSession(session);
+            setIsLoading(false);
         });
 
-        supabase.auth.onAuthStateChange((_event, session) => {
+        // Listen for auth state changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
+            setIsLoading(false);
         });
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
 
-    if (session === undefined) {
+    // Show loading state while checking auth
+    if (isLoading) {
         return (
-            <View className="flex-1 justify-center items-center bg-background">
-                <ActivityIndicator size="large" color="#0000ff" />
+            <View className="flex-1 justify-center items-center bg-white">
+                <ActivityIndicator size="large" color="#10b981" />
+                <Text className="mt-4 text-gray-600">Loading...</Text>
             </View>
         );
     }
 
+    // Redirect based on auth state
     if (!session) {
         return <Redirect href="/(auth)/sign-in" />;
     }
