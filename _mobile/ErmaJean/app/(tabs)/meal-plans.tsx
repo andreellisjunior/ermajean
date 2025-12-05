@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, Alert, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '@/libs/supabase';
 import { Colors } from '@/constants/design';
@@ -172,19 +172,20 @@ export default function MealPlansScreen() {
                 const isSelected = formatDate(day) === formatDate(selectedDate);
                 const isTodayDay = isToday(day);
                 return (
-                  <TouchableOpacity
-                    key={idx}
-                    onPress={() => setSelectedDate(day)}
-                    className={`flex-col items-center p-2 rounded-xl min-w-[44px] ${isSelected ? 'bg-emerald-800 shadow-md' : 'bg-transparent'}`}
-                  >
-                    <Text className={`text-xs font-medium mb-1 ${isSelected ? 'text-emerald-100' : 'text-stone-400'}`}>
-                      {day.toLocaleDateString('en-US', { weekday: 'short' })}
-                    </Text>
-                    <Text className={`font-bold ${isSelected ? 'text-white' : 'text-stone-700'}`}>
-                      {day.getDate()}
-                    </Text>
-                    {isTodayDay && !isSelected && <View className="w-1 h-1 bg-emerald-500 rounded-full mt-1" />}
-                  </TouchableOpacity>
+                  <View key={idx}>
+                    <Pressable
+                      onPress={() => setSelectedDate(day)}
+                      className={`flex-col items-center p-2 rounded-xl min-w-[44px] ${isSelected ? 'bg-emerald-800 shadow-md' : 'bg-transparent'}`}
+                    >
+                      <Text className={`text-xs font-medium mb-1 ${isSelected ? 'text-emerald-100' : 'text-stone-400'}`}>
+                        {day.toLocaleDateString('en-US', { weekday: 'short' })}
+                      </Text>
+                      <Text className={`font-bold ${isSelected ? 'text-white' : 'text-stone-700'}`}>
+                        {day.getDate()}
+                      </Text>
+                      {isTodayDay && !isSelected && <View className="w-1 h-1 bg-emerald-500 rounded-full mt-1" />}
+                    </Pressable>
+                  </View>
                 );
               })}
             </View>
