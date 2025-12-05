@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, TextInput, Animated } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, TextInput, Animated, Image } from 'react-native';
 import { supabase } from '@/libs/supabase';
 import { router } from 'expo-router';
 import { useEffect, useState, useRef } from 'react';
@@ -50,7 +50,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     fetchData();
-    
+
     // Start pulse animation for Sparkles icon
     Animated.loop(
       Animated.sequence([
@@ -108,7 +108,7 @@ export default function HomeScreen() {
         {/* Header Section - Enhanced shadow and spacing */}
         <View className="bg-emerald-900 p-7 rounded-3xl mb-6 shadow-2xl shadow-emerald-900/30 relative overflow-hidden">
           {/* Decorative circles with subtle gradient overlay */}
-          <View 
+          <View
             className="absolute w-32 h-32 rounded-full overflow-hidden"
             style={{ top: -40, right: -40 }}
           >
@@ -119,7 +119,7 @@ export default function HomeScreen() {
               className="w-full h-full"
             />
           </View>
-          <View 
+          <View
             className="absolute w-24 h-24 rounded-full overflow-hidden"
             style={{ bottom: -32, left: -32 }}
           >
@@ -131,7 +131,7 @@ export default function HomeScreen() {
             />
           </View>
           {/* Additional decorative circle for depth with subtle gradient */}
-          <View 
+          <View
             className="absolute w-20 h-20 rounded-full overflow-hidden"
             style={{ top: 60, right: 20 }}
           >
@@ -207,36 +207,36 @@ export default function HomeScreen() {
             }}
           />
           <View className="p-4 flex-row items-center justify-between">
-          <View className="relative z-10">
-            <View className="flex-row items-center gap-2 mb-1">
-              <Animated.View
-                style={{
-                  transform: [{ scale: pulseAnim }],
-                }}
-              >
-                <Sparkles size={18} color="#059669" fill="#d1fae5" />
-              </Animated.View>
-              <Text className="text-emerald-900 font-bold">Generate Recipe</Text>
+            <View className="relative z-10">
+              <View className="flex-row items-center gap-2 mb-1">
+                <Animated.View
+                  style={{
+                    transform: [{ scale: pulseAnim }],
+                  }}
+                >
+                  <Sparkles size={18} color="#059669" fill="#d1fae5" />
+                </Animated.View>
+                <Text className="text-emerald-900 font-bold">Generate Recipe</Text>
+              </View>
+              <View className="bg-emerald-100/50 px-2 py-0.5 rounded-md self-start">
+                <Text className="text-xs text-emerald-700 font-medium">
+                  {profile?.has_access ? 'Unlimited generations' : '3 free generations left'}
+                </Text>
+              </View>
             </View>
-            <View className="bg-emerald-100/50 px-2 py-0.5 rounded-md self-start">
-              <Text className="text-xs text-emerald-700 font-medium">
-                {profile?.has_access ? 'Unlimited generations' : '3 free generations left'}
-              </Text>
+            <View
+              className="bg-emerald-800 px-5 py-2.5 rounded-xl flex-row items-center gap-2 relative z-10"
+              style={{
+                shadowColor: '#064e3b',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.2,
+                shadowRadius: 8,
+                elevation: 8,
+              }}
+            >
+              <Text className="text-white font-semibold text-sm">Create</Text>
+              <ArrowRight size={16} color="white" />
             </View>
-          </View>
-          <View 
-            className="bg-emerald-800 px-5 py-2.5 rounded-xl flex-row items-center gap-2 relative z-10"
-            style={{
-              shadowColor: '#064e3b',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.2,
-              shadowRadius: 8,
-              elevation: 8,
-            }}
-          >
-            <Text className="text-white font-semibold text-sm">Create</Text>
-            <ArrowRight size={16} color="white" />
-          </View>
           </View>
         </TouchableOpacity>
 
@@ -267,11 +267,10 @@ export default function HomeScreen() {
             >
               {/* Image Placeholder Area - Enhanced gradient */}
               <View className="h-48 relative overflow-hidden items-center justify-center">
-                <LinearGradient
-                  colors={['#d6d3d1', '#a8a29e']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  className="absolute inset-0"
+                <Image
+                  source={require('../../assets/images/menu.jpg')}
+                  className="absolute inset-0 w-full h-full"
+                  resizeMode="cover"
                 />
                 <View className="absolute inset-0 opacity-10">
                   <LinearGradient
@@ -279,11 +278,9 @@ export default function HomeScreen() {
                     className="absolute inset-0"
                   />
                 </View>
-                <Leaf size={48} color="#78716c" />
-                <Text className="text-sm font-medium text-stone-500 mt-2">Delicious Food Image</Text>
 
                 {/* Time Badge - Enhanced with backdrop blur effect */}
-                <View 
+                <View
                   className="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded-full"
                   style={{
                     shadowColor: '#000',
