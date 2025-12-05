@@ -1,18 +1,22 @@
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Share, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Share, Alert, StatusBar } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/libs/supabase';
 import { Recipe } from '@/types/config';
 import { LinearGradient } from 'expo-linear-gradient';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import apiClient from '@/libs/api';
 import config from '@/config';
+import { ArrowLeft, Share2, Clock, Flame, BarChart2, Users, Receipt, List, PlayCircle, Info } from 'lucide-react-native';
+import { Colors } from '@/constants/design';
 
 export default function RecipeDetails() {
     const { id } = useLocalSearchParams();
+    const insets = useSafeAreaInsets();
     const [recipe, setRecipe] = useState<Recipe | null>(null);
     const [loading, setLoading] = useState(true);
     const [generatingNutrition, setGeneratingNutrition] = useState(false);
+    const [activeTab, setActiveTab] = useState<'ingredients' | 'instructions'>('ingredients');
 
     useEffect(() => {
         if (id) fetchRecipe();
@@ -35,7 +39,7 @@ export default function RecipeDetails() {
 
     const handleGenerateNutrition = async () => {
         if (!recipe) return;
-        
+
         setGeneratingNutrition(true);
         try {
             const response = await apiClient.post('/recipes/macros', {
@@ -43,16 +47,15 @@ export default function RecipeDetails() {
                 servings: recipe.servings,
             });
 
-            // Update the recipe with the new nutrition data
             setRecipe({
                 ...recipe,
-                calories: response.calories,
-                protein: response.protein,
-                carbs: response.carbs,
-                fat: response.fat,
-                fiber: response.fiber,
-                sugar: response.sugar,
-                sodium: response.sodium,
+                calories: response.data.calories,
+                protein: response.data.protein,
+                carbs: response.data.carbs,
+                fat: response.data.fat,
+                fiber: response.data.fiber,
+                sugar: response.data.sugar,
+                sodium: response.data.sodium,
             });
 
             Alert.alert('Success', 'Nutrition information generated successfully!');
@@ -82,16 +85,19 @@ export default function RecipeDetails() {
 
     if (loading) {
         return (
-            <View className="flex-1 justify-center items-center bg-white">
-                <ActivityIndicator size="large" color="#10b981" />
+            <View className="flex-1 justify-center items-center bg-[#FDFBF7]">
+                <ActivityIndicator size="large" color="#059669" />
             </View>
         );
     }
 
     if (!recipe) {
         return (
-            <View className="flex-1 justify-center items-center bg-white">
-                <Text>Recipe not found</Text>
+            <View className="flex-1 justify-center items-center bg-[#FDFBF7]">
+                <Text className="text-stone-500 font-medium">Recipe not found</Text>
+                <TouchableOpacity onPress={() => router.back()} className="mt-4 bg-emerald-800 px-6 py-2 rounded-xl">
+                    <Text className="text-white font-bold">Go Back</Text>
+                </TouchableOpacity>
             </View>
         );
     }
@@ -101,154 +107,195 @@ export default function RecipeDetails() {
     const hasNutrition = recipe.calories !== null && recipe.calories !== undefined;
 
     return (
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-[#FDFBF7]">
             <Stack.Screen options={{ headerShown: false }} />
+            <StatusBar barStyle="light-content" />
 
-            <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-                <View className="h-72 relative">
+            <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+                {/* Hero Image Section */}
+                <View className="h-96 relative bg-stone-900">
                     <LinearGradient
-                        colors={['transparent', 'rgba(0,0,0,0.7)']}
-                        className="absolute bottom-0 left-0 right-0 h-32 z-10"
+                        colors={['transparent', 'rgba(0,0,0,0.8)']}
+                        className="absolute bottom-0 left-0 right-0 h-48 z-10"
                     />
-                    <View className="w-full h-full bg-gray-200 justify-center items-center">
-                        <Text className="text-6xl">🍲</Text>
+
+                    {/* Placeholder for Image (Using Gradient + Emoji/Icon for now as no image in DB) */}
+                    <View className="w-full h-full justify-center items-center opacity-80">
+                        {/* We can use a pattern or just a gradient */}
+                        <LinearGradient colors={['#064e3b', '#065f46']} className="absolute inset-0" />
+                        <Text className="text-8xl">🍳</Text>
                     </View>
 
-                    <TouchableOpacity
-                        onPress={() => router.back()}
-                        className="absolute top-12 left-6 z-20 bg-white/20 backdrop-blur-md p-2 rounded-full"
+                    {/* Navigation Bar */}
+                    <View
+                        className="absolute left-0 right-0 z-20 px-6 flex-row justify-between items-center"
+                        style={{ top: insets.top + 10 }}
                     >
-                        <FontAwesome name="arrow-left" size={24} color="white" />
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => router.back()}
+                            className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full items-center justify-center border border-white/10"
+                        >
+                            <ArrowLeft size={20} color="white" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={handleShare}
+                            className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full items-center justify-center border border-white/10"
+                        >
+                            <Share2 size={20} color="white" />
+                        </TouchableOpacity>
+                    </View>
 
-                    <TouchableOpacity
-                        onPress={handleShare}
-                        className="absolute top-12 right-6 z-20 bg-white/20 backdrop-blur-md p-2 rounded-full"
-                    >
-                        <FontAwesome name="share-alt" size={24} color="white" />
-                    </TouchableOpacity>
-
-                    <View className="absolute bottom-6 left-6 right-6 z-20">
-                        <Text className="text-white text-3xl font-bold mb-2 shadow-sm">{recipe.recipe_name}</Text>
-                        <View className="flex-row flex-wrap gap-2">
-                            <Badge icon="clock-o" text={recipe.total_time} />
-                            <Badge icon="fire" text={`${recipe.calories || '-'} cal`} />
-                            <Badge icon="signal" text={recipe.difficulty_level} />
+                    {/* Title & Key Stats */}
+                    <View className="absolute bottom-8 left-6 right-6 z-20">
+                        <View className="bg-emerald-500/20 self-start px-3 py-1 rounded-lg backdrop-blur-sm border border-emerald-500/30 mb-3">
+                            <Text className="text-emerald-50 font-bold text-xs uppercase tracking-wider">{recipe.course}</Text>
+                        </View>
+                        <Text className="text-white text-3xl font-bold font-serif shadow-sm leading-tight mb-4">
+                            {recipe.recipe_name}
+                        </Text>
+                        <View className="flex-row items-center gap-4">
+                            <View className="flex-row items-center gap-1.5">
+                                <Clock size={16} color="#d1fae5" />
+                                <Text className="text-emerald-50 font-medium text-sm">{recipe.total_time}</Text>
+                            </View>
+                            <View className="flex-row items-center gap-1.5">
+                                <Flame size={16} color="#d1fae5" />
+                                <Text className="text-emerald-50 font-medium text-sm">{recipe.calories || '-'} kcal</Text>
+                            </View>
+                            <View className="flex-row items-center gap-1.5">
+                                <BarChart2 size={16} color="#d1fae5" />
+                                <Text className="text-emerald-50 font-medium text-sm">{recipe.difficulty_level}</Text>
+                            </View>
                         </View>
                     </View>
                 </View>
 
-                <View className="p-6 rounded-t-3xl -mt-6 bg-white">
-                    <Text className="text-gray-600 leading-6 mb-8">{recipe.description}</Text>
-
-                    {/* Recipe Details Section */}
-                    <SectionTitle title="Recipe Details" />
-                    <View className="bg-gray-50 rounded-2xl p-4 mb-8">
-                        <DetailRow label="Prep Time" value={recipe.prep_time} icon="clock-o" />
-                        <DetailRow label="Cook Time" value={recipe.cook_time} icon="fire" />
-                        <DetailRow label="Total Time" value={recipe.total_time} icon="hourglass-half" />
-                        <DetailRow label="Servings" value={recipe.servings} icon="users" />
-                        <DetailRow label="Difficulty" value={recipe.difficulty_level} icon="signal" />
-                        <DetailRow label="Course" value={recipe.course} icon="cutlery" last />
+                {/* Content Container */}
+                <View className="px-6 py-6 -mt-6 bg-[#FDFBF7] rounded-t-[32px] min-h-screen">
+                    <View className="items-center mb-2">
+                        <View className="w-12 h-1 bg-stone-200 rounded-full" />
                     </View>
 
-                    <SectionTitle title="Ingredients" />
-                    <View className="bg-gray-50 rounded-2xl p-4 mb-8">
-                        {ingredientsList.map((ingredient, index) => (
-                            <View key={index} className="flex-row items-center mb-3 last:mb-0">
-                                <View className="w-2 h-2 bg-primary rounded-full mr-3" />
-                                <Text className="text-gray-700 flex-1">{ingredient}</Text>
-                            </View>
-                        ))}
+                    {/* Description */}
+                    <Text className="text-stone-600 leading-relaxed mb-8 mt-2 text-base">
+                        {recipe.description}
+                    </Text>
+
+                    {/* Metadata Grid */}
+                    <View className="flex-row justify-between mb-8 bg-white p-4 rounded-2xl border border-stone-100 shadow-sm">
+                        <MetaItem label="Prep" value={recipe.prep_time} />
+                        <View className="w-[1px] bg-stone-100 h-8 self-center" />
+                        <MetaItem label="Cook" value={recipe.cook_time} />
+                        <View className="w-[1px] bg-stone-100 h-8 self-center" />
+                        <MetaItem label="Serves" value={recipe.servings} />
                     </View>
 
-                    <SectionTitle title="Instructions" />
-                    <View className="space-y-6 mb-8">
-                        {instructionsList.map((step, index) => (
-                            <View key={index} className="flex-row">
-                                <View className="w-8 h-8 bg-primary/10 rounded-full justify-center items-center mr-4 mt-1">
-                                    <Text className="text-primary font-bold">{index + 1}</Text>
+                    {/* Tabs */}
+                    <View className="flex-row bg-stone-100 h-12 rounded-xl p-1 mb-8 relative">
+                        <TouchableOpacity
+                            onPress={() => setActiveTab('ingredients')}
+                            className={`flex-1 flex-row items-center justify-center gap-2 rounded-lg ${activeTab === 'ingredients' ? 'bg-white shadow-sm' : ''}`}
+                        >
+                            <Receipt size={16} color={activeTab === 'ingredients' ? '#059669' : '#78716c'} />
+                            <Text className={`font-bold ${activeTab === 'ingredients' ? 'text-emerald-700' : 'text-stone-500'}`}>Ingredients</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => setActiveTab('instructions')}
+                            className={`flex-1 flex-row items-center justify-center gap-2 rounded-lg ${activeTab === 'instructions' ? 'bg-white shadow-sm' : ''}`}
+                        >
+                            <List size={16} color={activeTab === 'instructions' ? '#059669' : '#78716c'} />
+                            <Text className={`font-bold ${activeTab === 'instructions' ? 'text-emerald-700' : 'text-stone-500'}`}>Method</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {activeTab === 'ingredients' ? (
+                        <View className="space-y-3 animate-fade-in">
+                            {ingredientsList.map((ingredient, index) => (
+                                <View key={index} className="flex-row items-center p-3 bg-white border border-stone-100 rounded-xl">
+                                    <View className="w-2 h-2 bg-emerald-400 rounded-full mr-3" />
+                                    <Text className="text-stone-700 font-medium flex-1 text-base">{ingredient}</Text>
                                 </View>
-                                <Text className="text-gray-700 flex-1 leading-6 pt-1">{step}</Text>
-                            </View>
-                        ))}
-                    </View>
-
-                    <SectionTitle title="Nutrition (per serving)" />
-                    {hasNutrition ? (
-                        <View className="bg-gray-50 rounded-2xl p-4 mb-8">
-                            <View className="flex-row flex-wrap justify-between mb-4">
-                                <NutritionItem label="Calories" value={`${recipe.calories || 0}`} unit="kcal" />
-                                <NutritionItem label="Protein" value={`${recipe.protein || 0}`} unit="g" />
-                                <NutritionItem label="Carbs" value={`${recipe.carbs || 0}`} unit="g" />
-                                <NutritionItem label="Fat" value={`${recipe.fat || 0}`} unit="g" />
-                            </View>
-                            <View className="flex-row flex-wrap justify-between">
-                                <NutritionItem label="Fiber" value={`${recipe.fiber || 0}`} unit="g" />
-                                <NutritionItem label="Sugar" value={`${recipe.sugar || 0}`} unit="g" />
-                                <NutritionItem label="Sodium" value={`${recipe.sodium || 0}`} unit="mg" />
-                            </View>
+                            ))}
                         </View>
                     ) : (
-                        <View className="bg-gray-50 rounded-2xl p-6 mb-8 items-center">
-                            <FontAwesome name="info-circle" size={32} color="#10b981" style={{ marginBottom: 12 }} />
-                            <Text className="text-gray-600 text-center mb-4">
-                                Nutrition information is not available for this recipe.
-                            </Text>
-                            <TouchableOpacity
-                                onPress={handleGenerateNutrition}
-                                disabled={generatingNutrition}
-                                className="bg-primary px-6 py-3 rounded-full"
-                            >
-                                {generatingNutrition ? (
-                                    <ActivityIndicator color="white" />
-                                ) : (
-                                    <Text className="text-white font-bold">Generate Nutrition Info</Text>
-                                )}
-                            </TouchableOpacity>
+                        <View className="space-y-6 animate-fade-in">
+                            {instructionsList.map((step, index) => (
+                                <View key={index} className="flex-row gap-4">
+                                    <View className="w-8 h-8 rounded-full bg-emerald-100 items-center justify-center shrink-0 mt-0.5">
+                                        <Text className="text-emerald-800 font-bold">{index + 1}</Text>
+                                    </View>
+                                    <Text className="text-stone-700 leading-7 text-base flex-1 pt-0.5">{step}</Text>
+                                </View>
+                            ))}
                         </View>
                     )}
+
+                    {/* Nutrition Section */}
+                    <View className="mt-10">
+                        <Text className="text-xl font-bold text-stone-800 mb-4 font-serif">Nutrition Facts</Text>
+                        {hasNutrition ? (
+                            <View className="bg-emerald-900 rounded-2xl p-5 shadow-lg shadow-emerald-900/20">
+                                <Text className="text-emerald-100 text-xs mb-4 text-center tracking-widest uppercase">Per Serving</Text>
+                                <View className="flex-row flex-wrap justify-between gap-y-6">
+                                    <NutritionBit label="Calories" value={recipe.calories || 0} unit="" />
+                                    <NutritionBit label="Protein" value={recipe.protein || 0} unit="g" />
+                                    <NutritionBit label="Carbs" value={recipe.carbs || 0} unit="g" />
+                                    <NutritionBit label="Fat" value={recipe.fat || 0} unit="g" />
+                                </View>
+                                <View className="h-[1px] bg-emerald-800 my-4" />
+                                <View className="flex-row justify-between px-4">
+                                    <Text className="text-emerald-300 text-xs">Fiber: {recipe.fiber || 0}g</Text>
+                                    <Text className="text-emerald-300 text-xs">Sugar: {recipe.sugar || 0}g</Text>
+                                    <Text className="text-emerald-300 text-xs">Sodium: {recipe.sodium || 0}mg</Text>
+                                </View>
+                            </View>
+                        ) : (
+                            <View className="bg-stone-100 rounded-2xl p-6 items-center border border-stone-200 border-dashed">
+                                <Info size={32} color="#a8a29e" className="mb-3" />
+                                <Text className="text-stone-500 text-center mb-4">
+                                    Detailed nutrition information is not available.
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={handleGenerateNutrition}
+                                    disabled={generatingNutrition}
+                                    className="bg-emerald-800 px-6 py-3 rounded-xl active:bg-emerald-900"
+                                >
+                                    {generatingNutrition ? (
+                                        <ActivityIndicator color="white" />
+                                    ) : (
+                                        <Text className="text-white font-bold">Calculate Nutrition</Text>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
                 </View>
             </ScrollView>
-        </View>
-    );
-}
 
-function Badge({ icon, text }: { icon: any, text: string }) {
-    return (
-        <View className="flex-row items-center bg-black/30 px-3 py-1 rounded-full backdrop-blur-sm">
-            <FontAwesome name={icon} size={12} color="white" />
-            <Text className="text-white text-xs font-bold ml-2">{text}</Text>
-        </View>
-    );
-}
-
-function SectionTitle({ title }: { title: string }) {
-    return (
-        <Text className="text-xl font-bold text-gray-900 mb-4">{title}</Text>
-    );
-}
-
-function NutritionItem({ label, value, unit }: { label: string, value: string, unit?: string }) {
-    return (
-        <View className="items-center w-1/4 mb-2">
-            <Text className="text-gray-500 text-xs mb-1">{label}</Text>
-            <Text className="text-gray-900 font-bold">
-                {value}
-                {unit && <Text className="text-gray-500 text-xs font-normal"> {unit}</Text>}
-            </Text>
-        </View>
-    );
-}
-
-function DetailRow({ label, value, icon, last = false }: { label: string, value: string, icon: any, last?: boolean }) {
-    return (
-        <View className={`flex-row items-center py-3 ${!last ? 'border-b border-gray-200' : ''}`}>
-            <View className="w-8 items-center mr-3">
-                <FontAwesome name={icon} size={16} color="#10b981" />
+            {/* Floating Action Button for Cooking Mode (Optional) */}
+            <View className="absolute bottom-8 right-6">
+                <TouchableOpacity className="bg-emerald-600 w-14 h-14 rounded-full items-center justify-center shadow-lg shadow-emerald-600/30 flex-row active:scale-95 transition-all">
+                    <PlayCircle size={28} color="white" fill="white" className="text-emerald-600" />
+                </TouchableOpacity>
             </View>
-            <Text className="text-gray-500 flex-1">{label}</Text>
-            <Text className="text-gray-900 font-semibold">{value}</Text>
+        </View>
+    );
+}
+
+function MetaItem({ label, value }: { label: string, value: string }) {
+    return (
+        <View className="items-center flex-1">
+            <Text className="text-stone-400 text-xs mb-1 font-medium">{label}</Text>
+            <Text className="text-stone-800 font-bold">{value}</Text>
+        </View>
+    );
+}
+
+function NutritionBit({ label, value, unit }: { label: string, value: number, unit: string }) {
+    return (
+        <View className="items-center w-[22%]">
+            <Text className="text-emerald-200 text-xs mb-1 font-medium">{label}</Text>
+            <Text className="text-white font-bold text-lg">{value}<Text className="text-xs font-normal text-emerald-300">{unit}</Text></Text>
         </View>
     );
 }

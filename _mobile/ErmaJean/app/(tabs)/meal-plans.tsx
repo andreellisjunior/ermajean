@@ -1,126 +1,66 @@
-/**
- * MealPlansScreen
- * Weekly calendar view for meal planning with day cards, meal slots, and macro counters
- * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6
- */
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
-  StyleSheet,
-  Alert,
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/libs/supabase';
-import { Haptic } from '@/utils/haptics';
-import { Colors, Spacing, Typography, Shadows, BorderRadius } from '@/constants/design';
+import { Colors } from '@/constants/design';
 import { Recipe, MealSlot, MacroGoals } from '@/types/config';
-import { MealSlot as MealSlotComponent } from '@/components/MealSlot';
-import { MacroCounter } from '@/components/MacroCounter';
 import { RecipeSelectionModal } from '@/components/RecipeSelectionModal';
 import { ShoppingListModal } from '@/components/ShoppingListModal';
-import {
-  getWeekStart,
-  getWeekEnd,
-  getDaysInWeek,
-  formatDate,
-  isToday,
-} from '@/utils/dateUtils';
+import { getWeekStart, getWeekEnd, getDaysInWeek, formatDate, isToday } from '@/utils/dateUtils';
 import { calculateDayMacros } from '@/utils/macroCalculations';
-import {
-  getMealPlans,
-  addMealToPlan,
-  removeMealFromPlan,
-  MealType,
-} from '@/services/mealPlanService';
+import { getMealPlans, addMealToPlan, removeMealFromPlan, MealType } from '@/services/mealPlanService';
+import { ChevronLeft, ChevronRight, Calendar, ShoppingCart, Plus, Trash2, Flame, RefreshCw } from 'lucide-react-native';
 
 const MEAL_TYPES: MealType[] = ['Breakfast', 'Lunch', 'Dinner'];
 
 export default function MealPlansScreen() {
   // State
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [meals, setMeals] = useState<MealSlot[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [macroGoals, setMacroGoals] = useState<MacroGoals | undefined>();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  
+
   // Modal state
   const [recipeModalVisible, setRecipeModalVisible] = useState(false);
   const [shoppingListVisible, setShoppingListVisible] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; mealType: MealType } | null>(null);
 
-
   // Computed values
   const weekStart = useMemo(() => getWeekStart(currentDate), [currentDate]);
   const weekEnd = useMemo(() => getWeekEnd(currentDate), [currentDate]);
   const daysInWeek = useMemo(() => getDaysInWeek(currentDate), [currentDate]);
-  
-  // Create a map of recipes for quick lookup
+
   const recipesMap = useMemo(() => {
     const map = new Map<string, Recipe>();
     recipes.forEach(recipe => map.set(recipe.id, recipe));
     return map;
   }, [recipes]);
 
-  // Format week range for display
   const weekRangeText = useMemo(() => {
     const startMonth = weekStart.toLocaleDateString('en-US', { month: 'short' });
     const endMonth = weekEnd.toLocaleDateString('en-US', { month: 'short' });
     const startDay = weekStart.getDate();
     const endDay = weekEnd.getDate();
-    const year = weekEnd.getFullYear();
-    
-    if (startMonth === endMonth) {
-      return `${startMonth} ${startDay} - ${endDay}, ${year}`;
-    }
-    return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+    return `${startMonth} ${startDay} - ${endMonth !== startMonth ? endMonth : ''} ${endDay}`;
   }, [weekStart, weekEnd]);
 
   // Fetch data
   const fetchData = useCallback(async () => {
     try {
-      // Fetch meal plans for the week
       const mealPlans = await getMealPlans(weekStart, weekEnd);
       setMeals(mealPlans);
 
-      // Fetch all recipes
       const { data: recipesData } = await supabase
         .from('recipes')
         .select('*')
         .order('recipe_name', { ascending: true });
-      
-      if (recipesData) {
-        setRecipes(recipesData);
-      }
 
-      // Fetch user profile for macro goals
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('calorie_goal, protein_goal, carb_goal, fat_goal')
-          .eq('id', user.id)
-          .single();
-        
-        if (profile && profile.calorie_goal) {
-          setMacroGoals({
-            calories: profile.calorie_goal,
-            protein: profile.protein_goal || 150,
-            carbs: profile.carb_goal || 250,
-            fat: profile.fat_goal || 65,
-          });
-        }
-      }
+      if (recipesData) setRecipes(recipesData);
+
     } catch (error) {
-      console.error('Error fetching meal plan data:', error);
-      Alert.alert('Error', 'Failed to load meal plans. Please try again.');
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -131,45 +71,35 @@ export default function MealPlansScreen() {
     fetchData();
   }, [fetchData]);
 
-  // Navigation handlers
-  const goToPreviousWeek = async () => {
-    await Haptic.navigation();
-    const newDate = new Date(currentDate);
-    newDate.setDate(newDate.getDate() - 7);
-    setCurrentDate(newDate);
-  };
+  // Sync selected date when week changes if selected date is out of range
+  useEffect(() => {
+    // If we switch weeks, default to the first day of the week or today if in range
+    const isSelectedInRange = selectedDate >= weekStart && selectedDate <= weekEnd;
+    if (!isSelectedInRange) {
+      // If today is in this week, select today, else select start of week
+      const today = new Date();
+      const isTodayInWeek = today >= weekStart && today <= weekEnd;
+      setSelectedDate(isTodayInWeek ? today : weekStart);
+    }
+  }, [weekStart, weekEnd]);
 
-  const goToNextWeek = async () => {
-    await Haptic.navigation();
-    const newDate = new Date(currentDate);
-    newDate.setDate(newDate.getDate() + 7);
-    setCurrentDate(newDate);
-  };
 
-  const goToToday = async () => {
-    await Haptic.buttonPress();
-    setCurrentDate(new Date());
-  };
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchData();
+  }, [fetchData]);
 
-  // Meal slot handlers
-  const handleSlotPress = (date: string, mealType: MealType) => {
-    setSelectedSlot({ date, mealType });
+  const handleSlotPress = (mealType: MealType) => {
+    setSelectedSlot({ date: formatDate(selectedDate), mealType });
     setRecipeModalVisible(true);
   };
 
   const handleRecipeSelect = async (recipe: Recipe) => {
     if (!selectedSlot) return;
-    
     try {
       await addMealToPlan(selectedSlot.date, selectedSlot.mealType, recipe.id);
-      
-      // Update local state
       setMeals(prev => {
-        // Remove existing meal in this slot if any
-        const filtered = prev.filter(
-          m => !(m.date === selectedSlot.date && m.mealType === selectedSlot.mealType)
-        );
-        // Add new meal
+        const filtered = prev.filter(m => !(m.date === selectedSlot.date && m.mealType === selectedSlot.mealType));
         return [...filtered, {
           date: selectedSlot.date,
           mealType: selectedSlot.mealType,
@@ -177,166 +107,173 @@ export default function MealPlansScreen() {
           recipeName: recipe.recipe_name,
         }];
       });
-      
-      await Haptic.success();
+      setRecipeModalVisible(false);
+      setSelectedSlot(null);
     } catch (error) {
-      console.error('Error adding meal to plan:', error);
-      Alert.alert('Error', 'Failed to add meal. Please try again.');
+      Alert.alert('Error', 'Failed to add meal.');
     }
   };
 
-  const handleDeleteMeal = async (date: string, mealType: MealType) => {
+  const handleDeleteMeal = async (mealType: MealType) => {
+    const dateStr = formatDate(selectedDate);
     try {
-      await removeMealFromPlan(date, mealType);
-      
-      // Update local state
-      setMeals(prev => prev.filter(
-        m => !(m.date === date && m.mealType === mealType)
-      ));
+      await removeMealFromPlan(dateStr, mealType);
+      setMeals(prev => prev.filter(m => !(m.date === dateStr && m.mealType === mealType)));
     } catch (error) {
-      console.error('Error removing meal from plan:', error);
-      Alert.alert('Error', 'Failed to remove meal. Please try again.');
+      Alert.alert('Error', 'Failed to remove meal.');
     }
   };
 
-  // Get meal for a specific slot
-  const getMealForSlot = (date: string, mealType: MealType): MealSlot | undefined => {
-    return meals.find(m => m.date === date && m.mealType === mealType);
+  const getMealForSlot = (mealType: MealType) => {
+    return meals.find(m => m.date === formatDate(selectedDate) && m.mealType === mealType);
   };
 
-  // Get recipe for a meal slot
-  const getRecipeForSlot = (date: string, mealType: MealType): Recipe | undefined => {
-    const meal = getMealForSlot(date, mealType);
-    if (meal?.recipeId) {
-      return recipesMap.get(meal.recipeId);
-    }
-    return undefined;
-  };
-
-  // Refresh handler
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchData();
-  }, [fetchData]);
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#10b981" />
-          <Text style={styles.loadingText}>Loading meal plans...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
+  const dayMacros = useMemo(() => {
+    return calculateDayMacros(formatDate(selectedDate), meals, recipesMap);
+  }, [selectedDate, meals, recipesMap]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <Text style={styles.title}>Meal Plans</Text>
-          <TouchableOpacity
-            style={styles.shoppingButton}
-            onPress={async () => {
-              await Haptic.buttonPress();
-              setShoppingListVisible(true);
-            }}
-          >
-            <Ionicons name="cart-outline" size={24} color="#10b981" />
-          </TouchableOpacity>
-        </View>
-        
-        {/* Week Navigation */}
-        <View style={styles.weekNav}>
-          <TouchableOpacity onPress={goToPreviousWeek} style={styles.navButton}>
-            <Ionicons name="chevron-back" size={24} color="#1f2937" />
-          </TouchableOpacity>
-          
-          <TouchableOpacity onPress={goToToday} style={styles.weekTextContainer}>
-            <Text style={styles.weekText}>{weekRangeText}</Text>
-            <Text style={styles.todayHint}>Tap for today</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity onPress={goToNextWeek} style={styles.navButton}>
-            <Ionicons name="chevron-forward" size={24} color="#1f2937" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Calendar Content */}
-      <ScrollView
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="#10b981"
-          />
-        }
-      >
-        {daysInWeek.map((day) => {
-          const dateStr = formatDate(day);
-          const dayName = day.toLocaleDateString('en-US', { weekday: 'short' });
-          const dayNum = day.getDate();
-          const isTodayDate = isToday(day);
-          const dayMacros = calculateDayMacros(dateStr, meals, recipesMap);
-          const hasMeals = meals.some(m => m.date === dateStr && m.recipeId);
-
-          return (
-            <View key={dateStr} style={[styles.dayCard, isTodayDate && styles.todayCard]}>
-              {/* Day Header */}
-              <View style={styles.dayHeader}>
-                <View style={styles.dayInfo}>
-                  <View style={[styles.dayBadge, isTodayDate && styles.todayBadge]}>
-                    <Text style={[styles.dayNum, isTodayDate && styles.todayDayNum]}>
-                      {dayNum}
-                    </Text>
-                  </View>
-                  <View>
-                    <Text style={[styles.dayName, isTodayDate && styles.todayDayName]}>
-                      {dayName}
-                    </Text>
-                    {isTodayDate && <Text style={styles.todayLabel}>Today</Text>}
-                  </View>
-                </View>
-              </View>
-
-              {/* Meal Slots */}
-              <View style={styles.mealSlots}>
-                {MEAL_TYPES.map((mealType) => (
-                  <MealSlotComponent
-                    key={`${dateStr}-${mealType}`}
-                    date={dateStr}
-                    mealType={mealType}
-                    recipe={getRecipeForSlot(dateStr, mealType)}
-                    onPress={() => handleSlotPress(dateStr, mealType)}
-                    onDelete={() => handleDeleteMeal(dateStr, mealType)}
-                  />
-                ))}
-              </View>
-
-              {/* Macro Counter for the day */}
-              {hasMeals && (
-                <View style={styles.macroSection}>
-                  <MacroCounter
-                    currentMacros={dayMacros}
-                    macroGoals={macroGoals}
-                    compact
-                  />
-                </View>
-              )}
+    <View className="flex-1 bg-[#FDFBF7]">
+      <SafeAreaView className="flex-1" edges={['top']}>
+        <ScrollView
+          className="flex-1 px-5"
+          contentContainerStyle={{ paddingBottom: 100 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#065f46" />}
+        >
+          <View className="flex-row justify-between items-center mb-2 mt-4">
+            <View>
+              <Text className="text-3xl font-bold text-stone-800 font-serif">Weekly Planner</Text>
+              <Text className="text-stone-500">Plan your meals for a healthier week</Text>
             </View>
-          );
-        })}
-        
-        {/* Bottom spacing */}
-        <View style={styles.bottomSpacer} />
-      </ScrollView>
+            <TouchableOpacity
+              onPress={() => setShoppingListVisible(true)}
+              className="w-10 h-10 bg-emerald-100 items-center justify-center rounded-full"
+            >
+              <ShoppingCart size={20} color="#065f46" />
+            </TouchableOpacity>
+          </View>
 
-      {/* Recipe Selection Modal */}
+          {/* Week Navigator */}
+          <View className="bg-white p-4 rounded-2xl shadow-sm border border-stone-100 mb-6 mt-4">
+            <View className="flex-row justify-between items-center mb-4">
+              <TouchableOpacity onPress={() => setCurrentDate(d => { const n = new Date(d); n.setDate(n.getDate() - 7); return n; })} className="p-2 bg-stone-50 rounded-full">
+                <ChevronLeft size={20} color="#57534e" />
+              </TouchableOpacity>
+              <View className="flex-row items-center gap-2">
+                <Calendar size={18} color="#059669" />
+                <Text className="font-bold text-stone-800">{weekRangeText}</Text>
+              </View>
+              <TouchableOpacity onPress={() => setCurrentDate(d => { const n = new Date(d); n.setDate(n.getDate() + 7); return n; })} className="p-2 bg-stone-50 rounded-full">
+                <ChevronRight size={20} color="#57534e" />
+              </TouchableOpacity>
+            </View>
+            <View className="flex-row justify-between">
+              {daysInWeek.map((day, idx) => {
+                const isSelected = formatDate(day) === formatDate(selectedDate);
+                const isTodayDay = isToday(day);
+                return (
+                  <TouchableOpacity
+                    key={idx}
+                    onPress={() => setSelectedDate(day)}
+                    className={`flex-col items-center p-2 rounded-xl min-w-[44px] ${isSelected ? 'bg-emerald-800 shadow-md' : 'bg-transparent'}`}
+                  >
+                    <Text className={`text-xs font-medium mb-1 ${isSelected ? 'text-emerald-100' : 'text-stone-400'}`}>
+                      {day.toLocaleDateString('en-US', { weekday: 'short' })}
+                    </Text>
+                    <Text className={`font-bold ${isSelected ? 'text-white' : 'text-stone-700'}`}>
+                      {day.getDate()}
+                    </Text>
+                    {isTodayDay && !isSelected && <View className="w-1 h-1 bg-emerald-500 rounded-full mt-1" />}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Daily View */}
+          <View className="flex-1 space-y-4">
+            {MEAL_TYPES.map(type => {
+              const meal = getMealForSlot(type);
+              const recipe = meal?.recipeId ? recipesMap.get(meal.recipeId) : null;
+
+              return (
+                <View key={type} className="bg-white p-4 rounded-2xl border border-stone-100 shadow-sm mb-4">
+                  <View className="flex-row justify-between items-center mb-3">
+                    <Text className="font-bold text-stone-700 text-lg">{type}</Text>
+                    <TouchableOpacity onPress={() => handleSlotPress(type)}>
+                      <Plus size={20} color="#059669" />
+                    </TouchableOpacity>
+                  </View>
+
+                  {recipe ? (
+                    <View className="bg-stone-50 p-3 rounded-xl flex-row items-center justify-between">
+                      <View className="flex-1">
+                        <Text className="font-bold text-stone-800 text-base mb-1">{recipe.recipe_name}</Text>
+                        <View className="flex-row items-center gap-3">
+                          <View className="flex-row items-center gap-1">
+                            <Flame size={12} color="#f97316" />
+                            <Text className="text-xs text-stone-500">{recipe.calories || 0} kcal</Text>
+                          </View>
+                          <Text className="text-xs text-stone-400">|</Text>
+                          <Text className="text-xs text-stone-500">{recipe.total_time}</Text>
+                        </View>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => handleDeleteMeal(type)}
+                        className="p-2 bg-white rounded-lg border border-stone-200"
+                      >
+                        <Trash2 size={16} color="#ef4444" />
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      onPress={() => handleSlotPress(type)}
+                      className="border-2 border-dashed border-stone-200 rounded-xl p-6 items-center justify-center bg-stone-50/50"
+                    >
+                      <Text className="text-stone-400 font-medium text-sm">Add {type}</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            })}
+
+            {/* Macro Summary for Selected Day */}
+            <View className="bg-emerald-900	p-5 rounded-2xl mt-4 relative overflow-hidden">
+              <Text className="text-white font-bold text-lg mb-4">Daily Nutrition</Text>
+              <View className="flex-row justify-between">
+                <View className="items-center">
+                  <Text className="text-emerald-200 text-xs mb-1">Calories</Text>
+                  <Text className="text-white font-bold text-xl">{Math.round(dayMacros.calories)}</Text>
+                </View>
+                <View className="items-center">
+                  <Text className="text-emerald-200 text-xs mb-1">Protein</Text>
+                  <Text className="text-white font-bold text-xl">{Math.round(dayMacros.protein)}g</Text>
+                </View>
+                <View className="items-center">
+                  <Text className="text-emerald-200 text-xs mb-1">Carbs</Text>
+                  <Text className="text-white font-bold text-xl">{Math.round(dayMacros.carbs)}g</Text>
+                </View>
+                <View className="items-center">
+                  <Text className="text-emerald-200 text-xs mb-1">Fat</Text>
+                  <Text className="text-white font-bold text-xl">{Math.round(dayMacros.fat)}g</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Shopping List Button kept in Header, but maybe also useful here? Mockup showed Generate Shopping List button at bottom */}
+          <TouchableOpacity
+            onPress={() => setShoppingListVisible(true)}
+            className="bg-emerald-100 py-4 rounded-xl items-center flex-row justify-center gap-2 mt-6 active:scale-95 transition-all"
+          >
+            <RefreshCw size={18} color="#065f46" />
+            <Text className="text-emerald-800 font-bold">Generate Shopping List</Text>
+          </TouchableOpacity>
+
+        </ScrollView>
+
+      </SafeAreaView>
+
       <RecipeSelectionModal
         visible={recipeModalVisible}
         onClose={() => {
@@ -349,154 +286,12 @@ export default function MealPlansScreen() {
         date={selectedSlot?.date || formatDate(new Date())}
       />
 
-      {/* Shopping List Modal */}
       <ShoppingListModal
         visible={shoppingListVisible}
         onClose={() => setShoppingListVisible(false)}
         meals={meals}
         recipes={recipesMap}
       />
-    </SafeAreaView>
+    </View>
   );
 }
-
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#6b7280',
-  },
-  header: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1f2937',
-  },
-  shoppingButton: {
-    padding: 8,
-    backgroundColor: '#d1fae5',
-    borderRadius: 12,
-  },
-  weekNav: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  navButton: {
-    padding: 8,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 10,
-  },
-  weekTextContainer: {
-    alignItems: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 16,
-  },
-  weekText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-  },
-  todayHint: {
-    fontSize: 11,
-    color: '#9ca3af',
-    marginTop: 2,
-  },
-  content: {
-    flex: 1,
-    padding: 16,
-  },
-  dayCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    marginBottom: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  todayCard: {
-    borderWidth: 2,
-    borderColor: '#10b981',
-  },
-  dayHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  dayInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  dayBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#f3f4f6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  todayBadge: {
-    backgroundColor: '#10b981',
-  },
-  dayNum: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1f2937',
-  },
-  todayDayNum: {
-    color: '#fff',
-  },
-  dayName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-  },
-  todayDayName: {
-    color: '#10b981',
-  },
-  todayLabel: {
-    fontSize: 12,
-    color: '#10b981',
-    fontWeight: '500',
-  },
-  mealSlots: {
-    gap: 8,
-  },
-  macroSection: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
-  },
-  bottomSpacer: {
-    height: 32,
-  },
-});

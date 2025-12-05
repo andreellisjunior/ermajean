@@ -1,16 +1,13 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '@/libs/supabase';
 import { useEffect, useState } from 'react';
 import { Profile, MacroGoals } from '@/types/config';
 import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Ionicons } from '@expo/vector-icons';
 import { GoalsFormModal } from '@/components/GoalsFormModal';
 import { updateMacroGoals } from '@/services/profileService';
 import { Haptic } from '@/utils/haptics';
-import { Colors } from '@/constants/design';
+import { Settings, CreditCard, Bell, LogOut, ChevronRight, User, Crown, Flame, Activity, Wheat, Droplet } from 'lucide-react-native';
 
 export default function ProfileScreen() {
     const [profile, setProfile] = useState<Profile | null>(null);
@@ -84,132 +81,80 @@ export default function ProfileScreen() {
 
     if (loading) {
         return (
-            <SafeAreaView className="flex-1 justify-center items-center bg-gray-50">
-                <ActivityIndicator size="large" color="#10b981" />
+            <SafeAreaView className="flex-1 justify-center items-center bg-[#FDFBF7]">
+                <ActivityIndicator size="large" color="#059669" />
             </SafeAreaView>
         );
     }
 
     return (
-        <View className="flex-1 bg-gray-50">
-            <LinearGradient
-                colors={['#10b981', '#059669']}
-                className="pt-20 pb-10 px-6 rounded-b-[40px] shadow-lg"
-            >
-                <View className="items-center">
-                    <View className="w-24 h-24 bg-white rounded-full justify-center items-center mb-4 shadow-md">
-                        <Text className="text-4xl text-primary font-bold">
-                            {profile?.name?.charAt(0).toUpperCase() || 'U'}
-                        </Text>
-                    </View>
-                    <View className="flex-row items-center gap-2">
-                        <Text className="text-2xl font-bold text-white">{profile?.name || 'User'}</Text>
-                        {profile?.has_access && (
-                            <View className="bg-amber-400 px-3 py-1 rounded-full flex-row items-center gap-1">
-                                <FontAwesome name="star" size={12} color="#fff" />
-                                <Text className="text-white text-xs font-bold">Premium</Text>
-                            </View>
-                        )}
-                    </View>
-                    <Text className="text-white/80 mt-1">{profile?.email}</Text>
-                </View>
-            </LinearGradient>
+        <View className="flex-1 bg-[#FDFBF7]">
+            <SafeAreaView className="flex-1" edges={['top']}>
+                <View className="px-5 pt-4 pb-2">
+                    <Text className="text-3xl font-bold text-stone-800 font-serif mb-6">My Profile</Text>
 
-            <ScrollView className="flex-1 px-6 -mt-6" showsVerticalScrollIndicator={false}>
-                {/* Macro Goals Card */}
-                <View className="bg-white rounded-2xl p-6 shadow-sm mb-6">
-                    <View className="flex-row justify-between items-center mb-4">
-                        <Text className="text-lg font-bold text-gray-900">My Goals</Text>
+                    {/* User Card */}
+                    <View className="flex-row items-center gap-4 mb-8">
+                        <View className="w-20 h-20 bg-emerald-100 rounded-full items-center justify-center border-2 border-white shadow-sm">
+                            <Text className="text-3xl font-bold text-emerald-800">
+                                {profile?.name?.charAt(0).toUpperCase() || 'U'}
+                            </Text>
+                        </View>
+                        <View>
+                            <Text className="text-xl font-bold text-stone-800">{profile?.name || 'User'}</Text>
+                            <Text className="text-stone-500 mb-2">{profile?.email}</Text>
+                            {profile?.has_access && (
+                                <View className="bg-amber-100 self-start px-2 py-0.5 rounded-md border border-amber-200 flex-row items-center gap-1">
+                                    <Crown size={12} color="#d97706" fill="#d97706" />
+                                    <Text className="text-amber-700 text-xs font-bold">Premium Plan</Text>
+                                </View>
+                            )}
+                        </View>
+                    </View>
+
+                    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+                        {/* Macro Goals */}
+                        <View className="mb-8">
+                            <View className="flex-row justify-between items-end mb-4 px-1">
+                                <Text className="font-bold text-stone-800 text-lg">Macro Goals</Text>
+                                <TouchableOpacity onPress={handleEditGoals}>
+                                    <Text className="text-emerald-700 font-bold text-sm">Edit Goals</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            <View className="flex-row flex-wrap gap-3">
+                                <GoalCard label="Calories" value={currentGoals.calories} unit="kcal" icon={Flame} color="text-orange-500" bg="bg-orange-50" />
+                                <GoalCard label="Protein" value={currentGoals.protein} unit="g" icon={Activity} color="text-blue-500" bg="bg-blue-50" />
+                                <GoalCard label="Carbs" value={currentGoals.carbs} unit="g" icon={Wheat} color="text-yellow-600" bg="bg-yellow-50" />
+                                <GoalCard label="Fat" value={currentGoals.fat} unit="g" icon={Droplet} color="text-purple-500" bg="bg-purple-50" />
+                            </View>
+                        </View>
+
+                        {/* Account Settings */}
+                        <View className="mb-8">
+                            <Text className="font-bold text-stone-800 text-lg mb-4 px-1">Account Settings</Text>
+                            <View className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
+                                <SettingItem icon={User} label="Personal Information" />
+                                <SettingItem icon={Settings} label="Diet Preferences" />
+                                <SettingItem icon={CreditCard} label="Subscription" value={profile?.has_access ? "Active" : "Free"} />
+                                <SettingItem icon={Bell} label="Notifications" border={false} />
+                            </View>
+                        </View>
+
+                        {/* Sign Out */}
                         <TouchableOpacity
-                            onPress={handleEditGoals}
-                            className="bg-emerald-50 px-4 py-2 rounded-lg flex-row items-center gap-2"
+                            onPress={handleSignOut}
+                            className="bg-red-50 p-4 rounded-xl flex-row items-center justify-center gap-2 active:scale-95 transition-all"
                         >
-                            <Ionicons name="pencil" size={16} color="#10b981" />
-                            <Text className="text-emerald-600 font-semibold text-sm">Edit</Text>
+                            <LogOut size={20} color="#ef4444" />
+                            <Text className="text-red-500 font-bold">Log Out</Text>
                         </TouchableOpacity>
-                    </View>
-                    
-                    {profile?.calorie_goal || profile?.protein_goal || profile?.carb_goal || profile?.fat_goal ? (
-                        <View className="space-y-4">
-                            <GoalRow 
-                                label="Calories" 
-                                value={profile?.calorie_goal} 
-                                unit="" 
-                                icon="flame-outline"
-                                color="#10b981"
-                            />
-                            <GoalRow 
-                                label="Protein" 
-                                value={profile?.protein_goal} 
-                                unit="g" 
-                                icon="fitness-outline"
-                                color="#3b82f6"
-                            />
-                            <GoalRow 
-                                label="Carbs" 
-                                value={profile?.carb_goal} 
-                                unit="g" 
-                                icon="nutrition-outline"
-                                color="#f59e0b"
-                            />
-                            <GoalRow 
-                                label="Fat" 
-                                value={profile?.fat_goal} 
-                                unit="g" 
-                                icon="water-outline"
-                                color="#8b5cf6"
-                            />
-                        </View>
-                    ) : (
-                        <View className="py-6 items-center">
-                            <Ionicons name="target-outline" size={48} color="#d1d5db" />
-                            <Text className="text-gray-500 mt-2 text-center">No goals set yet</Text>
-                            <Text className="text-gray-400 text-sm text-center mt-1">
-                                Tap Edit to set your daily macro targets
-                            </Text>
-                        </View>
-                    )}
+
+                        <Text className="text-center text-stone-300 text-xs mt-8">Version 1.0.0</Text>
+                    </ScrollView>
                 </View>
+            </SafeAreaView>
 
-                {/* Account Section */}
-                <View className="bg-white rounded-2xl p-6 shadow-sm mb-6">
-                    <Text className="text-lg font-bold text-gray-900 mb-4">Account</Text>
-                    <View className="flex-row items-center py-3 border-b border-gray-100">
-                        <View className="w-10 h-10 bg-amber-50 rounded-full justify-center items-center">
-                            <FontAwesome name="star" size={18} color="#f59e0b" />
-                        </View>
-                        <View className="flex-1 ml-3">
-                            <Text className="text-gray-900 font-medium">Subscription Plan</Text>
-                            <Text className="text-gray-500 text-sm mt-0.5">
-                                {profile?.has_access ? 'Premium Member' : 'Free Plan'}
-                            </Text>
-                        </View>
-                        {profile?.has_access && (
-                            <View className="bg-emerald-100 px-3 py-1 rounded-full">
-                                <Text className="text-emerald-700 text-xs font-semibold">Active</Text>
-                            </View>
-                        )}
-                    </View>
-                    <TouchableOpacity className="flex-row items-center py-3">
-                        <View className="w-10 h-10 bg-gray-50 rounded-full justify-center items-center">
-                            <FontAwesome name="gear" size={18} color="#6b7280" />
-                        </View>
-                        <Text className="flex-1 ml-3 text-gray-900 font-medium">Settings</Text>
-                        <FontAwesome name="chevron-right" size={14} color="#d1d5db" />
-                    </TouchableOpacity>
-                </View>
-
-                {/* Sign Out Button */}
-                <TouchableOpacity
-                    onPress={handleSignOut}
-                    className="bg-red-50 p-4 rounded-xl flex-row justify-center items-center mb-8"
-                >
-                    <FontAwesome name="sign-out" size={20} color="#ef4444" />
-                    <Text className="text-red-500 font-bold ml-2">Sign Out</Text>
-                </TouchableOpacity>
-            </ScrollView>
-
-            {/* Goals Form Modal */}
             <GoalsFormModal
                 visible={goalsModalVisible}
                 onClose={() => setGoalsModalVisible(false)}
@@ -220,26 +165,31 @@ export default function ProfileScreen() {
     );
 }
 
-interface GoalRowProps {
-    label: string;
-    value?: number;
-    unit: string;
-    icon: keyof typeof Ionicons.glyphMap;
-    color: string;
+function GoalCard({ label, value, unit, icon: Icon, color, bg }: { label: string, value: number, unit: string, icon: any, color: string, bg: string }) {
+    return (
+        <View className={`${bg} p-4 rounded-2xl w-[48%] mb-1 grow`}>
+            <View className="flex-row justify-between items-start mb-2">
+                <Icon size={20} className={color} />
+                <Text className={`font-bold text-lg ${color}`}>{value}</Text>
+            </View>
+            <Text className="text-stone-500 text-xs font-medium">{label}</Text>
+        </View>
+    )
 }
 
-function GoalRow({ label, value, unit, icon, color }: GoalRowProps) {
+function SettingItem({ icon: Icon, label, value, border = true }: { icon: any, label: string, value?: string, border?: boolean }) {
     return (
-        <View className="flex-row items-center justify-between py-2">
+        <TouchableOpacity className={`p-4 flex-row items-center justify-between active:bg-stone-50 ${border ? 'border-b border-stone-100' : ''}`}>
             <View className="flex-row items-center gap-3">
-                <View className="w-10 h-10 rounded-full justify-center items-center" style={{ backgroundColor: `${color}20` }}>
-                    <Ionicons name={icon} size={20} color={color} />
+                <View className="w-8 h-8 rounded-full bg-stone-50 items-center justify-center">
+                    <Icon size={16} color="#57534e" />
                 </View>
-                <Text className="text-gray-700 font-medium">{label}</Text>
+                <Text className="text-stone-700 font-medium">{label}</Text>
             </View>
-            <Text className="font-bold text-gray-900 text-lg">
-                {value || '-'}{value ? ` ${unit}` : ''}
-            </Text>
-        </View>
-    );
+            <View className="flex-row items-center gap-2">
+                {value && <Text className="text-emerald-600 font-medium text-sm">{value}</Text>}
+                <ChevronRight size={16} color="#d6d3d1" />
+            </View>
+        </TouchableOpacity>
+    )
 }

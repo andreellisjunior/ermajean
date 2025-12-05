@@ -8,7 +8,17 @@ export default function Index() {
     const [session, setSession] = useState<Session | null | undefined>(undefined);
     const [isLoading, setIsLoading] = useState(true);
 
+    // Dev bypass for auth - allows UI development without authentication
+    const devBypassAuth = process.env.EXPO_PUBLIC_DEV_BYPASS_AUTH === 'true';
+
     useEffect(() => {
+        // Skip auth check if dev bypass is enabled
+        if (devBypassAuth) {
+            setSession({} as Session); // Mock session
+            setIsLoading(false);
+            return;
+        }
+
         // Check for existing session
         supabase.auth.getSession().then(({ data: { session }, error }) => {
             if (error) {
@@ -27,7 +37,7 @@ export default function Index() {
         return () => {
             subscription.unsubscribe();
         };
-    }, []);
+    }, [devBypassAuth]);
 
     // Show loading state while checking auth
     if (isLoading) {

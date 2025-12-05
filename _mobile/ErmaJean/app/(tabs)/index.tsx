@@ -1,24 +1,17 @@
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, StyleSheet, Dimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Image, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '@/libs/supabase';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Recipe, Profile, MealSlot } from '@/types/config';
-import { Colors, Spacing, Typography, Shadows, BorderRadius, Layout } from '@/constants/design';
-import { FadeInView, StaggeredList, AnimatedCard } from '@/components/animated';
-import { Haptic } from '@/utils/haptics';
-import { getMealPlans } from '@/services/mealPlanService';
-import { formatDate, isToday } from '@/utils/dateUtils';
-
-const { width } = Dimensions.get('window');
+import { Recipe, Profile } from '@/types/config';
+import { User, Search, BookOpen, Flame, Settings, Plus, Sparkles, ArrowRight, Leaf, Clock, ChefHat } from 'lucide-react-native';
 
 export default function HomeScreen() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [todaysMeals, setTodaysMeals] = useState<MealSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchData = async () => {
     try {
@@ -37,40 +30,10 @@ export default function HomeScreen() {
       const { data: recipesData } = await supabase
         .from('recipes')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(6);
+        .order('created_at', { ascending: false });
 
       if (recipesData) {
         setRecipes(recipesData);
-      }
-
-      // Fetch today's meal plan
-      const today = new Date();
-      const todayStr = formatDate(today);
-      const { data: mealsData } = await supabase
-        .from('meal_plans')
-        .select(`
-          id,
-          date,
-          meal_type,
-          recipe_id,
-          recipes (
-            recipe_name,
-            total_time,
-            calories
-          )
-        `)
-        .eq('user_id', user?.id)
-        .eq('date', todayStr);
-
-      if (mealsData) {
-        const meals: MealSlot[] = mealsData.map((plan: any) => ({
-          date: plan.date,
-          mealType: plan.meal_type,
-          recipeId: plan.recipe_id,
-          recipeName: plan.recipes?.recipe_name,
-        }));
-        setTodaysMeals(meals);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -86,537 +49,138 @@ export default function HomeScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Haptic.refresh();
     await fetchData();
   };
 
-  const handleSignOut = async () => {
-    await Haptic.buttonPress();
-    await supabase.auth.signOut();
-    router.replace('/(auth)/sign-in');
-  };
-
-  const getMealIcon = (mealType: string) => {
-    switch (mealType) {
-      case 'Breakfast':
-        return '🌅';
-      case 'Lunch':
-        return '☀️';
-      case 'Dinner':
-        return '🌙';
-      default:
-        return '🍽️';
-    }
-  };
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  };
+  const filteredRecipes = recipes.filter(r =>
+    r.recipe_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={Colors.gradients.emerald}
-        style={styles.headerGradient}
-      >
-        <SafeAreaView edges={['top']} style={styles.headerSafeArea}>
-          <FadeInView duration={400}>
-            <View style={styles.headerContainer}>
-              <View style={styles.headerContent}>
-                <Text style={styles.greetingText}>{getGreeting()},</Text>
-                <Text style={styles.nameText}>
-                  {profile?.name?.split(' ')[0] || 'Chef'}!
-                </Text>
-                {profile?.has_access && (
-                  <View style={styles.premiumBadge}>
-                    <Text style={styles.premiumBadgeText}>✨ Premium</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          </FadeInView>
-        </SafeAreaView>
-      </LinearGradient>
-
+    <View className="flex-1 bg-[#FDFBF7]">
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        className="flex-1 px-5"
+        contentContainerStyle={{ paddingBottom: 100, paddingTop: 24 }}
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh}
-            tintColor={Colors.primary[500]}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#065f46" />
         }
-        showsVerticalScrollIndicator={false}
       >
-        {/* Quick Actions */}
-        <FadeInView delay={200} duration={400}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
-            <View style={styles.quickActionsGrid}>
-              <AnimatedCard
-                style={styles.quickActionCard}
-                onPress={async () => {
-                  await Haptic.buttonPress();
-                  router.push('/(tabs)/meal-plans');
-                }}
-                shadow="md"
-              >
-                <LinearGradient
-                  colors={Colors.gradients.primary}
-                  style={styles.quickActionGradient}
-                >
-                  <Text style={styles.quickActionIcon}>📅</Text>
-                  <Text style={styles.quickActionText}>Meal Plans</Text>
-                </LinearGradient>
-              </AnimatedCard>
+        {/* Header Section */}
+        <View className="bg-emerald-900	p-6 rounded-3xl mb-6 shadow-xl shadow-emerald-900/20 relative overflow-hidden">
+          {/* Decorative circles */}
+          <View className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10"></View>
+          <View className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-8 -mb-8"></View>
 
-              <AnimatedCard
-                style={styles.quickActionCard}
-                onPress={async () => {
-                  await Haptic.buttonPress();
-                  router.push('/(tabs)/generate');
-                }}
-                shadow="md"
-              >
-                <LinearGradient
-                  colors={Colors.gradients.secondary}
-                  style={styles.quickActionGradient}
-                >
-                  <Text style={styles.quickActionIcon}>✨</Text>
-                  <Text style={styles.quickActionText}>AI Generate</Text>
-                </LinearGradient>
-              </AnimatedCard>
-
-              <AnimatedCard
-                style={styles.quickActionCard}
-                onPress={async () => {
-                  await Haptic.buttonPress();
-                  router.push('/(tabs)/recipes');
-                }}
-                shadow="md"
-              >
-                <LinearGradient
-                  colors={Colors.gradients.ocean}
-                  style={styles.quickActionGradient}
-                >
-                  <Text style={styles.quickActionIcon}>📖</Text>
-                  <Text style={styles.quickActionText}>My Recipes</Text>
-                </LinearGradient>
-              </AnimatedCard>
-
-              <AnimatedCard
-                style={styles.quickActionCard}
-                onPress={async () => {
-                  await Haptic.buttonPress();
-                  router.push('/(tabs)/profile');
-                }}
-                shadow="md"
-              >
-                <LinearGradient
-                  colors={Colors.gradients.sunset}
-                  style={styles.quickActionGradient}
-                >
-                  <Text style={styles.quickActionIcon}>👤</Text>
-                  <Text style={styles.quickActionText}>Profile</Text>
-                </LinearGradient>
-              </AnimatedCard>
-            </View>
-          </View>
-        </FadeInView>
-
-        {/* Today's Meals */}
-        {todaysMeals.length > 0 && (
-          <FadeInView delay={300} duration={400}>
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Today's Meals</Text>
-                <TouchableOpacity
-                  onPress={async () => {
-                    await Haptic.buttonPress();
-                    router.push('/(tabs)/meal-plans');
-                  }}
-                >
-                  <Text style={styles.seeAllText}>View All →</Text>
-                </TouchableOpacity>
+          <View className="relative z-10">
+            <View className="flex-row justify-between items-start mb-4">
+              <View>
+                <Text className="text-3xl font-serif italic mb-1 text-white">
+                  Hi, {profile?.name?.split(' ')[0] || 'Boss'}!
+                </Text>
+                <Text className="text-emerald-100 text-sm">What would you like to make today?</Text>
               </View>
-              <StaggeredList
-                staggerDelay={80}
-                itemDuration={300}
-                style={styles.todaysMealsList}
-              >
-                {todaysMeals.map((meal, index) => (
-                  <AnimatedCard
-                    key={`${meal.date}-${meal.mealType}`}
-                    style={styles.mealCard}
-                    onPress={async () => {
-                      await Haptic.cardTap();
-                      if (meal.recipeId) {
-                        router.push(`/recipe/${meal.recipeId}`);
-                      }
-                    }}
-                    shadow="sm"
-                  >
-                    <View style={styles.mealCardContent}>
-                      <View style={styles.mealIconContainer}>
-                        <Text style={styles.mealIcon}>{getMealIcon(meal.mealType)}</Text>
-                      </View>
-                      <View style={styles.mealInfo}>
-                        <Text style={styles.mealType}>{meal.mealType}</Text>
-                        <Text style={styles.mealRecipeName} numberOfLines={1}>
-                          {meal.recipeName || 'No meal planned'}
-                        </Text>
-                      </View>
-                      <Text style={styles.mealArrow}>›</Text>
-                    </View>
-                  </AnimatedCard>
-                ))}
-              </StaggeredList>
+              <View className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                <User size={20} color="white" />
+              </View>
             </View>
-          </FadeInView>
-        )}
 
-        {/* Recent Recipes */}
-        <FadeInView delay={400} duration={400}>
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Recent Recipes</Text>
-              <TouchableOpacity
-                onPress={async () => {
-                  await Haptic.buttonPress();
-                  router.push('/(tabs)/recipes');
-                }}
-              >
-                <Text style={styles.seeAllText}>See All →</Text>
-              </TouchableOpacity>
+            <View className="relative mt-6">
+              <View className="absolute left-4 top-3.5 z-10">
+                <Search size={20} color="#065f46" />
+              </View>
+              <TextInput
+                placeholder="Search Saved Recipes..."
+                placeholderTextColor="rgba(6, 95, 70, 0.5)"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                className="w-full pl-12 pr-4 py-3 rounded-xl bg-stone-50 text-stone-900 focus:bg-white border-transparent focus:border-emerald-400"
+              />
             </View>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.horizontalScroll}
-            >
-              <StaggeredList
-                staggerDelay={100}
-                itemDuration={400}
-                style={styles.recipeList}
-              >
-                {recipes.map((item) => (
-                  <AnimatedCard
-                    key={item.id}
-                    style={styles.recipeCard}
-                    onPress={async () => {
-                      await Haptic.cardTap();
-                      router.push(`/recipe/${item.id}`);
-                    }}
-                    shadow="lg"
-                  >
-                    <View style={styles.recipeImageContainer}>
-                      <LinearGradient
-                        colors={Colors.gradients.primary}
-                        style={styles.recipeImageGradient}
-                      >
-                        <Text style={styles.recipeEmoji}>🍳</Text>
-                      </LinearGradient>
-                    </View>
-                    <Text style={styles.recipeName} numberOfLines={1}>
-                      {item.recipe_name}
-                    </Text>
-                    <Text style={styles.recipeDescription} numberOfLines={2}>
-                      {item.description}
-                    </Text>
-                    <View style={styles.recipeMeta}>
-                      {item.total_time && (
-                        <View style={styles.timeBadge}>
-                          <Text style={styles.timeBadgeText}>⏱ {item.total_time}</Text>
-                        </View>
-                      )}
-                      {item.calories && (
-                        <View style={styles.caloriesBadge}>
-                          <Text style={styles.caloriesBadgeText}>🔥 {item.calories} cal</Text>
-                        </View>
-                      )}
-                    </View>
-                  </AnimatedCard>
-                ))}
-              </StaggeredList>
-            </ScrollView>
           </View>
-        </FadeInView>
+        </View>
 
-        {/* Stats Card */}
-        <FadeInView delay={500} duration={400}>
-          <View style={styles.section}>
-            <AnimatedCard style={styles.statsCard} shadow="md">
-              <LinearGradient
-                colors={[Colors.primary[500], Colors.primary[600]]}
-                style={styles.statsGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <View style={styles.statsContent}>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statValue}>{recipes.length}</Text>
-                    <Text style={styles.statLabel}>Recipes</Text>
-                  </View>
-                  <View style={styles.statDivider} />
-                  <View style={styles.statItem}>
-                    <Text style={styles.statValue}>{todaysMeals.length}</Text>
-                    <Text style={styles.statLabel}>Today's Meals</Text>
-                  </View>
-                  <View style={styles.statDivider} />
-                  <View style={styles.statItem}>
-                    <Text style={styles.statValue}>{profile?.has_access ? '∞' : '5'}</Text>
-                    <Text style={styles.statLabel}>AI Recipes</Text>
+        {/* AI Chef / Generator Action Card */}
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => router.push('/generate-modal')}
+          className="bg-white p-4 rounded-2xl border border-emerald-100 shadow-sm mb-8 flex-row items-center justify-between"
+        >
+          <View>
+            <View className="flex-row items-center gap-2 mb-1">
+              <Sparkles size={18} color="#059669" className="text-emerald-600" />
+              <Text className="text-emerald-900 font-bold">Generate Recipe</Text>
+            </View>
+            <View className="bg-emerald-100 px-2 py-0.5 rounded-md self-start">
+              <Text className="text-xs text-emerald-700 font-medium">
+                {profile?.has_access ? 'Unlimited generations' : '3 free generations left'}
+              </Text>
+            </View>
+          </View>
+          <View className="bg-emerald-800 px-5 py-2.5 rounded-xl flex-row items-center gap-2 shadow-lg shadow-emerald-900/10">
+            <Text className="text-white font-semibold text-sm">Create</Text>
+            <ArrowRight size={16} color="white" />
+          </View>
+        </TouchableOpacity>
+
+        {/* Recipe Feed Title */}
+        <View className="flex-row items-center gap-2 mb-4 px-1">
+          <BookOpen size={18} color="#a8a29e" />
+          <Text className="font-bold text-stone-800 text-lg">Saved Recipes</Text>
+        </View>
+
+        {/* Recipe Feed */}
+        <View className="gap-6">
+          {filteredRecipes.map((recipe) => (
+            <TouchableOpacity
+              key={recipe.id}
+              activeOpacity={0.9}
+              onPress={() => router.push(`/recipe/${recipe.id}`)}
+              className="bg-white rounded-2xl overflow-hidden shadow-md border border-stone-100"
+            >
+              {/* Image Placeholder Area */}
+              <View className="h-48 bg-stone-200 relative overflow-hidden items-center justify-center">
+                <View className="absolute inset-0 bg-stone-300 opacity-20" />
+                <Leaf size={48} color="#a8a29e" className="mb-2" />
+                <Text className="text-sm font-medium text-stone-400">Delicious Food Image</Text>
+
+                {/* Badges */}
+                <View className="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded-full shadow-sm">
+                  <Text className="text-xs font-bold text-stone-800">{recipe.total_time}</Text>
+                </View>
+              </View>
+
+              <View className="p-5">
+                <Text className="text-xl font-bold text-stone-800 mb-2">{recipe.recipe_name}</Text>
+                <View className="flex-row gap-4 mb-4">
+                  {recipe.calories && (
+                    <View className="flex-row items-center gap-1">
+                      <Flame size={14} color="#f97316" />
+                      <Text className="text-sm text-stone-500">{recipe.calories} kcal</Text>
+                    </View>
+                  )}
+                  <View className="flex-row items-center gap-1">
+                    <Settings size={14} color="#3b82f6" />
+                    <Text className="text-sm text-stone-500">{recipe.difficulty_level}</Text>
                   </View>
                 </View>
-              </LinearGradient>
-            </AnimatedCard>
-          </View>
-        </FadeInView>
+                <Text className="text-stone-600 text-sm leading-relaxed" numberOfLines={2}>
+                  {recipe.description}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
 
-        {/* Bottom Spacing */}
-        <View style={styles.bottomSpacing} />
       </ScrollView>
+
+      {/* Floating Action Button */}
+      <TouchableOpacity
+        onPress={() => router.push('/generate-modal')}
+        className="absolute bottom-6 right-6 w-14 h-14 bg-emerald-800 rounded-full shadow-xl items-center justify-center z-20"
+        activeOpacity={0.8}
+      >
+        <Plus size={28} color="white" />
+      </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.secondary,
-  },
-  headerGradient: {
-    paddingBottom: Spacing.xl,
-  },
-  headerSafeArea: {
-    paddingHorizontal: Spacing.screenPadding,
-  },
-  headerContainer: {
-    paddingTop: Spacing.md,
-  },
-  headerContent: {
-    flexDirection: 'column',
-  },
-  greetingText: {
-    ...Typography.styles.body,
-    color: Colors.primary[50],
-    opacity: 0.9,
-    marginBottom: Spacing.xs,
-  },
-  nameText: {
-    ...Typography.styles.h1,
-    color: Colors.background.primary,
-    marginBottom: Spacing.xs,
-  },
-  premiumBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: Colors.background.primary + '30',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
-    marginTop: Spacing.xs,
-  },
-  premiumBadgeText: {
-    ...Typography.styles.caption,
-    fontWeight: Typography.fontWeight.semibold,
-    color: Colors.background.primary,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: Spacing.screenPadding,
-    paddingTop: Spacing.md,
-  },
-  section: {
-    marginBottom: Spacing.xl,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-  },
-  sectionTitle: {
-    ...Typography.styles.h4,
-    color: Colors.text.primary,
-  },
-  seeAllText: {
-    ...Typography.styles.body,
-    color: Colors.primary[600],
-    fontWeight: Typography.fontWeight.semibold,
-  },
-  quickActionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.md,
-  },
-  quickActionCard: {
-    width: (width - Spacing.screenPadding * 2 - Spacing.md) / 2,
-    height: 120,
-    borderRadius: BorderRadius.xl,
-    overflow: 'hidden',
-  },
-  quickActionGradient: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.md,
-  },
-  quickActionIcon: {
-    fontSize: 40,
-    marginBottom: Spacing.sm,
-  },
-  quickActionText: {
-    ...Typography.styles.body,
-    fontWeight: Typography.fontWeight.semibold,
-    color: Colors.background.primary,
-  },
-  todaysMealsList: {
-    gap: Spacing.sm,
-  },
-  mealCard: {
-    backgroundColor: Colors.background.primary,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-  },
-  mealCardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  mealIconContainer: {
-    width: 48,
-    height: 48,
-    backgroundColor: Colors.primary[50],
-    borderRadius: BorderRadius.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.md,
-  },
-  mealIcon: {
-    fontSize: 24,
-  },
-  mealInfo: {
-    flex: 1,
-  },
-  mealType: {
-    ...Typography.styles.caption,
-    color: Colors.text.secondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: Spacing.xs,
-  },
-  mealRecipeName: {
-    ...Typography.styles.body,
-    fontWeight: Typography.fontWeight.semibold,
-    color: Colors.text.primary,
-  },
-  mealArrow: {
-    ...Typography.styles.h3,
-    color: Colors.text.tertiary,
-  },
-  horizontalScroll: {
-    paddingRight: Spacing.md,
-  },
-  recipeList: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  recipeCard: {
-    width: 260,
-    padding: Spacing.md,
-    marginRight: Spacing.md,
-  },
-  recipeImageContainer: {
-    height: 140,
-    borderRadius: BorderRadius.lg,
-    marginBottom: Spacing.md,
-    overflow: 'hidden',
-  },
-  recipeImageGradient: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  recipeEmoji: {
-    fontSize: 48,
-  },
-  recipeName: {
-    ...Typography.styles.h5,
-    color: Colors.text.primary,
-    marginBottom: Spacing.xs,
-  },
-  recipeDescription: {
-    ...Typography.styles.bodySmall,
-    color: Colors.text.secondary,
-    marginBottom: Spacing.sm,
-    lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.sm,
-  },
-  recipeMeta: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    flexWrap: 'wrap',
-  },
-  timeBadge: {
-    backgroundColor: Colors.primary[50],
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.sm,
-  },
-  timeBadgeText: {
-    ...Typography.styles.caption,
-    fontWeight: Typography.fontWeight.semibold,
-    color: Colors.primary[700],
-  },
-  caloriesBadge: {
-    backgroundColor: Colors.warning.light + '20',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.sm,
-  },
-  caloriesBadgeText: {
-    ...Typography.styles.caption,
-    fontWeight: Typography.fontWeight.semibold,
-    color: Colors.warning.dark,
-  },
-  statsCard: {
-    borderRadius: BorderRadius.xl,
-    overflow: 'hidden',
-  },
-  statsGradient: {
-    padding: Spacing.lg,
-  },
-  statsContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  statValue: {
-    ...Typography.styles.h2,
-    color: Colors.background.primary,
-    fontWeight: Typography.fontWeight.bold,
-    marginBottom: Spacing.xs,
-  },
-  statLabel: {
-    ...Typography.styles.caption,
-    color: Colors.primary[50],
-    opacity: 0.9,
-  },
-  statDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: Colors.background.primary + '30',
-  },
-  bottomSpacing: {
-    height: Spacing.xl,
-  },
-});

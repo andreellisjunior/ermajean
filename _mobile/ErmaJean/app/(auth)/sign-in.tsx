@@ -1,361 +1,238 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { View, Text, Alert, Image, ScrollView, TouchableOpacity } from "react-native";
 import { supabase } from "@/libs/supabase";
-import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import { AuthError } from "@supabase/supabase-js";
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
+import { User, Mail, Lock, ArrowRight, ChefHat } from "lucide-react-native";
+import { Input } from "@/components/Input";
+import { Button } from "@/components/Button";
 
 WebBrowser.maybeCompleteAuthSession();
 
-export default function SignIn() {
+// Theme Constants derived from global config/mockup
+const THEME = {
+    colors: {
+        background: 'bg-[#FDFBF7]',
+        primary: 'bg-emerald-800',
+    }
+};
+
+export default function AuthScreen() {
     const router = useRouter();
+    const [isLogin, setIsLogin] = useState(true);
+
+    // Form States
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [fullName, setFullName] = useState(""); // For sign up
+
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
 
     function getErrorMessage(error: AuthError): string {
-        // Handle specific error types with user-friendly messages
-        if (error.message.includes("Invalid login credentials")) {
-            return "Invalid email or password. Please try again.";
+        if (error.message.includes("Invalid login credentials")) return "Invalid email or password.";
+        if (error.message.includes("User not found")) return "No account found.";
+        if (error.message.includes("User already registered")) return "Account already exists.";
+        return error.message || "An unexpected error occurred.";
+    }
+
+    async function handleAuth() {
+        setErrorMessage("");
+        if (!email.trim() || !password) {
+            setErrorMessage("Please fill in all fields.");
+            return;
         }
-        if (error.message.includes("Email not confirmed")) {
-            return "Please verify your email address before signing in.";
+
+        if (isLogin) {
+            await signInWithEmail();
+        } else {
+            await signUpWithEmail();
         }
-        if (error.message.includes("User not found")) {
-            return "No account found with this email address.";
-        }
-        if (error.message.includes("network")) {
-            return "Network error. Please check your connection and try again.";
-        }
-        if (error.message.includes("rate limit")) {
-            return "Too many attempts. Please wait a moment and try again.";
-        }
-        if (error.message.includes("Password should be at least")) {
-            return "Password must be at least 6 characters long.";
-        }
-        if (error.message.includes("Unable to validate email address")) {
-            return "Please enter a valid email address.";
-        }
-        if (error.message.includes("User already registered")) {
-            return "An account with this email already exists. Please sign in instead.";
-        }
-        
-        // Default to the original error message if no specific match
-        return error.message || "An unexpected error occurred. Please try again.";
     }
 
     async function signInWithEmail() {
-        // Clear previous errors
-        setErrorMessage("");
-        
-        // Validate inputs
-        if (!email.trim()) {
-            setErrorMessage("Please enter your email address.");
-            return;
-        }
-        if (!password) {
-            setErrorMessage("Please enter your password.");
-            return;
-        }
-
         setLoading(true);
         try {
             const { error } = await supabase.auth.signInWithPassword({
                 email: email.trim(),
                 password,
             });
-
-            if (error) {
-                setErrorMessage(getErrorMessage(error));
-            }
+            if (error) setErrorMessage(getErrorMessage(error));
         } catch (err) {
-            setErrorMessage("An unexpected error occurred. Please try again.");
-            console.error("Sign in error:", err);
+            setErrorMessage("An unexpected error occurred.");
+            console.error(err);
         } finally {
             setLoading(false);
         }
     }
 
-
-
-    async function signInWithGoogle() {
+    async function signUpWithEmail() {
+        if (password.length < 6) {
+            setErrorMessage("Password must be at least 6 characters.");
+            return;
+        }
         setLoading(true);
-        setErrorMessage("");
-        
         try {
-            // For Expo Go, use the exp:// scheme
-            const redirectUrl = makeRedirectUri({
-                scheme: undefined, // Let Expo handle the scheme automatically
-                path: 'auth/callback'
-            });
-
-            console.log('Redirect URL:', redirectUrl); // Debug log
-
-            const { data, error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
+            const { error, data } = await supabase.auth.signUp({
+                email: email.trim(),
+                password,
                 options: {
-                    redirectTo: redirectUrl,
-                    skipBrowserRedirect: true, // Important for mobile
+                    data: {
+                        full_name: fullName,
+                    }
                 }
             });
 
             if (error) {
                 setErrorMessage(getErrorMessage(error));
-                setLoading(false);
-                return;
+            } else if (data.user && !data.session) {
+                Alert.alert("Success!", "Check your email for verification.");
             }
+        } catch (err) {
+            setErrorMessage("An unexpected error occurred.");
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    async function signInWithGoogle() {
+        setLoading(true);
+        setErrorMessage("");
+
+        try {
+            const redirectUrl = makeRedirectUri({
+                scheme: undefined,
+                path: 'auth/callback'
+            });
+
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: redirectUrl,
+                    skipBrowserRedirect: true,
+                }
+            });
+
+            if (error) throw error;
 
             if (data?.url) {
-                const result = await WebBrowser.openAuthSessionAsync(
-                    data.url,
-                    redirectUrl
-                );
-
+                const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
                 if (result.type === 'success' && result.url) {
-                    // Extract the tokens from the URL
                     const url = new URL(result.url);
                     const access_token = url.searchParams.get('access_token');
                     const refresh_token = url.searchParams.get('refresh_token');
 
                     if (access_token && refresh_token) {
-                        // Set the session with the tokens
-                        const { error: sessionError } = await supabase.auth.setSession({
-                            access_token,
-                            refresh_token,
-                        });
-
-                        if (sessionError) {
-                            setErrorMessage("Failed to establish session. Please try again.");
-                            console.error("Session error:", sessionError);
-                        }
-                        // Session is set, auth state listener will handle navigation
-                    } else {
-                        setErrorMessage("Authentication failed. Please try again.");
+                        await supabase.auth.setSession({ access_token, refresh_token });
                     }
-                } else if (result.type === 'cancel') {
-                    setErrorMessage("Sign in was cancelled.");
                 }
             }
-        } catch (err) {
-            setErrorMessage("An error occurred with Google sign in. Please try again.");
-            console.error("Google sign in error:", err);
+        } catch (err: any) {
+            setErrorMessage(err.message || "Google sign in failed.");
         } finally {
             setLoading(false);
         }
     }
 
     return (
-        <View style={{ flex: 1 }}>
+        <View className={`flex-1 flex-col justify-center p-6 ${THEME.colors.background}`}>
             <Stack.Screen options={{ headerShown: false }} />
-            <LinearGradient
-                colors={['#4A5D7C', '#5B7396', '#6B8AAF']}
-                style={{ flex: 1 }}
-            >
-                <KeyboardAvoidingView 
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                    style={{ flex: 1 }}
-                >
-                    <ScrollView 
-                        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingVertical: 48 }}
-                        keyboardShouldPersistTaps="handled"
-                        showsVerticalScrollIndicator={false}
-                    >
-                        <View style={{ flex: 1, justifyContent: 'center' }}>
-                            {/* Logo Section */}
-                            <View style={{ alignItems: 'center', marginBottom: 40 }}>
-                                <Image 
-                                    source={require('@/assets/images/logo-color.png')}
-                                    style={{ width: 200, height: 200 }}
-                                    resizeMode="contain"
-                                />
-                                <Text style={{ 
-                                    color: 'rgba(255, 255, 255, 0.9)', 
-                                    fontSize: 14, 
-                                    fontWeight: '300',
-                                    textAlign: 'center',
-                                    marginTop: 8,
-                                    letterSpacing: 0.5
-                                }}>
-                                    Your personal recipe management and creation tool
+            <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
+                <View className="flex-1 flex-col justify-center max-w-md mx-auto w-full">
+                    {/* Branding */}
+                    <View className="items-center mb-10">
+                        <View className="w-24 h-24 mb-6 items-center justify-center">
+                            <Image
+                                source={require('@/assets/images/logo-color.png')}
+                                className="w-full h-full"
+                                resizeMode="contain"
+                            />
+                        </View>
+                        {/* Removed text as requested, just logo */}
+                    </View>
+
+                    {/* Form Card */}
+                    <View className="bg-white p-8 rounded-3xl shadow-xl shadow-stone-200 border border-stone-100">
+                        <Text className="text-2xl font-bold text-stone-800 mb-6">
+                            {isLogin ? "Welcome Back!" : "Create Account"}
+                        </Text>
+
+                        {errorMessage ? (
+                            <View className="bg-red-50 p-3 rounded-xl mb-4">
+                                <Text className="text-red-600 text-center text-sm font-medium">
+                                    {errorMessage}
                                 </Text>
                             </View>
+                        ) : null}
 
-                            {/* Auth Card */}
-                            <View style={{ 
-                                backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                                borderRadius: 24, 
-                                padding: 32,
-                                shadowColor: '#000',
-                                shadowOffset: { width: 0, height: 8 },
-                                shadowOpacity: 0.3,
-                                shadowRadius: 16,
-                                elevation: 8
-                            }}>
-                                <View style={{ marginBottom: 24 }}>
-                                    <Text style={{ fontSize: 24, fontWeight: '600', color: '#1f2937', marginBottom: 8 }}>
-                                        Welcome back
-                                    </Text>
-                                    <Text style={{ fontSize: 14, color: '#6b7280' }}>
-                                        Sign in to continue to your recipes
-                                    </Text>
-                                </View>
+                        <View>
+                            {!isLogin && (
+                                <Input
+                                    icon={User}
+                                    placeholder="Full Name"
+                                    value={fullName}
+                                    onChangeText={setFullName}
+                                />
+                            )}
+                            <Input
+                                icon={Mail}
+                                type="email"
+                                placeholder="Email Address"
+                                value={email}
+                                onChangeText={setEmail}
+                            />
+                            <Input
+                                icon={Lock}
+                                type="password"
+                                placeholder="Password"
+                                value={password}
+                                onChangeText={setPassword}
+                            />
 
-                                {errorMessage ? (
-                                    <View style={{ 
-                                        backgroundColor: 'rgba(239, 68, 68, 0.9)', 
-                                        padding: 12, 
-                                        borderRadius: 12, 
-                                        marginBottom: 16 
-                                    }}>
-                                        <Text style={{ color: '#ffffff', textAlign: 'center', fontWeight: '500', fontSize: 14 }}>
-                                            {errorMessage}
+                            {isLogin && (
+                                <View className="flex-row justify-end mb-6">
+                                    <TouchableOpacity>
+                                        <Text className="text-sm font-medium text-emerald-700">
+                                            Forgot Password?
                                         </Text>
-                                    </View>
-                                ) : null}
-
-                                <View style={{ marginBottom: 16 }}>
-                                    <Text style={{ color: '#374151', fontWeight: '500', marginBottom: 8 }}>Email</Text>
-                                    <TextInput
-                                        style={{ 
-                                            backgroundColor: '#f9fafb', 
-                                            color: '#111827', 
-                                            padding: 16, 
-                                            borderRadius: 12,
-                                            borderWidth: 1,
-                                            borderColor: '#d1d5db',
-                                            fontSize: 16
-                                        }}
-                                        placeholder="you@example.com"
-                                        placeholderTextColor="#9ca3af"
-                                        value={email}
-                                        onChangeText={(text) => {
-                                            setEmail(text);
-                                            setErrorMessage("");
-                                        }}
-                                        autoCapitalize="none"
-                                        keyboardType="email-address"
-                                        editable={!loading}
-                                    />
+                                    </TouchableOpacity>
                                 </View>
+                            )}
 
-                                <View style={{ marginBottom: 24 }}>
-                                    <Text style={{ color: '#374151', fontWeight: '500', marginBottom: 8 }}>Password</Text>
-                                    <TextInput
-                                        style={{ 
-                                            backgroundColor: '#f9fafb', 
-                                            color: '#111827', 
-                                            padding: 16, 
-                                            borderRadius: 12,
-                                            borderWidth: 1,
-                                            borderColor: '#d1d5db',
-                                            fontSize: 16
-                                        }}
-                                        placeholder="Enter your password"
-                                        placeholderTextColor="#9ca3af"
-                                        value={password}
-                                        onChangeText={(text) => {
-                                            setPassword(text);
-                                            setErrorMessage("");
-                                        }}
-                                        secureTextEntry
-                                        editable={!loading}
-                                    />
-                                </View>
+                            <Button fullWidth onClick={handleAuth} disabled={loading}>
+                                <Text className="text-white font-semibold">
+                                    {isLogin ? "Sign In" : "Sign Up"}
+                                </Text>
+                                <ArrowRight size={18} color="white" />
+                            </Button>
 
-                                <TouchableOpacity
-                                    onPress={signInWithEmail}
-                                    disabled={loading}
-                                    style={{ 
-                                        borderRadius: 12, 
-                                        marginBottom: 16, 
-                                        overflow: 'hidden',
-                                        opacity: loading ? 0.5 : 1
-                                    }}
-                                >
-                                    <LinearGradient
-                                        colors={['#4A5D7C', '#5B7396']}
-                                        style={{ padding: 16 }}
-                                    >
-                                        {loading ? (
-                                            <ActivityIndicator color="#ffffff" />
-                                        ) : (
-                                            <Text style={{ 
-                                                textAlign: 'center', 
-                                                fontWeight: '600', 
-                                                color: '#ffffff', 
-                                                fontSize: 16 
-                                            }}>
-                                                Sign In
-                                            </Text>
-                                        )}
-                                    </LinearGradient>
-                                </TouchableOpacity>
-
-                                <View style={{ 
-                                    flexDirection: 'row', 
-                                    alignItems: 'center', 
-                                    marginVertical: 24 
-                                }}>
-                                    <View style={{ flex: 1, height: 1, backgroundColor: '#d1d5db' }} />
-                                    <Text style={{ 
-                                        marginHorizontal: 16, 
-                                        color: '#6b7280', 
-                                        fontSize: 14 
-                                    }}>
-                                        or continue with
-                                    </Text>
-                                    <View style={{ flex: 1, height: 1, backgroundColor: '#d1d5db' }} />
-                                </View>
-
-                                <TouchableOpacity
-                                    onPress={signInWithGoogle}
-                                    disabled={loading}
-                                    style={{ 
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        backgroundColor: '#ffffff',
-                                        borderWidth: 2,
-                                        borderColor: '#d1d5db',
-                                        borderRadius: 12,
-                                        padding: 12,
-                                        marginBottom: 24,
-                                        opacity: loading ? 0.5 : 1
-                                    }}
-                                >
-                                    <Image 
-                                        source={{ uri: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjIuNTYgMTIuMjVjMC0uNzgtLjA3LTEuNTMtLjItMi4yNUgxMnY0LjI2aDUuOTJjLS4yNiAxLjM3LTEuMDQgMi41My0yLjIxIDMuMzF2Mi43N2gzLjU3YzIuMDgtMS45MiAzLjI4LTQuNzQgMy4yOC04LjA5eiIgZmlsbD0iIzQyODVGNCIvPjxwYXRoIGQ9Ik0xMiAyM2M0LjI1IDAgNy44MS0xLjQxIDEwLjQxLTMuODFsLTMuNTctMi43N2MtLjk4LjY2LTIuMjMgMS4wNi0zLjg0IDEuMDYtMi45NSAwLTUuNDUtMS45OS02LjM1LTQuNjZINC4zNHYyLjg0QzYuOTQgMjAuMzQgOS4zNCAyMyAxMiAyM3oiIGZpbGw9IiMzNEE4NTMiLz48cGF0aCBkPSJNNS42NSAxNC4wOWMtLjIyLS42Ni0uMzUtMS4zNi0uMzUtMi4wOXMuMTMtMS40My4zNS0yLjA5VjcuMDdINC4zNEMzLjQ5IDguNTUgMyAxMC4yMiAzIDEyczAuNDkgMy40NSAxLjM0IDQuOTNsMi4zMS0yLjg0eiIgZmlsbD0iI0ZCQkMwNSIvPjxwYXRoIGQ9Ik0xMiA1LjM4YzEuNjIgMCAzLjA2LjU2IDQuMjEgMS42NGwzLjE1LTMuMTVDMTcuNDUgMi4wOSAxNC45NyAxIDEyIDEgOS4zNCAxIDYuOTQgMy42NiA0LjM0IDguMDdsMS4zMSAyLjg0Yy45LTIuNjcgMy40LTQuNjYgNi4zNS00LjY2eiIgZmlsbD0iI0VBNDMzNSIvPjwvc3ZnPg==' }}
-                                        style={{ width: 20, height: 20, marginRight: 12 }}
-                                    />
-                                    <Text style={{ 
-                                        color: '#374151', 
-                                        fontWeight: '500', 
-                                        fontSize: 16 
-                                    }}>
-                                        Continue with Google
-                                    </Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    onPress={() => router.push('/sign-up')}
-                                    disabled={loading}
-                                    style={{ opacity: loading ? 0.5 : 1 }}
-                                >
-                                    <Text style={{ textAlign: 'center', color: '#6b7280', fontSize: 14 }}>
-                                        Don't have an account?{' '}
-                                        <Text style={{ color: '#5B7396', fontWeight: '600' }}>
-                                            Sign Up
-                                        </Text>
-                                    </Text>
-                                </TouchableOpacity>
+                            <View className="mt-4">
+                                <Button fullWidth variant="secondary" onClick={signInWithGoogle} disabled={loading}>
+                                    <Text className="text-stone-800 font-semibold">Sign in with Google</Text>
+                                </Button>
                             </View>
                         </View>
-                    </ScrollView>
-                </KeyboardAvoidingView>
-            </LinearGradient>
+
+                        <View className="mt-6">
+                            <Text className="text-stone-500 text-center">
+                                {isLogin ? "Don't have an account? " : "Already have an account? "}
+                                <Text
+                                    onPress={() => {
+                                        setIsLogin(!isLogin);
+                                        setErrorMessage("");
+                                    }}
+                                    className="font-bold text-emerald-800"
+                                >
+                                    {isLogin ? "Sign Up" : "Log In"}
+                                </Text>
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+            </ScrollView>
         </View>
     );
 }

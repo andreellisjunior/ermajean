@@ -104,6 +104,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="recipe/[id]" options={{ headerShown: true, title: 'Recipe' }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        <Stack.Screen name="generate-modal" options={{ presentation: 'modal', headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
