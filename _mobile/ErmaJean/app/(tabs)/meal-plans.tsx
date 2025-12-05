@@ -190,11 +190,11 @@ export default function MealPlansScreen() {
             </TouchableOpacity>
             <View className="flex-row items-center gap-2">
               <Calendar size={18} color="#059669" />
-              <Text className="font-bold text-stone-800">{weekRangeText}</Text> {/* Changed from font-semibold to font-bold */}
+              <Text className="font-bold text-stone-800">{weekRangeText}</Text>
             </View>
             <TouchableOpacity 
               onPress={() => setCurrentDate(d => { const n = new Date(d); n.setDate(n.getDate() + 7); return n; })} 
-              className="p-2 bg-stone-100 rounded-full" // Changed from bg-stone-50 to bg-stone-100
+              className="p-2 bg-stone-100 rounded-full"
             >
               <ChevronRight size={20} color="#57534e" />
             </TouchableOpacity>
@@ -214,10 +214,10 @@ export default function MealPlansScreen() {
                   style={isSelected ? {
                     shadowColor: '#064e3b',
                     shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.2, // shadow-lg shadow-emerald-900/20
-                    shadowRadius: 12, // shadow-lg
+                    shadowOpacity: 0.2,
+                    shadowRadius: 12,
                     elevation: 8,
-                    transform: [{ scale: 1.1 }], // scale-110
+                    transform: [{ scale: 1.1 }],
                   } : {}}
                 >
                   <Text className={`text-xs font-medium mb-1 ${isSelected ? 'text-emerald-100' : 'text-stone-400'}`}>
@@ -324,8 +324,8 @@ export default function MealPlansScreen() {
                 <Text className="text-white font-bold text-lg mb-4">Daily Nutrition</Text>
                 <View className="flex-row justify-between">
                   <View className="items-center">
-                    <Text className="text-emerald-100 text-xs mb-1">Calories</Text> {/* text-emerald-100 for labels */}
-                    <Text className="text-white font-bold text-2xl">{Math.round(dayMacros.calories)}</Text> {/* text-white text-2xl font-bold for values */}
+                    <Text className="text-emerald-100 text-xs mb-1">Calories</Text>
+                    <Text className="text-white font-bold text-2xl">{Math.round(dayMacros.calories)}</Text>
                   </View>
                   <View className="items-center">
                     <Text className="text-emerald-100 text-xs mb-1">Protein</Text>
