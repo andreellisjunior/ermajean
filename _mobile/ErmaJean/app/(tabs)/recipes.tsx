@@ -32,6 +32,7 @@ import Animated, {
   withTiming,
   withSequence,
 } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AddRecipeFAB } from '@/components/AddRecipeFAB';
 import { RecipeFormModal } from '@/components/RecipeFormModal';
 import { createRecipe } from '@/services/recipeService';
@@ -101,9 +102,14 @@ function RecipeCard({ item, index }: { item: Recipe; index: number }) {
       >
         {/* Recipe Image Placeholder */}
         <View style={styles.imageContainer}>
-          <View style={styles.imagePlaceholder}>
+          <LinearGradient
+            colors={['#d6d3d1', '#a8a29e']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.imagePlaceholder}
+          >
             <Text style={styles.imageEmoji}>🥘</Text>
-          </View>
+          </LinearGradient>
           {/* Course Badge */}
           {item.course && (
             <View style={styles.courseBadge}>
@@ -560,12 +566,14 @@ const styles = StyleSheet.create({
   recipeCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
-    marginBottom: 16,
+    marginBottom: 24, // Changed from 16 to use gap-6 spacing
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#f5f5f4', // Added subtle border: border-stone-100
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
+    shadowOpacity: 0.1, // Changed from 0.08 to shadow-md
+    shadowRadius: 8, // Changed from 12 for shadow-md
     elevation: 3,
     flexDirection: 'row',
   },
@@ -576,7 +584,6 @@ const styles = StyleSheet.create({
   imagePlaceholder: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#f0fdf4',
     justifyContent: 'center',
     alignItems: 'center',
     minHeight: 120,
@@ -613,7 +620,7 @@ const styles = StyleSheet.create({
   recipeDescription: {
     fontSize: 13,
     color: '#6b7280',
-    lineHeight: 18,
+    lineHeight: 19, // Changed to leading-relaxed (1.625 * 13 ≈ 21, but keeping proportional)
     marginBottom: 8,
   },
   metaRow: {
@@ -625,11 +632,16 @@ const styles = StyleSheet.create({
   metaBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f3f4f6',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)', // Changed to bg-white/90 for backdrop-blur-md effect
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
     gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05, // Added shadow-sm
+    shadowRadius: 2,
+    elevation: 1,
   },
   metaText: {
     fontSize: 11,

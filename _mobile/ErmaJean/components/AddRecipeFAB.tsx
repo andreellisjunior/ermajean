@@ -12,6 +12,7 @@ import {
   StyleSheet,
   Dimensions,
   Pressable,
+  Platform,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -60,8 +61,8 @@ function MenuItem({ icon, label, sublabel, onPress, color, index, isExpanded }: 
     <Animated.View style={[styles.menuItem, animatedStyle]}>
       <TouchableOpacity
         style={styles.menuItemButton}
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        onPress={async () => {
+          await Haptic.light();
           onPress();
         }}
         activeOpacity={0.8}
@@ -86,12 +87,14 @@ export function AddRecipeFAB({
   planLimit = null,
 }: AddRecipeFABProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
   const rotation = useSharedValue(0);
+  const scale = useSharedValue(1);
 
-  const toggleMenu = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  const toggleMenu = async () => {
+    await Haptic.buttonPress();
     setIsExpanded(!isExpanded);
-    rotation.value = withSpring(isExpanded ? 0 : 45, { damping: 15 });
+    rotation.value = withSpring(isExpanded ? 0 : 90, { damping: 15 }); // Changed to 90deg rotation
   };
 
   const closeMenu = () => {
@@ -109,8 +112,18 @@ export function AddRecipeFAB({
     onManualAdd();
   };
 
+  const handlePressIn = () => {
+    setIsPressed(true);
+    scale.value = withSpring(0.9, { damping: 15 }); // active:scale-90
+  };
+
+  const handlePressOut = () => {
+    setIsPressed(false);
+    scale.value = withSpring(1, { damping: 15 });
+  };
+
   const fabAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
+    transform: [{ rotate: `${rotation.value}deg` }, { scale: scale.value }],
   }));
 
   const overlayAnimatedStyle = useAnimatedStyle(() => ({
@@ -135,9 +148,9 @@ export function AddRecipeFAB({
       </Animated.View>
 
       {/* Menu Container */}
-      <View style={styles.container}>
+      <View style={styles.container} pointerEvents="box-none">
         {/* Menu Items */}
-        <View style={styles.menuContainer}>
+        <View style={styles.menuContainer} pointerEvents="box-none">
           <MenuItem
             icon="sparkles"
             label="Generate with AI"
@@ -158,15 +171,17 @@ export function AddRecipeFAB({
         </View>
 
         {/* FAB Button */}
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={toggleMenu}
-          activeOpacity={0.9}
-        >
-          <Animated.View style={fabAnimatedStyle}>
-            <Ionicons name="add" size={28} color="#fff" />
-          </Animated.View>
-        </TouchableOpacity>
+        <Animated.View style={fabAnimatedStyle}>
+          <TouchableOpacity
+            style={styles.fab}
+            onPress={toggleMenu}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            activeOpacity={1}
+          >
+            <Ionicons name="add" size={32} color="#fff" />
+          </TouchableOpacity>
+        </Animated.View>
       </View>
     </>
   );
@@ -178,16 +193,18 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     zIndex: 998,
+    elevation: 998,
   },
   overlayPressable: {
     flex: 1,
   },
   container: {
     position: 'absolute',
-    bottom: 24,
+    bottom: Platform.OS === 'ios' ? 118 : 100, // Tab bar bottom + height + spacing
     right: 24,
     alignItems: 'flex-end',
-    zIndex: 999,
+    zIndex: 1000,
+    elevation: 1000,
   },
   menuContainer: {
     marginBottom: 16,
@@ -204,12 +221,18 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingLeft: 14,
     paddingRight: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
     gap: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   menuItemIcon: {
     width: 40,
@@ -232,17 +255,23 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   fab: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: '#10b981',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#10b981',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#064e3b',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 12,
+      },
+    }),
   },
 });
 

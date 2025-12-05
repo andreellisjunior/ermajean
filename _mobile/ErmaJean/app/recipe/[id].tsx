@@ -9,6 +9,7 @@ import apiClient from '@/libs/api';
 import config from '@/config';
 import { ArrowLeft, Share2, Clock, Flame, BarChart2, Users, Receipt, List, PlayCircle, Info } from 'lucide-react-native';
 import { Colors } from '@/constants/design';
+import { Haptic } from '@/utils/haptics';
 
 export default function RecipeDetails() {
     const { id } = useLocalSearchParams();
@@ -41,6 +42,7 @@ export default function RecipeDetails() {
         if (!recipe) return;
 
         setGeneratingNutrition(true);
+        await Haptic.buttonPress();
         try {
             const response = await apiClient.post('/recipes/macros', {
                 recipeId: recipe.id,
@@ -58,9 +60,11 @@ export default function RecipeDetails() {
                 sodium: response.data.sodium,
             });
 
+            await Haptic.success();
             Alert.alert('Success', 'Nutrition information generated successfully!');
         } catch (error) {
             console.error('Error generating nutrition:', error);
+            await Haptic.error();
             Alert.alert('Error', 'Failed to generate nutrition information. Please try again.');
         } finally {
             setGeneratingNutrition(false);
@@ -70,6 +74,7 @@ export default function RecipeDetails() {
     const handleShare = async () => {
         if (!recipe) return;
 
+        await Haptic.light();
         try {
             const shareUrl = `https://${config.domainName}/recipe/${recipe.id}`;
             const message = `Check out this recipe: ${recipe.recipe_name}\n\n${shareUrl}`;
@@ -115,7 +120,7 @@ export default function RecipeDetails() {
                 {/* Hero Image Section */}
                 <View className="h-96 relative bg-stone-900">
                     <LinearGradient
-                        colors={['transparent', 'rgba(0,0,0,0.8)']}
+                        colors={['transparent', 'rgba(0,0,0,0.8)']} // Gradient overlay should be stronger: from-transparent to-black/80
                         className="absolute bottom-0 left-0 right-0 h-48 z-10"
                     />
 
@@ -132,14 +137,17 @@ export default function RecipeDetails() {
                         style={{ top: insets.top + 10 }}
                     >
                         <TouchableOpacity
-                            onPress={() => router.back()}
-                            className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full items-center justify-center border border-white/10"
+                            onPress={async () => {
+                                await Haptic.light();
+                                router.back();
+                            }}
+                            className="w-10 h-10 bg-white/20 rounded-full items-center justify-center border border-white/10" // bg-white/20 backdrop-blur-md border border-white/10
                         >
                             <ArrowLeft size={20} color="white" />
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={handleShare}
-                            className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full items-center justify-center border border-white/10"
+                            className="w-10 h-10 bg-white/20 rounded-full items-center justify-center border border-white/10" // bg-white/20 backdrop-blur-md border border-white/10
                         >
                             <Share2 size={20} color="white" />
                         </TouchableOpacity>
@@ -147,16 +155,16 @@ export default function RecipeDetails() {
 
                     {/* Title & Key Stats */}
                     <View className="absolute bottom-8 left-6 right-6 z-20">
-                        <View className="bg-emerald-500/20 self-start px-3 py-1 rounded-lg backdrop-blur-sm border border-emerald-500/30 mb-3">
+                        <View className="bg-emerald-500/20 self-start px-3 py-1 rounded-lg border border-emerald-500/30 mb-3"> {/* Course badge: bg-emerald-500/20 border border-emerald-500/30 backdrop-blur-sm */}
                             <Text className="text-emerald-50 font-bold text-xs uppercase tracking-wider">{recipe.course}</Text>
                         </View>
-                        <Text className="text-white text-3xl font-bold font-serif shadow-sm leading-tight mb-4">
+                        <Text className="text-white text-4xl font-bold font-serif leading-tight mb-4" style={{ textShadowColor: 'rgba(0, 0, 0, 0.3)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 }}> {/* Title: text-4xl with leading-tight, add subtle shadow */}
                             {recipe.recipe_name}
                         </Text>
                         <View className="flex-row items-center gap-4">
                             <View className="flex-row items-center gap-1.5">
                                 <Clock size={16} color="#d1fae5" />
-                                <Text className="text-emerald-50 font-medium text-sm">{recipe.total_time}</Text>
+                                <Text className="text-emerald-50 font-medium text-sm">{recipe.total_time}</Text> {/* Stats use text-emerald-50 */}
                             </View>
                             <View className="flex-row items-center gap-1.5">
                                 <Flame size={16} color="#d1fae5" />
@@ -173,7 +181,7 @@ export default function RecipeDetails() {
                 {/* Content Container */}
                 <View className="px-6 py-6 -mt-6 bg-[#FDFBF7] rounded-t-[32px] min-h-screen">
                     <View className="items-center mb-2">
-                        <View className="w-12 h-1 bg-stone-200 rounded-full" />
+                        <View className="w-12 h-1 bg-stone-200 rounded-full" /> {/* Pull-down indicator is more prominent: w-12 h-1 bg-stone-200 */}
                     </View>
 
                     {/* Description */}
@@ -191,16 +199,23 @@ export default function RecipeDetails() {
                     </View>
 
                     {/* Tabs */}
-                    <View className="flex-row bg-stone-100 h-12 rounded-xl p-1 mb-8 relative">
+                    <View className="flex-row bg-stone-100 h-12 rounded-xl p-1 mb-8 relative"> {/* Tabs have smooth transition animation */}
+                        {/* Active tab has shadow-sm on white background */}
                         <TouchableOpacity
-                            onPress={() => setActiveTab('ingredients')}
+                            onPress={async () => {
+                                await Haptic.selection();
+                                setActiveTab('ingredients');
+                            }}
                             className={`flex-1 flex-row items-center justify-center gap-2 rounded-lg ${activeTab === 'ingredients' ? 'bg-white shadow-sm' : ''}`}
                         >
                             <Receipt size={16} color={activeTab === 'ingredients' ? '#059669' : '#78716c'} />
                             <Text className={`font-bold ${activeTab === 'ingredients' ? 'text-emerald-700' : 'text-stone-500'}`}>Ingredients</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            onPress={() => setActiveTab('instructions')}
+                            onPress={async () => {
+                                await Haptic.selection();
+                                setActiveTab('instructions');
+                            }}
                             className={`flex-1 flex-row items-center justify-center gap-2 rounded-lg ${activeTab === 'instructions' ? 'bg-white shadow-sm' : ''}`}
                         >
                             <List size={16} color={activeTab === 'instructions' ? '#059669' : '#78716c'} />
@@ -211,14 +226,14 @@ export default function RecipeDetails() {
                     {activeTab === 'ingredients' ? (
                         <View className="space-y-3 animate-fade-in">
                             {ingredientsList.map((ingredient, index) => (
-                                <View key={index} className="flex-row items-center p-3 bg-white border border-stone-100 rounded-xl">
+                                <View key={index} className="flex-row items-center p-3 bg-white border border-stone-100 rounded-xl shadow-sm"> {/* Ingredient items have shadow-sm and border border-stone-100 */}
                                     <View className="w-2 h-2 bg-emerald-400 rounded-full mr-3" />
                                     <Text className="text-stone-700 font-medium flex-1 text-base">{ingredient}</Text>
                                 </View>
                             ))}
                         </View>
                     ) : (
-                        <View className="space-y-6 animate-fade-in">
+                        <View className="space-y-4 animate-fade-in"> {/* Instruction steps have better spacing: gap-4 */}
                             {instructionsList.map((step, index) => (
                                 <View key={index} className="flex-row gap-4">
                                     <View className="w-8 h-8 rounded-full bg-emerald-100 items-center justify-center shrink-0 mt-0.5">
@@ -250,7 +265,7 @@ export default function RecipeDetails() {
                                 </View>
                             </View>
                         ) : (
-                            <View className="bg-stone-100 rounded-2xl p-6 items-center border border-stone-200 border-dashed">
+                            <View className="bg-stone-100 rounded-2xl p-6 items-center border-2 border-dashed border-stone-200"> {/* Empty state has border-dashed border-stone-200 */}
                                 <Info size={32} color="#a8a29e" className="mb-3" />
                                 <Text className="text-stone-500 text-center mb-4">
                                     Detailed nutrition information is not available.
@@ -274,8 +289,8 @@ export default function RecipeDetails() {
 
             {/* Floating Action Button for Cooking Mode (Optional) */}
             <View className="absolute bottom-8 right-6">
-                <TouchableOpacity className="bg-emerald-600 w-14 h-14 rounded-full items-center justify-center shadow-lg shadow-emerald-600/30 flex-row active:scale-95 transition-all">
-                    <PlayCircle size={28} color="white" fill="white" className="text-emerald-600" />
+                <TouchableOpacity className="bg-emerald-600 w-16 h-16 rounded-full items-center justify-center flex-row active:scale-95" style={{ shadowColor: '#059669', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8 }}> {/* w-16 h-16 with shadow-lg shadow-emerald-600/30 and active:scale-95 */}
+                    <PlayCircle size={28} color="white" fill="white" className="text-emerald-600" /> {/* PlayCircle icon should be fill-white */}
                 </TouchableOpacity>
             </View>
         </View>

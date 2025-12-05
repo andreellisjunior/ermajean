@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: '#f5f5f4', // Header has border-b border-stone-100
   },
   closeButton: {
     padding: 4,
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#fafaf9', // Search bar has bg-stone-50 with focus state
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     color: '#1f2937',
   },
   listContent: {
-    padding: 16,
+    padding: 24, // Add proper spacing: p-6 for content
     paddingBottom: 32,
   },
   recipeItem: {
@@ -266,8 +266,8 @@ const styles = StyleSheet.create({
     padding: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowOpacity: 0.05, // Recipe items have shadow-sm
+    shadowRadius: 2, // shadow-sm
     elevation: 1,
   },
   recipeContent: {
