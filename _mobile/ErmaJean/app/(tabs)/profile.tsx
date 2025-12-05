@@ -95,7 +95,7 @@ export default function ProfileScreen() {
             >
                 <Text className="text-3xl font-bold text-stone-800 font-serif mb-6">My Profile</Text>
 
-                {/* User Card - Enhanced avatar */}
+               
                 <View className="flex-row items-center gap-4 mb-8">
                     <View 
                         className="w-24 h-24 bg-emerald-200 rounded-full items-center justify-center border-4 border-white" // w-24 h-24 with border-4 border-white shadow-lg
@@ -112,20 +112,20 @@ export default function ProfileScreen() {
                         </Text>
                     </View>
                     <View>
-                        <Text className="text-2xl font-bold text-stone-800">{profile?.name || 'User'}</Text> {/* text-2xl font-bold */}
+                        <Text className="text-2xl font-bold text-stone-800">{profile?.name || 'User'}</Text>
                         <Text className="text-stone-500 mb-2">{profile?.email}</Text>
                         {profile?.has_access && (
-                            <View className="bg-amber-100 self-start px-2 py-0.5 rounded-md border border-amber-200 flex-row items-center gap-1"> {/* bg-amber-100 border border-amber-200 */}
-                                <Crown size={12} color="#b45309" fill="#b45309" /> {/* fill-amber-700 */}
+                            <View className="bg-amber-100 self-start px-2 py-0.5 rounded-md border border-amber-200 flex-row items-center gap-1">
+                                <Crown size={12} color="#b45309" fill="#b45309" />
                                 <Text className="text-amber-700 text-xs font-bold">Premium Plan</Text>
                             </View>
                         )}
                     </View>
                 </View>
 
-                {/* Macro Goals */}
+               
                 <View className="mb-8">
-                    <View className="flex-row justify-between items-end mb-4 px-1"> {/* Section title with mb-4 px-1 */}
+                    <View className="flex-row justify-between items-end mb-4 px-1">
                         <Text className="font-bold text-stone-800 text-lg">Macro Goals</Text>
                         <TouchableOpacity onPress={handleEditGoals}>
                             <Text className="text-emerald-700 font-bold text-sm">Edit Goals</Text>
@@ -133,14 +133,14 @@ export default function ProfileScreen() {
                     </View>
 
                     <View className="flex-row flex-wrap gap-3">
-                        <GoalCard label="Calories" value={currentGoals.calories} unit="kcal" icon={Flame} color="text-orange-500" bg="bg-orange-50" /> {/* bg-orange-50 */}
-                        <GoalCard label="Protein" value={currentGoals.protein} unit="g" icon={Activity} color="text-blue-500" bg="bg-blue-50" /> {/* bg-blue-50 */}
-                        <GoalCard label="Carbs" value={currentGoals.carbs} unit="g" icon={Wheat} color="text-yellow-600" bg="bg-yellow-50" /> {/* bg-yellow-50 */}
-                        <GoalCard label="Fat" value={currentGoals.fat} unit="g" icon={Droplet} color="text-purple-500" bg="bg-purple-50" /> {/* bg-purple-50 */}
+                        <GoalCard label="Calories" value={currentGoals.calories} unit="kcal" icon={Flame} color="text-orange-500" bg="bg-orange-50" />
+                        <GoalCard label="Protein" value={currentGoals.protein} unit="g" icon={Activity} color="text-blue-500" bg="bg-blue-50" />
+                        <GoalCard label="Carbs" value={currentGoals.carbs} unit="g" icon={Wheat} color="text-yellow-600" bg="bg-yellow-50" />
+                        <GoalCard label="Fat" value={currentGoals.fat} unit="g" icon={Droplet} color="text-purple-500" bg="bg-purple-50" />
                     </View>
                 </View>
 
-                {/* Account Settings - Enhanced shadow */}
+               
                 <View className="mb-8">
                     <Text className="font-bold text-stone-800 text-lg mb-4 px-1">Account Settings</Text>
                     <View 
@@ -160,7 +160,7 @@ export default function ProfileScreen() {
                     </View>
                 </View>
 
-                {/* Subscription Upgrade Card - New */}
+               
                 {!profile?.has_access && (
                     <View 
                         className="bg-emerald-900 p-5 rounded-2xl mb-8 relative overflow-hidden" // bg-emerald-900 with decorative elements
@@ -174,18 +174,18 @@ export default function ProfileScreen() {
                     >
                         <View className="relative z-10">
                             <Text className="text-white font-bold text-lg mb-1">Upgrade to Premium</Text>
-                            <Text className="text-emerald-200 text-sm mb-4">Get unlimited AI recipes and detailed analytics.</Text> {/* text-emerald-200 for description */}
-                            <TouchableOpacity className="bg-white py-2 px-4 rounded-lg self-start"> {/* bg-white text-emerald-900 py-2 px-4 rounded-lg */}
+                            <Text className="text-emerald-200 text-sm mb-4">Get unlimited AI recipes and detailed analytics.</Text>
+                            <TouchableOpacity className="bg-white py-2 px-4 rounded-lg self-start">
                                 <Text className="text-emerald-900 font-bold">View Plans</Text>
                             </TouchableOpacity>
                         </View>
-                        <View className="absolute right-0 bottom-0 opacity-10" style={{ transform: [{ translateX: 16 }, { translateY: 16 }] }}> {/* Large decorative ChefHat icon in bottom-right: opacity-10 */}
+                        <View className="absolute right-0 bottom-0 opacity-10" style={{ transform: [{ translateX: 16 }, { translateY: 16 }] }}>
                             <ChefHat size={120} color="white" />
                         </View>
                     </View>
                 )}
 
-                {/* Sign Out */}
+               
                 <TouchableOpacity
                     onPress={handleSignOut}
                     className="bg-red-50 p-4 rounded-xl flex-row items-center justify-center gap-2 active:scale-95"
@@ -230,8 +230,8 @@ function GoalCard({ label, value, unit, icon: Icon, color, bg }: { label: string
             }}
         >
             <View className="flex-row justify-between items-start mb-2">
-                <Icon size={20} color={iconColor} /> {/* Icons colored to match */}
-                <Text className={`font-bold text-xl ${color}`}>{value}</Text> {/* Values are text-xl font-bold */}
+                <Icon size={20} color={iconColor} />
+                <Text className={`font-bold text-xl ${color}`}>{value}</Text>
             </View>
             <Text className="text-stone-500 text-xs font-medium">{label}</Text>
         </View>
@@ -240,16 +240,16 @@ function GoalCard({ label, value, unit, icon: Icon, color, bg }: { label: string
 
 function SettingItem({ icon: Icon, label, value, border = true }: { icon: any, label: string, value?: string, border?: boolean }) {
     return (
-        <TouchableOpacity className={`p-4 flex-row items-center justify-between active:bg-stone-50 ${border ? 'border-b border-stone-100' : ''}`}> {/* active:bg-stone-50 press state */}
+        <TouchableOpacity className={`p-4 flex-row items-center justify-between active:bg-stone-50 ${border ? 'border-b border-stone-100' : ''}`}>
             <View className="flex-row items-center gap-3">
-                <View className="w-8 h-8 rounded-full bg-stone-100 items-center justify-center"> {/* Icons in bg-stone-100 circles */}
+                <View className="w-8 h-8 rounded-full bg-stone-100 items-center justify-center">
                     <Icon size={16} color="#57534e" />
                 </View>
                 <Text className="text-stone-700 font-medium">{label}</Text>
             </View>
             <View className="flex-row items-center gap-2">
                 {value && <Text className="text-emerald-600 font-medium text-sm">{value}</Text>}
-                <ChevronRight size={16} color="#d6d3d1" /> {/* Chevron is text-stone-300 */}
+                <ChevronRight size={16} color="#d6d3d1" />
             </View>
         </TouchableOpacity>
     )
