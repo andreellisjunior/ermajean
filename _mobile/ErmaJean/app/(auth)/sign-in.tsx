@@ -55,11 +55,17 @@ export default function AuthScreen() {
     async function signInWithEmail() {
         setLoading(true);
         try {
-            const { error } = await supabase.auth.signInWithPassword({
+            const { error, data } = await supabase.auth.signInWithPassword({
                 email: email.trim(),
                 password,
             });
-            if (error) setErrorMessage(getErrorMessage(error));
+            if (error) {
+                setErrorMessage(getErrorMessage(error));
+            } else if (data.session) {
+                // Successfully signed in - navigation will happen via onAuthStateChange
+                console.log('Sign in successful');
+                router.replace('/(tabs)');
+            }
         } catch (err) {
             setErrorMessage("An unexpected error occurred.");
             console.error(err);
@@ -89,6 +95,10 @@ export default function AuthScreen() {
                 setErrorMessage(getErrorMessage(error));
             } else if (data.user && !data.session) {
                 Alert.alert("Success!", "Check your email for verification.");
+            } else if (data.session) {
+                // Auto sign-in after sign-up
+                console.log('Sign up successful');
+                router.replace('/(tabs)');
             }
         } catch (err) {
             setErrorMessage("An unexpected error occurred.");
@@ -144,14 +154,17 @@ export default function AuthScreen() {
                 <View className="flex-1 flex-col justify-center max-w-md mx-auto w-full">
                     {/* Branding */}
                     <View className="items-center mb-10">
-                        <View className="w-24 h-24 mb-6 items-center justify-center">
+                        <View className="w-full h-24 mb-6 items-center justify-center">
                             <Image
                                 source={require('@/assets/images/logo-color.png')}
                                 className="w-full h-full"
                                 resizeMode="contain"
                             />
                         </View>
-                        {/* Removed text as requested, just logo */}
+
+                        <Text className="text-xl font-bold text-stone-800 mb-6 text-center">
+                            Your personal recipe management and creation tool</Text>
+
                     </View>
 
                     {/* Form Card */}
