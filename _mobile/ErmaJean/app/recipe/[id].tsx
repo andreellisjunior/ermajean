@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Share, Alert, StatusBar } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Share, Alert, StatusBar, Pressable } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
@@ -162,8 +162,8 @@ export default function RecipeDetails() {
                         <View className="bg-emerald-500/20 self-start px-3 py-1 rounded-lg border border-emerald-500/30 mb-3">
                             <Text className="text-emerald-50 font-bold text-xs uppercase tracking-wider">{recipe.course}</Text>
                         </View>
-                        <Text 
-                            className="text-white text-4xl font-bold font-serif leading-tight mb-4" 
+                        <Text
+                            className="text-white text-4xl font-bold font-serif leading-tight mb-4"
                             style={{ textShadowColor: 'rgba(0, 0, 0, 0.3)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 }}
                         >
                             {recipe.recipe_name}
@@ -207,20 +207,54 @@ export default function RecipeDetails() {
 
                     {/* Tabs */}
                     <View className="flex-row bg-stone-100 h-12 rounded-xl p-1 mb-8 relative">
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => setActiveTab('ingredients')}
-                            className={`flex-1 flex-row items-center justify-center gap-2 rounded-lg ${activeTab === 'ingredients' ? 'bg-white shadow-sm' : ''}`}
+                            style={{ flex: 1 }}
                         >
-                            <Receipt size={16} color={activeTab === 'ingredients' ? '#059669' : '#78716c'} />
-                            <Text className={`font-bold ${activeTab === 'ingredients' ? 'text-emerald-700' : 'text-stone-500'}`}>Ingredients</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
+                            <View style={{
+                                flex: 1,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 8,
+                                borderRadius: 8,
+                                backgroundColor: activeTab === 'ingredients' ? 'white' : 'transparent',
+                                ...(activeTab === 'ingredients' ? {
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 0, height: 1 },
+                                    shadowOpacity: 0.05,
+                                    shadowRadius: 2,
+                                    elevation: 2
+                                } : {})
+                            }}>
+                                <Receipt size={16} color={activeTab === 'ingredients' ? '#059669' : '#78716c'} />
+                                <Text className={`font-bold ${activeTab === 'ingredients' ? 'text-emerald-700' : 'text-stone-500'}`}>Ingredients</Text>
+                            </View>
+                        </Pressable>
+                        <Pressable
                             onPress={() => setActiveTab('instructions')}
-                            className={`flex-1 flex-row items-center justify-center gap-2 rounded-lg ${activeTab === 'instructions' ? 'bg-white shadow-sm' : ''}`}
+                            style={{ flex: 1 }}
                         >
-                            <List size={16} color={activeTab === 'instructions' ? '#059669' : '#78716c'} />
-                            <Text className={`font-bold ${activeTab === 'instructions' ? 'text-emerald-700' : 'text-stone-500'}`}>Method</Text>
-                        </TouchableOpacity>
+                            <View style={{
+                                flex: 1,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 8,
+                                borderRadius: 8,
+                                backgroundColor: activeTab === 'instructions' ? 'white' : 'transparent',
+                                ...(activeTab === 'instructions' ? {
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 0, height: 1 },
+                                    shadowOpacity: 0.05,
+                                    shadowRadius: 2,
+                                    elevation: 2
+                                } : {})
+                            }}>
+                                <List size={16} color={activeTab === 'instructions' ? '#059669' : '#78716c'} />
+                                <Text className={`font-bold ${activeTab === 'instructions' ? 'text-emerald-700' : 'text-stone-500'}`}>Instructions</Text>
+                            </View>
+                        </Pressable>
                     </View>
 
                     <View>
@@ -293,8 +327,8 @@ export default function RecipeDetails() {
 
             {/* Floating Action Button for Cooking Mode (Optional) */}
             <View className="absolute bottom-8 right-6">
-                <TouchableOpacity 
-                    className="bg-emerald-600 w-16 h-16 rounded-full items-center justify-center flex-row active:scale-95" 
+                <TouchableOpacity
+                    className="bg-emerald-600 w-16 h-16 rounded-full items-center justify-center flex-row active:scale-95"
                     style={{ shadowColor: '#059669', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8 }}
                 >
                     <PlayCircle size={28} color="white" fill="white" />
