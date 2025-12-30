@@ -19,6 +19,7 @@ export type Recipe = {
     fiber?: number;
     sugar?: number;
     sodium?: number;
+    is_kid_friendly?: boolean;
 };
 
 export interface Profile {
@@ -31,6 +32,7 @@ export interface Profile {
     protein_goal?: number;
     carb_goal?: number;
     fat_goal?: number;
+    kid_friendly_preference?: boolean;
 }
 
 // Meal Planning Types (Requirements 3.1, 3.3)
@@ -98,4 +100,5 @@ export interface RecipeInput {
     fiber?: number;
     sugar?: number;
     sodium?: number;
+    is_kid_friendly?: boolean;
 }

@@ -1,8 +1,8 @@
-import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform, Alert, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { X, Sparkles, Clock, ChefHat, Leaf, ArrowRight } from 'lucide-react-native';
+import { X, Sparkles, Clock, ChefHat, Leaf, ArrowRight, Baby } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import apiClient from '@/libs/api';
 import { Haptic } from '@/utils/haptics';
@@ -13,6 +13,7 @@ export default function GenerateRecipeModal() {
     const [servings, setServings] = useState('2');
     const [ingredients, setIngredients] = useState('');
     const [dietary, setDietary] = useState('');
+    const [isKidFriendly, setIsKidFriendly] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const handleGenerate = async () => {
@@ -25,11 +26,28 @@ export default function GenerateRecipeModal() {
         setLoading(true);
         await Haptic.buttonPress();
         try {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            await Haptic.success();
-            Alert.alert('Coming Soon', 'AI Generation is being integrated with the backend.', [
-                { text: 'OK', onPress: () => router.back() }
-            ]);
+            const response = await apiClient.post('/generate-recipe', {
+                ingredients: ingredients ? ingredients.split(',').map(i => i.trim()) : [],
+                taste: craving || '',
+                total_time: time || '',
+                serving: servings,
+                course: 'Main Course',
+                restrictions: dietary ? dietary.split(',').map(r => r.trim()) : [],
+                is_kid_friendly: isKidFriendly,
+            });
+
+            if (Array.isArray(response) && response.length > 0) {
+                await Haptic.success();
+                // For now, since this is a modal, we'll navigate to the recipes tab
+                // or redirect to the first generated recipe if we had a way to save it here.
+                // However, based on generate.tsx, it shows a preview.
+                // Given the current structure, let's notify the user or redirect.
+                router.replace('/(tabs)/generate'); // Redirect to the main generator which has the preview UI
+                Alert.alert('Recipe Generated', 'Head over to the AI Chef tab to see your new recipe!');
+            } else {
+                await Haptic.warning();
+                Alert.alert('No recipes generated', 'Try different ingredients or preferences.');
+            }
         } catch (error) {
             console.error('Generation failed:', error);
             await Haptic.error();
@@ -150,6 +168,27 @@ export default function GenerateRecipeModal() {
                                     onChangeText={setDietary}
                                 />
                             </View>
+                        </View>
+
+                        {/* Kid Friendly Toggle */}
+                        <View className="flex-row items-center justify-between bg-stone-50 p-4 rounded-2xl border border-stone-200 mb-6">
+                            <View className="flex-row items-center gap-3 flex-1">
+                                <View className="w-10 h-10 bg-sky-50 rounded-full items-center justify-center">
+                                    <Baby size={20} color="#0284c7" />
+                                </View>
+                                <View className="flex-1">
+                                    <Text className="font-bold text-stone-800">Kid Friendly</Text>
+                                    <Text className="text-stone-500 text-xs">Simpler flavors for children</Text>
+                                </View>
+                            </View>
+                            <Switch
+                                trackColor={{ false: '#d1d5db', true: '#bae6fd' }}
+                                thumbColor={isKidFriendly ? '#0ea5e9' : '#f4f3f4'}
+                                ios_backgroundColor="#d1d5db"
+                                onValueChange={setIsKidFriendly}
+                                value={isKidFriendly}
+                                disabled={loading}
+                            />
                         </View>
 
                     </ScrollView>

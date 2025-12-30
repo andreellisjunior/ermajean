@@ -213,6 +213,7 @@ export const addNewRecipeAction = async (formData: FormData) => {
         fiber,
         sugar,
         sodium,
+        is_kid_friendly: formData.get('isKidFriendly') === 'true',
       })
       .eq('id', id)
       .eq('user_id', userId);
@@ -343,6 +344,7 @@ export const addAIRecipeAction = async (formData: FormData) => {
   const course = formData.get('course')?.toString();
   const restrictions = formData.get('restrictions')?.toString();
   const location = formData.get('location')?.toString();
+  const is_kid_friendly = formData.get('isKidFriendly') === 'true';
 
   const aiData = await aiPrompt(
     taste,
@@ -351,7 +353,8 @@ export const addAIRecipeAction = async (formData: FormData) => {
     total_time,
     course,
     restrictions,
-    location
+    location,
+    is_kid_friendly
   );
 
   const result = JSON.parse(aiData.choices[0].message.content!);
@@ -373,6 +376,7 @@ export const addAIRecipeAction = async (formData: FormData) => {
         est_cost: result.estimated_cost_per_serving,
         est_savings: result.estimated_savings_per_serving,
         user_id: userId,
+        is_kid_friendly: is_kid_friendly,
       },
     ])
     .select();
@@ -439,6 +443,7 @@ export const shareRecipeAction = async (recipeId: string) => {
         ingredients: singleRecipe.ingredients,
         instructions: singleRecipe.instructions,
         recipe_id: singleRecipe.id,
+        is_kid_friendly: singleRecipe.is_kid_friendly,
       },
     ]);
 
@@ -510,7 +515,11 @@ export const updateProfileAction = async (formData: FormData) => {
 
   const { error } = await supabase
     .from('profiles')
-    .update({ name, location })
+    .update({
+      name,
+      location,
+      kid_friendly_preference: formData.get('kidFriendlyPreference') === 'true',
+    })
     .eq('id', userId);
 
   if (error) {

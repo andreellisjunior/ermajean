@@ -39,6 +39,7 @@ CREATE TABLE public.profiles (
   protein_goal integer DEFAULT 150,
   carb_goal integer DEFAULT 250,
   fat_goal integer DEFAULT 65,
+  kid_friendly_preference boolean DEFAULT false,
   CONSTRAINT profiles_pkey PRIMARY KEY (id),
   CONSTRAINT profiles_user_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );
@@ -74,6 +75,7 @@ CREATE TABLE public.recipes (
   fiber numeric,
   sugar numeric,
   sodium integer,
+  is_kid_friendly boolean DEFAULT false,
   CONSTRAINT recipes_pkey PRIMARY KEY (id),
   CONSTRAINT recipes_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
@@ -98,5 +100,6 @@ CREATE TABLE public.share_recipes (
   fiber numeric,
   sugar numeric,
   sodium integer,
+  is_kid_friendly boolean DEFAULT false,
   CONSTRAINT share_recipes_pkey PRIMARY KEY (id)
 );
