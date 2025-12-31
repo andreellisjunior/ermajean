@@ -88,6 +88,7 @@ export type Recipe = {
   fiber?: number; // in grams
   sugar?: number; // in grams
   sodium?: number; // in mg
+  is_kid_friendly?: boolean;
 };
 
 export interface DayMacros {
@@ -118,4 +119,5 @@ export interface Profile {
   protein_goal?: number;
   carb_goal?: number;
   fat_goal?: number;
+  kid_friendly_preference?: boolean;
 }

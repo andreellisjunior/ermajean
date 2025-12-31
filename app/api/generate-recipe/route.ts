@@ -3,8 +3,15 @@ import { Recipe } from '@/types';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
-  const { taste, ingredients, serving, total_time, course, restrictions } =
-    await req.json();
+  const {
+    taste,
+    ingredients,
+    serving,
+    total_time,
+    course,
+    restrictions,
+    is_kid_friendly,
+  } = await req.json();
 
   console.log(req.json());
 
@@ -14,7 +21,9 @@ export async function POST(req: NextRequest) {
     serving,
     total_time,
     course,
-    restrictions
+    restrictions,
+    undefined,
+    is_kid_friendly
   );
 
   const result = JSON.parse(aiData.choices[0].message.content!).map(

@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Modal, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Modal, StyleSheet, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -20,12 +20,13 @@ export default function GenerateScreen() {
     const [servings, setServings] = useState('2');
     const [course, setCourse] = useState('Main Course');
     const [restrictions, setRestrictions] = useState('');
+    const [isKidFriendly, setIsKidFriendly] = useState(false);
     const [loading, setLoading] = useState(false);
     const [generatedRecipes, setGeneratedRecipes] = useState<any[]>([]);
     const [showPreviewModal, setShowPreviewModal] = useState(false);
     const [selectedRecipeIndex, setSelectedRecipeIndex] = useState(0);
     const [savingRecipe, setSavingRecipe] = useState(false);
-    
+
     // Plan limit state (Requirements 2.4, 2.5)
     const [profile, setProfile] = useState<Profile | null>(null);
     const [recipeUsageCount, setRecipeUsageCount] = useState(0);
@@ -48,7 +49,7 @@ export default function GenerateScreen() {
                     .select('*', { count: 'exact', head: true })
                     .eq('user_id', user.user.id)
                     .not('ai_generated', 'is', null);
-                
+
                 setRecipeUsageCount(count || 0);
             }
         } catch (error) {
@@ -95,6 +96,7 @@ export default function GenerateScreen() {
                 serving: servings,
                 course: course,
                 restrictions: restrictions ? restrictions.split(',').map(r => r.trim()) : [],
+                is_kid_friendly: isKidFriendly,
             });
 
             // Requirement 2.3: Show preview modal with generated recipes
@@ -121,7 +123,7 @@ export default function GenerateScreen() {
         setSavingRecipe(true);
         try {
             const recipe = generatedRecipes[selectedRecipeIndex];
-            
+
             // Track recipe usage
             const { data: user } = await supabase.auth.getUser();
             if (!user.user) throw new Error('User not authenticated');
@@ -138,6 +140,7 @@ export default function GenerateScreen() {
                 course: recipe.course,
                 ingredients: recipe.ingredients,
                 instructions: recipe.instructions,
+                is_kid_friendly: isKidFriendly,
             });
 
             // Determine source based on plan type
@@ -422,6 +425,24 @@ export default function GenerateScreen() {
                                 editable={!loading}
                             />
 
+                            <View style={styles.toggleContainer}>
+                                <View style={styles.toggleTextContainer}>
+                                    <View style={styles.toggleIconLabel}>
+                                        <Ionicons name="body" size={18} color="#374151" />
+                                        <Text style={styles.toggleLabel}>Kid Friendly</Text>
+                                    </View>
+                                    <Text style={styles.toggleDescription}>Optimize recipe for children's tastes</Text>
+                                </View>
+                                <Switch
+                                    trackColor={{ false: '#d1d5db', true: '#bae6fd' }}
+                                    thumbColor={isKidFriendly ? '#0ea5e9' : '#f4f3f4'}
+                                    ios_backgroundColor="#d1d5db"
+                                    onValueChange={setIsKidFriendly}
+                                    value={isKidFriendly}
+                                    disabled={loading}
+                                />
+                            </View>
+
                             {/* Requirement 2.2: Improved loading state */}
                             <TouchableOpacity
                                 onPress={handleGenerate}
@@ -461,6 +482,34 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         gap: 12,
+    },
+    toggleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#f9fafb',
+        padding: 16,
+        borderRadius: 16,
+        marginBottom: 24,
+    },
+    toggleTextContainer: {
+        flex: 1,
+        marginRight: 12,
+    },
+    toggleIconLabel: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: 2,
+    },
+    toggleLabel: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#374151',
+    },
+    toggleDescription: {
+        fontSize: 12,
+        color: '#6b7280',
     },
     remainingBadge: {
         flexDirection: 'row',

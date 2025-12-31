@@ -95,6 +95,7 @@ export async function createRecipe(recipe: RecipeInput): Promise<Recipe> {
       fiber: recipe.fiber,
       sugar: recipe.sugar,
       sodium: recipe.sodium,
+      is_kid_friendly: recipe.is_kid_friendly,
     })
     .select()
     .single();
@@ -143,6 +144,7 @@ export async function updateRecipe(
       ...(recipe.fiber !== undefined && { fiber: recipe.fiber }),
       ...(recipe.sugar !== undefined && { sugar: recipe.sugar }),
       ...(recipe.sodium !== undefined && { sodium: recipe.sodium }),
+      ...(recipe.is_kid_friendly !== undefined && { is_kid_friendly: recipe.is_kid_friendly }),
     })
     .eq('id', id)
     .eq('user_id', user.user.id)
