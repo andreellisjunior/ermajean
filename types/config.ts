@@ -56,6 +56,11 @@ export interface ConfigProps {
     supportEmail?: string;
     forwardRepliesTo?: string;
   };
+  resend: {
+    fromNoReply: string;
+    fromAdmin: string;
+    supportEmail?: string;
+  };
   colors: {
     theme: Theme;
     main: string;
