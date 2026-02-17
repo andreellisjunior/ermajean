@@ -79,6 +79,13 @@ Reference: `libs/supabase/db-schema.sql` (read-only, do not modify this file)
 - **Auth gating**: `profiles.has_access` boolean controls premium features
 - **Stripe price IDs**: Hardcoded in `config.ts` — must match Stripe dashboard exactly
 
+## Git Workflow
+
+- **Always create atomic commits.** Each commit must contain exactly one logical change — a single feature, fix, refactor, or configuration update. Never bundle unrelated changes into a single commit.
+- Write lowercase commit messages. Prefix mobile changes with `mobile:` (e.g., `mobile: wire forgot password with Supabase reset`).
+- Keep messages concise (imperative mood, explain the "why" not the "what" when possible).
+- Never commit `.env` files, credentials, or API keys.
+
 ## Constraints
 
 - `libs/supabase/db-schema.sql` is reference-only. Never modify it directly; use Supabase migrations.

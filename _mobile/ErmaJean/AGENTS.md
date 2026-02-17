@@ -133,6 +133,13 @@ Always use `Haptic.*` from `utils/haptics.ts`. Common usage:
 - Modals use `visible` + `onClose` + `onSave` prop pattern
 - Buttons accept `fullWidth`, `variant` ("primary" | "secondary"), `disabled`, `onClick` props
 
+## Git Workflow
+
+- **Always create atomic commits.** Each commit must contain exactly one logical change — a single feature, fix, refactor, or configuration update. Never bundle unrelated changes into a single commit.
+- Prefix commit messages with `mobile:` (e.g., `mobile: add haptic feedback to meal plan actions`).
+- Write lowercase commit messages in imperative mood. Explain the "why" not just the "what" when possible.
+- Never commit `.env` files, credentials, or API keys.
+
 ## Environment Variables
 
 | Variable | Purpose |
