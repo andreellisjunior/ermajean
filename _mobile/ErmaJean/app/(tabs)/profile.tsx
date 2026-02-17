@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Linking } from 'react-native';
 import { supabase } from '@/libs/supabase';
 import { useEffect, useState } from 'react';
 import { Profile, MacroGoals } from '@/types/config';
@@ -153,10 +153,8 @@ export default function ProfileScreen() {
                             elevation: 4,
                         }}
                     >
-                        <SettingItem icon={User} label="Personal Information" />
-                        <SettingItem icon={Settings} label="Diet Preferences" />
-                        <SettingItem icon={CreditCard} label="Subscription" value={profile?.has_access ? "Active" : "Free"} />
-                        <SettingItem icon={Bell} label="Notifications" border={false} />
+                        <SettingItem icon={CreditCard} label="Subscription" value={profile?.has_access ? "Active" : "Free"} onPress={() => Linking.openURL('https://ermajean.com/dashboard')} />
+                        <SettingItem icon={Bell} label="Notifications" border={false} onPress={() => Alert.alert('Notifications', 'Push notification preferences coming soon.')} />
                     </View>
                 </View>
 
@@ -175,7 +173,7 @@ export default function ProfileScreen() {
                         <View className="relative z-10">
                             <Text className="text-white font-bold text-lg mb-1">Upgrade to Premium</Text>
                             <Text className="text-emerald-200 text-sm mb-4">Get unlimited AI recipes and detailed analytics.</Text>
-                            <TouchableOpacity className="bg-white py-2 px-4 rounded-lg self-start">
+                            <TouchableOpacity className="bg-white py-2 px-4 rounded-lg self-start" onPress={() => Linking.openURL('https://ermajean.com/pricing')}>
                                 <Text className="text-emerald-900 font-bold">View Plans</Text>
                             </TouchableOpacity>
                         </View>
@@ -238,9 +236,9 @@ function GoalCard({ label, value, unit, icon: Icon, color, bg }: { label: string
     )
 }
 
-function SettingItem({ icon: Icon, label, value, border = true }: { icon: any, label: string, value?: string, border?: boolean }) {
+function SettingItem({ icon: Icon, label, value, border = true, onPress }: { icon: any, label: string, value?: string, border?: boolean, onPress?: () => void }) {
     return (
-        <TouchableOpacity className={`p-4 flex-row items-center justify-between active:bg-stone-50 ${border ? 'border-b border-stone-100' : ''}`}>
+        <TouchableOpacity onPress={onPress} className={`p-4 flex-row items-center justify-between active:bg-stone-50 ${border ? 'border-b border-stone-100' : ''}`}>
             <View className="flex-row items-center gap-3">
                 <View className="w-8 h-8 rounded-full bg-stone-100 items-center justify-center">
                     <Icon size={16} color="#57534e" />
