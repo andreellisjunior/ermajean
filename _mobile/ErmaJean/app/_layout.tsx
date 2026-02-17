@@ -4,10 +4,9 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import "../global.css";
 import { useEffect, useRef, useState } from 'react';
-// NOTE: Notifications disabled for Expo Go (SDK 53+)
-// Uncomment when using development build or production
-// import * as Notifications from 'expo-notifications';
-// import { registerForPushNotificationsAsync } from '@/libs/notifications';
+import * as Notifications from 'expo-notifications';
+import { type EventSubscription } from 'expo-modules-core';
+import { registerForPushNotificationsAsync } from '@/libs/notifications';
 import { supabase } from '@/libs/supabase';
 import * as Linking from 'expo-linking';
 
@@ -60,72 +59,60 @@ export const linking = {
   },
 };
 
-// NOTE: Notifications disabled for Expo Go (SDK 53+)
-// Uncomment when using development build or production
-// Set up notification handler with error handling
-// try {
-//   Notifications.setNotificationHandler({
-//     handleNotification: async () => ({
-//       shouldShowAlert: true,
-//       shouldPlaySound: false,
-//       shouldSetBadge: false,
-//       shouldShowBanner: true,
-//       shouldShowList: true,
-//     }),
-//   });
-// } catch (error) {
-//   console.log('Error setting notification handler:', error);
-// }
+try {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+} catch (error) {
+  console.log('Error setting notification handler:', error);
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   
-  // NOTE: Notifications disabled for Expo Go (SDK 53+)
-  // Uncomment when using development build or production
-  // const [expoPushToken, setExpoPushToken] = useState<string>('');
-  // const [notification, setNotification] = useState<Notifications.Notification | undefined>(undefined);
-  // const notificationListener = useRef<Notifications.Subscription>(undefined);
-  // const responseListener = useRef<Notifications.Subscription>(undefined);
+  const [expoPushToken, setExpoPushToken] = useState<string>('');
+  const [notification, setNotification] = useState<Notifications.Notification | undefined>(undefined);
+  const notificationListener = useRef<EventSubscription>(undefined);
+  const responseListener = useRef<EventSubscription>(undefined);
 
-  // useEffect(() => {
-  //   // Register for push notifications with error handling
-  //   registerForPushNotificationsAsync()
-  //     .then(token => {
-  //       if (token) {
-  //         setExpoPushToken(token);
-  //         console.log('Push token registered:', token);
-  //       }
-  //     })
-  //     .catch(error => {
-  //       console.log('Error registering for push notifications:', error);
-  //     });
+  useEffect(() => {
+    registerForPushNotificationsAsync()
+      .then(token => {
+        if (token) {
+          setExpoPushToken(token);
+        }
+      })
+      .catch(error => {
+        console.log('Error registering for push notifications:', error);
+      });
 
-  //   // Set up notification listeners with error handling
-  //   try {
-  //     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-  //       setNotification(notification);
-  //     });
+    try {
+      notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+        setNotification(notification);
+      });
 
-  //     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-  //       console.log('Notification response:', response);
-  //     });
-  //   } catch (error) {
-  //     console.log('Error setting up notification listeners:', error);
-  //   }
+      responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+        console.log('Notification response:', response);
+      });
+    } catch (error) {
+      console.log('Error setting up notification listeners:', error);
+    }
 
-  //   return () => {
-  //     try {
-  //       if (notificationListener.current) {
-  //         Notifications.removeNotificationSubscription(notificationListener.current);
-  //       }
-  //       if (responseListener.current) {
-  //         Notifications.removeNotificationSubscription(responseListener.current);
-  //       }
-  //     } catch (error) {
-  //       console.log('Error removing notification listeners:', error);
-  //     }
-  //   };
-  // }, []);
+    return () => {
+      try {
+        notificationListener.current?.remove();
+        responseListener.current?.remove();
+      } catch (error) {
+        console.log('Error removing notification listeners:', error);
+      }
+    };
+  }, []);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

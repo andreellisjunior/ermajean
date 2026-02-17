@@ -108,6 +108,33 @@ export default function AuthScreen() {
         }
     }
 
+    async function handleForgotPassword() {
+        if (!email.trim()) {
+            setErrorMessage("Please enter your email address first.");
+            return;
+        }
+        setLoading(true);
+        setErrorMessage("");
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+                redirectTo: 'https://ermajean.com/auth/callback?type=recovery',
+            });
+            if (error) {
+                setErrorMessage(error.message);
+            } else {
+                Alert.alert(
+                    "Check Your Email",
+                    "If an account exists with that email, you'll receive a password reset link."
+                );
+            }
+        } catch (err) {
+            setErrorMessage("An unexpected error occurred.");
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    }
+
     async function signInWithGoogle() {
         setLoading(true);
         setErrorMessage("");
@@ -207,7 +234,7 @@ export default function AuthScreen() {
 
                             {isLogin && (
                                 <View className="flex-row justify-end mb-6">
-                                    <TouchableOpacity>
+                                    <TouchableOpacity onPress={handleForgotPassword} disabled={loading}>
                                         <Text className="text-sm font-medium text-emerald-700">
                                             Forgot Password?
                                         </Text>

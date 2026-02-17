@@ -8,18 +8,7 @@ export default function Index() {
     const [session, setSession] = useState<Session | null | undefined>(undefined);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Dev bypass for auth - allows UI development without authentication
-    const devBypassAuth = process.env.EXPO_PUBLIC_DEV_BYPASS_AUTH === 'true';
-
     useEffect(() => {
-        // Skip auth check if dev bypass is enabled
-        if (devBypassAuth) {
-            setSession({} as Session); // Mock session
-            setIsLoading(false);
-            return;
-        }
-
-        // Check for existing session
         supabase.auth.getSession().then(({ data: { session }, error }) => {
             if (error) {
                 console.error("Error getting session:", error);
@@ -28,7 +17,6 @@ export default function Index() {
             setIsLoading(false);
         });
 
-        // Listen for auth state changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
             setIsLoading(false);
@@ -37,7 +25,7 @@ export default function Index() {
         return () => {
             subscription.unsubscribe();
         };
-    }, [devBypassAuth]);
+    }, []);
 
     // Show loading state while checking auth
     if (isLoading) {
