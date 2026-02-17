@@ -69,7 +69,6 @@ export default function TabLayout() {
       {/* Hide other tabs from navigation */}
       <Tabs.Screen name="generate" options={{ href: null }} />
       <Tabs.Screen name="recipes" options={{ href: null }} />
-      <Tabs.Screen name="explore" options={{ href: null }} />
     </Tabs>
   );
 }
