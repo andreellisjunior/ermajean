@@ -1,134 +1,151 @@
-import TemplateImage from '@/app/assets/food-placeholder.png';
-import MacroDisplay from '@/components/ui/MacroDisplay';
-import { createClient } from '@/libs/supabase/server';
-import type { Recipe } from '@/types/config';
-import { Metadata } from 'next';
-import React from 'react';
+import { cache } from "react";
+import Link from "next/link";
+import type { Metadata } from "next";
+import { createClient } from "@/libs/supabase/server";
+import type { Recipe } from "@/types/config";
+
+const getSharedRecipe = cache(async (id: string): Promise<Recipe | null> => {
+  try {
+    const { data, error } = await createClient()
+      .from("share_recipes")
+      .select("*")
+      .eq("recipe_id", id)
+      .maybeSingle();
+    if (error || !data) return null;
+    return data as Recipe;
+  } catch {
+    return null;
+  }
+});
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }): Promise<Metadata> {
-  const id = (await params).id;
-  const supabase = createClient();
-  const { data: recipes } = (await supabase
-    .from('share_recipes')
-    .select('*')
-    .eq('recipe_id', id)
-    .maybeSingle()) as { data: Recipe };
-
+  const recipe = await getSharedRecipe(params.id);
   return {
-    title: recipes.recipe_name,
-    description: recipes.description,
+    title: recipe
+      ? `${recipe.recipe_name} | ErmaJean`
+      : "Recipe unavailable | ErmaJean",
+    description:
+      recipe?.description || "A recipe shared from the ErmaJean kitchen.",
   };
 }
 
-const ShareRecipe = async ({ params }: { params: { id: string } }) => {
-  const supabase = createClient();
+function lines(value: unknown): string[] {
+  return typeof value === "string"
+    ? value
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+    : [];
+}
 
-  const { data: recipes } = (await supabase
-    .from('share_recipes')
-    .select('*')
-    .eq('recipe_id', params.id)
-    .maybeSingle()) as { data: Recipe };
+export default async function ShareRecipe({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const recipe = await getSharedRecipe(params.id);
+  if (!recipe)
+    return (
+      <section className="ej-secondary-state">
+        <p className="ej-secondary-eyebrow">Shared recipe</p>
+        <h1>This recipe isn’t available right now.</h1>
+        <p>
+          The link may have expired, or we couldn’t load it. Try again in a
+          moment, or find your next dinner with ErmaJean.
+        </p>
+        <div className="ej-secondary-actions">
+          <Link className="ej-secondary-button" href="/kitchen">
+            Find dinner →
+          </Link>
+          <Link className="ej-secondary-button ej-secondary-outline" href="/">
+            Back home
+          </Link>
+        </div>
+      </section>
+    );
 
+  const facts = [
+    ["Prep time", recipe.prep_time],
+    ["Cook time", recipe.cook_time],
+    ["Total time", recipe.total_time],
+    ["Servings", recipe.servings],
+    ["Difficulty", recipe.difficulty_level],
+    ["Course", recipe.course],
+  ];
+  const ingredients = lines(recipe.ingredients);
+  const instructions = lines(recipe.instructions);
   return (
-    <div className="flex flex-col gap-4 relative h-auto">
-      <h1 className="text-2xl md:text-4xl text-center font-bold">
-        {recipes.recipe_name}
-      </h1>
-      <p className="text-gray-800 text-sm">{recipes.description}</p>
-      <div className="py-6 flex flex-col gap-4">
-        <div
-          className="h-48 w-full"
-          style={{
-            backgroundImage: `url(${TemplateImage.src})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          {/* <Image src={TemplateImage} alt='recipes![0]' width={500} height={50} /> */}
-        </div>
-        <div className="grid grid-cols-2 grid-rows-3 text-left gap-4 text-sm">
-          <p>
-            Prep Time: <span className="font-bold">{recipes.prep_time}</span>
-          </p>
-          <p>
-            Servings: <span className="font-bold">{recipes.servings}</span>
-          </p>
-          <p>
-            Cook Time: <span className="font-bold">{recipes.cook_time}</span>
-          </p>
-          <p>
-            Level:{' '}
-            <span className="font-bold capitalize">
-              {recipes.difficulty_level}
-            </span>
-          </p>
-          <p>
-            Total Time: <span className="font-bold">{recipes.total_time}</span>
-          </p>
-          <p>
-            Course:{' '}
-            <span className="font-bold capitalize">{recipes.course}</span>
-          </p>
-          {recipes.est_cost && (
-            <>
-              <p>
-                Est. Cost/serv:{' '}
-                <span className="font-bold text-green-600">
-                  ${recipes.est_cost}
-                </span>
-              </p>
-              <p>
-                Est. Savings/serv:{' '}
-                <span className="font-bold text-green-600">
-                  +${recipes.est_savings}
-                </span>
-              </p>
-            </>
-          )}
-        </div>
-        <hr />
-        <div className="text-left flex flex-col gap-4">
-          <h3 className="text-lg font-semibold">Ingredients</h3>
-          <ul className="list-disc flex flex-col gap-4">
-            {recipes.ingredients.split('\n').map((ingredients, index) => (
-              <li key={index} className="ml-4">
-                {ingredients}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <hr />
-        <div className="text-left flex flex-col gap-4">
-          <h3 className="text-lg font-semibold">Instructions</h3>
-          <ul className="list-disc flex flex-col gap-4">
-            {recipes.instructions.split('\n').map((instruction, index) => (
-              <li key={index} className="ml-4">
-                {instruction}
-              </li>
-            ))}
-          </ul>
-        </div>
-        {/* <MacroDisplay
-          recipeId={params.id}
-          servings={recipes.servings}
-          readOnly={true}
-          existingMacros={{
-            calories: recipes.calories,
-            protein: recipes.protein,
-            carbs: recipes.carbs,
-            fat: recipes.fat,
-            fiber: recipes.fiber,
-            sugar: recipes.sugar,
-            sodium: recipes.sodium,
-          }}
-        /> */}
+    <article>
+      <div className="ej-secondary-recipe-intro">
+        <p className="ej-secondary-eyebrow">From someone’s kitchen to yours</p>
+        <h1>{recipe.recipe_name || "Shared recipe"}</h1>
+        <p>{recipe.description}</p>
       </div>
-    </div>
+      <div className="ej-secondary-recipe-note">
+        <svg
+          viewBox="0 0 48 48"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          aria-hidden="true"
+        >
+          <path d="M10 20h28v14a8 8 0 0 1-8 8H18a8 8 0 0 1-8-8V20ZM5 25h5m28 0h5M8 16h32M20 12v-2a4 4 0 0 1 8 0v2M14 7V3m20 4V3" />
+        </svg>
+        <div>
+          <strong>Good food doesn’t need a photoshoot.</strong>
+          <p>No photo has been added to this shared recipe.</p>
+        </div>
+      </div>
+      <dl className="ej-secondary-facts">
+        {facts.map(([label, value]) => (
+          <div key={label}>
+            <dt>{label}</dt>
+            <dd>{value || "Not provided"}</dd>
+          </div>
+        ))}
+        {recipe.est_cost && (
+          <div>
+            <dt>Estimated cost per serving</dt>
+            <dd>${recipe.est_cost}</dd>
+          </div>
+        )}
+        {recipe.est_savings && (
+          <div>
+            <dt>Estimated savings per serving</dt>
+            <dd>${recipe.est_savings}</dd>
+          </div>
+        )}
+      </dl>
+      <div className="ej-secondary-recipe-columns">
+        <section>
+          <h2>What you’ll need</h2>
+          {ingredients.length ? (
+            <ul>
+              {ingredients.map((ingredient, index) => (
+                <li key={index}>{ingredient}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>No ingredients were included.</p>
+          )}
+        </section>
+        <section>
+          <h2>Let’s get cooking.</h2>
+          {instructions.length ? (
+            <ol>
+              {instructions.map((instruction, index) => (
+                <li key={index}>{instruction.replace(/^\d+[.)]\s*/, "")}</li>
+              ))}
+            </ol>
+          ) : (
+            <p>No instructions were included.</p>
+          )}
+        </section>
+      </div>
+    </article>
   );
-};
-
-export default ShareRecipe;
+}

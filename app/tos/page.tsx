@@ -32,7 +32,7 @@ export const metadata = getSEOTags({
 
 const TOS = () => {
   return (
-    <main className="max-w-xl mx-auto">
+    <article className="ej-secondary-legal">
       <div className="p-5">
         <Link href="/" className="btn btn-ghost">
           <svg
@@ -86,7 +86,7 @@ Privacy Policy: For details on how we handle your personal information, please r
 By using ermajean, you acknowledge that you have read, understood, and agree to these Terms & Services.`}
         </pre>
       </div>
-    </main>
+    </article>
   );
 };
 

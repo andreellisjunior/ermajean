@@ -32,7 +32,7 @@ export const metadata = getSEOTags({
 
 const PrivacyPolicy = () => {
   return (
-    <main className="max-w-xl mx-auto">
+    <article className="ej-secondary-legal">
       <div className="p-5">
         <Link href="/" className="btn btn-ghost">
           <svg
@@ -94,7 +94,7 @@ If you have any questions about this Privacy Policy, please contact us at suppor
 Thank you for using ermajean!`}
         </pre>
       </div>
-    </main>
+    </article>
   );
 };
 

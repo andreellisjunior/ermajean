@@ -1,13 +1,12 @@
-'use client';
+"use client";
 
-import { createClient } from '@/libs/supabase/client';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const sessionId = searchParams.get('session_id');
+  const sessionId = searchParams.get("session_id");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -16,7 +15,7 @@ function CheckoutSuccessContent() {
   useEffect(() => {
     const handleAutoLogin = async () => {
       if (!sessionId) {
-        setError('No session ID provided');
+        setError("No session ID provided");
         setIsLoading(false);
         return;
       }
@@ -24,18 +23,18 @@ function CheckoutSuccessContent() {
       try {
         // Get session details from Stripe (this will work client-side for completed sessions)
         const response = await fetch(
-          `/api/stripe/session-details?session_id=${sessionId}`
+          `/api/stripe/session-details?session_id=${sessionId}`,
         );
         const sessionData = await response.json();
 
         if (!response.ok) {
-          throw new Error(sessionData.error || 'Failed to get session details');
+          throw new Error(sessionData.error || "Failed to get session details");
         }
 
         const customerEmail = sessionData.customer_email;
 
         if (!customerEmail) {
-          throw new Error('No email found in session');
+          throw new Error("No email found in session");
         }
 
         // Since users must be authenticated before checkout, just redirect to recipes
@@ -44,12 +43,12 @@ function CheckoutSuccessContent() {
         setIsLoading(false);
         setTimeout(() => {
           router.push(
-            '/recipes?message=Payment successful! Welcome to premium recipes'
+            "/recipes?message=Payment successful! Welcome to premium recipes",
           );
         }, 2000);
       } catch (err) {
-        console.error('Auto-login error:', err);
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        console.error("Auto-login error:", err);
+        setError(err instanceof Error ? err.message : "An error occurred");
         setIsLoading(false);
       }
     };
@@ -59,7 +58,7 @@ function CheckoutSuccessContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="ej-secondary-checkout min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-8">
           <div className="mb-6">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -85,13 +84,13 @@ function CheckoutSuccessContent() {
 
           <div className="space-y-4">
             <button
-              onClick={() => router.push('/sign-in')}
+              onClick={() => router.push("/sign-in")}
               className="btn btn-primary btn-block"
             >
               Go to Sign In
             </button>
             <button
-              onClick={() => router.push('/')}
+              onClick={() => router.push("/")}
               className="btn btn-outline btn-block"
             >
               Back to Home
@@ -104,7 +103,7 @@ function CheckoutSuccessContent() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="ej-secondary-checkout min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-8">
           <div className="mb-6">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -145,7 +144,7 @@ function CheckoutSuccessContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="ej-secondary-checkout min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="loading loading-spinner loading-lg mb-4"></div>
         <h1 className="text-2xl font-bold mb-2">Processing your payment...</h1>
@@ -162,7 +161,7 @@ export default function CheckoutSuccessPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="ej-secondary-checkout min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="loading loading-spinner loading-lg mb-4"></div>
             <h1 className="text-2xl font-bold mb-2">Loading...</h1>
