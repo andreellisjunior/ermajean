@@ -19,7 +19,7 @@ export function FormMessage({ message }: { message: Message }) {
           role="alert"
           className="rounded-lg border border-[#B84732] bg-[#fff4ef] text-[#963b29] p-3"
         >
-          {message.error}. Please try again.
+          {message.error}
         </div>
       )}
       {"message" in message && (
