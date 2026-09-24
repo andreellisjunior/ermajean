@@ -1,61 +1,80 @@
-import { resetPasswordAction } from '@/app/actions';
-import Logo from '@/app/assets/Logo.svg';
-import { Button } from '@/components/ui/button';
-import { FormMessage, Message } from '@/components/ui/form-message';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { SubmitButton } from '@/components/ui/submit-button';
-import Image from 'next/image';
-import Link from 'next/link';
+import { resetPasswordAction } from "@/app/actions";
+import { FormMessage, Message } from "@/components/ui/form-message";
+import { SubmitButton } from "@/components/ui/submit-button";
+import Brand from "@/components/redesign/Brand";
+import Image from "next/image";
+import Link from "next/link";
+import "@/components/redesign/public.css";
 
-export default async function ResetPassword({
+export default function ResetPassword({
   searchParams,
 }: {
   searchParams: Message;
 }) {
   return (
-    <div className="flex flex-col justify-evenly items-center w-full h-screen p-2">
-      {/* Hero/Logo */}
-      <div className="flex flex-col items-center justify-center text-center">
-        <h3>welcome to</h3>
-        <Image src={Logo} alt="logo" width={500} height={500} />
-        <p>Your personal recipe management and creation tool.</p>
-      </div>
-      {/* Sign up/Sign in Section */}
-      <div className="w-full flex flex-col">
-        {'success' in searchParams ? (
-          <div className="text-foreground border-l-2 border-foreground px-4">
-            <Link href="/sign-in">
-              <Button className="w-full">Sign In</Button>
-            </Link>
+    <div className="ej-auth">
+      <header className="ej-auth-header">
+        <Brand />
+      </header>
+      <main className="ej-auth-grid">
+        <section className="ej-auth-story">
+          <h1>
+            A fresh start.
+            <br />
+            Same good kitchen.
+          </h1>
+          <p>Set a new password, then get back to your keepers.</p>
+          <Image
+            src="/redesign/ermajean.png"
+            alt=""
+            width={400}
+            height={480}
+            sizes="400px"
+          />
+        </section>
+        <section className="ej-auth-card">
+          <h1>Reset your password.</h1>
+          {"success" in searchParams ? (
+            <>
+              <FormMessage message={searchParams} />
+              <Link href="/kitchen" className="ej-button ej-green">
+                Back to my kitchen →
+              </Link>
+            </>
+          ) : (
+            <>
+              <p>Choose a password you haven’t used here before.</p>
+              <form action={resetPasswordAction}>
+                <label htmlFor="password">New password</label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={6}
+                  required
+                />
+                <label htmlFor="confirmPassword">Confirm new password</label>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={6}
+                  required
+                />
+                <SubmitButton pendingText="Updating password…">
+                  Save new password
+                </SubmitButton>
+                <FormMessage message={searchParams} />
+              </form>
+            </>
+          )}
+          <div className="ej-auth-links">
+            <Link href="/sign-in">Back to sign in</Link>
           </div>
-        ) : (
-          <form className="flex flex-col w-full min-w-64 p-4 gap-2 [&>input]:mb-4">
-            <h1 className="text-2xl font-medium">Reset password</h1>
-            <p className="text-sm text-foreground/60">
-              Please enter your new password below.
-            </p>
-            <Label htmlFor="password">New password</Label>
-            <Input
-              type="password"
-              name="password"
-              placeholder="New password"
-              required
-            />
-            <Label htmlFor="confirmPassword">Confirm password</Label>
-            <Input
-              type="password"
-              name="confirmPassword"
-              placeholder="Confirm password"
-              required
-            />
-            <SubmitButton formAction={resetPasswordAction}>
-              Reset password
-            </SubmitButton>
-          </form>
-        )}
-        <FormMessage message={searchParams} />
-      </div>
+        </section>
+      </main>
     </div>
   );
 }

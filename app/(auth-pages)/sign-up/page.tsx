@@ -1,6 +1,7 @@
 import { googleAuth } from "@/app/actions";
 import { FormMessage, Message } from "@/components/ui/form-message";
 import Link from "next/link";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 export default function Signup({ searchParams }: { searchParams: Message }) {
   return (
@@ -13,7 +14,9 @@ export default function Signup({ searchParams }: { searchParams: Message }) {
       <FormMessage message={searchParams} />
       {!("success" in searchParams) && (
         <form action={googleAuth}>
-          <button type="submit">Continue with Google</button>
+          <SubmitButton pendingText="Opening Google…">
+            Continue with Google
+          </SubmitButton>
         </form>
       )}
       <div className="ej-auth-links">

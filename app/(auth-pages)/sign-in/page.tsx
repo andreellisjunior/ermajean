@@ -6,29 +6,32 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "react-toastify";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 export default function Login({ searchParams }: { searchParams: Message }) {
   const router = useRouter();
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
   return (
     <>
       <h1>Welcome back, hon.</h1>
       <p>Your keepers are right where you left them.</p>
       <form
+        aria-busy={sending}
         onSubmit={async (e) => {
           e.preventDefault();
           setSending(true);
+          setError("");
           try {
             const result = await signInAction(new FormData(e.currentTarget));
             if (result?.status === 500)
-              toast.error(`${result.message}. Please try again.`);
+              setError(`${result.message}. Please try again.`);
             else {
               router.replace("/kitchen");
               router.refresh();
             }
           } catch {
-            toast.error("Couldn’t sign in. Please try again.");
+            setError("Couldn’t sign in. Please try again.");
           } finally {
             setSending(false);
           }
@@ -54,6 +57,7 @@ export default function Login({ searchParams }: { searchParams: Message }) {
         <button type="submit" disabled={sending}>
           {sending ? "Signing in…" : "Back to my kitchen"}
         </button>
+        {error && <FormMessage message={{ error }} />}
         <FormMessage message={searchParams} />
       </form>
       <div className="ej-auth-links">
@@ -62,9 +66,9 @@ export default function Login({ searchParams }: { searchParams: Message }) {
       </div>
       <div className="ej-auth-divider">or</div>
       <form action={googleAuth}>
-        <button className="ej-google" type="submit">
+        <SubmitButton className="ej-google" pendingText="Opening Google…">
           Continue with Google
-        </button>
+        </SubmitButton>
       </form>
     </>
   );
