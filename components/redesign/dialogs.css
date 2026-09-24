@@ -1,0 +1,379 @@
+.ej-dialog-root {
+  position: relative;
+  z-index: 70;
+  font-family: var(--font-body), "DM Sans", sans-serif;
+  color: #173e35;
+}
+.ej-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: #102e2b99;
+  backdrop-filter: blur(4px);
+}
+.ej-dialog-position {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.ej-dialog-panel {
+  position: relative;
+  width: 100%;
+  max-width: 650px;
+  max-height: calc(100dvh - 48px);
+  height: auto !important;
+  overflow-y: auto;
+  background: #faf7ef;
+  border: 1px solid #d9dfcd;
+  border-radius: 24px;
+  padding: 34px 28px 28px;
+  box-shadow: 0 24px 100px #102e2b33;
+}
+.ej-dialog-content {
+  min-width: 0;
+}
+.ej-dialog-close {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #e4e9d7;
+  color: #173e35;
+  z-index: 1;
+}
+.ej-dialog-panel h1,
+.ej-dialog-panel h2,
+.ej-dialog-panel h3,
+.ej-dialog-panel h4,
+.ej-dialog-panel h5 {
+  font-family: var(--font-display), Georgia, serif;
+  color: #173e35;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+.ej-dialog-panel h3[id],
+.ej-dialog-panel h2[id] {
+  font-size: 30px;
+  padding-right: 20px;
+  margin-bottom: 15px;
+}
+.ej-dialog-panel p {
+  line-height: 1.55;
+}
+.ej-dialog-panel label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #294c41;
+}
+.ej-dialog-panel
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.ej-dialog-panel select,
+.ej-dialog-panel textarea {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #cbd4bf;
+  border-radius: 12px;
+  background: #fffdf8;
+  padding: 10px 13px;
+  color: #173e35;
+  font-size: 16px;
+}
+.ej-dialog-panel textarea {
+  height: auto;
+  min-height: 130px;
+  resize: vertical;
+}
+.ej-dialog-panel input:disabled {
+  background: #e9ecdf;
+  color: #63725c;
+}
+.ej-dialog-root :focus-visible {
+  outline: 3px solid #bb802d;
+  outline-offset: 3px;
+}
+.ej-dialog-root button {
+  min-height: 40px;
+}
+.ej-dialog-content > form {
+  height: auto;
+}
+.ej-dialog-content .text-black,
+.ej-dialog-content .text-gray-900,
+.ej-dialog-content .text-rose-900 {
+  color: #173e35;
+}
+.ej-dialog-content .text-gray-500,
+.ej-dialog-content .text-gray-600,
+.ej-dialog-content .text-black\/50 {
+  color: #657263;
+}
+.ej-dialog-content .bg-white,
+.ej-dialog-content .bg-gray-50 {
+  background: #faf7ef;
+}
+.ej-dialog-content .bg-blue-50 {
+  background: #e5ebd9;
+  border-color: #d2ddc4;
+}
+.ej-dialog-content .text-blue-900,
+.ej-dialog-content .text-blue-800 {
+  color: #294c41;
+}
+.ej-dialog-content .sticky {
+  background: #faf7ef;
+}
+.ej-dialog-section {
+  padding: 23px 0;
+  border-bottom: 1px solid #dce1d2;
+}
+.ej-dialog-section h3 {
+  font-size: 24px;
+  margin-bottom: 7px;
+}
+.ej-dialog-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+.ej-dialog-form label {
+  display: grid;
+  gap: 7px;
+}
+.ej-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 22px;
+}
+.ej-dialog-error {
+  background: #f8e5d7;
+  border: 1px solid #dcab8c;
+  border-radius: 12px;
+  padding: 12px 15px;
+  margin: 15px 0;
+  color: #7e301e;
+  font-size: 14px;
+}
+.ej-dialog-error button {
+  text-decoration: underline;
+  margin-left: 10px;
+}
+.ej-dialog-muted {
+  color: #64735f;
+  font-size: 14px;
+}
+.ej-settings-intro {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 5px 0 12px;
+}
+.ej-settings-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  background: #e0e7d2;
+  border-radius: 50%;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 28px;
+}
+.ej-setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-top: 15px;
+}
+.ej-setting-row > div {
+  min-width: 0;
+}
+.ej-setting-row p {
+  font-size: 13px;
+  color: #657263;
+}
+.ej-danger {
+  border: 1px solid #deb4a0;
+  border-radius: 15px;
+  padding: 18px;
+  margin-top: 24px;
+}
+.ej-note-list {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0;
+}
+.ej-note-card {
+  background: #edf0e3;
+  border: 1px solid #d9dfcb;
+  border-radius: 14px;
+  padding: 18px;
+  text-align: left;
+  width: 100%;
+}
+.ej-note-card h3 {
+  font-size: 22px;
+  margin: 7px 0;
+}
+.ej-note-card p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.ej-note-card small {
+  font-size: 11px;
+  color: #63705f;
+}
+.ej-dialog-empty {
+  padding: 32px 14px;
+  text-align: center;
+  background: #e9eddf;
+  border-radius: 16px;
+  margin: 20px 0;
+}
+.ej-dialog-empty h3 {
+  font-size: 26px;
+  margin-bottom: 10px;
+}
+.ej-plan-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin: 25px 0;
+}
+.ej-plan-option {
+  background: #fffdf8;
+  border: 1px solid #d7dfca;
+  border-radius: 17px;
+  padding: 20px;
+}
+.ej-plan-option[data-featured="true"] {
+  background: #e7edda;
+}
+.ej-plan-option h3 {
+  font-size: 26px;
+}
+.ej-plan-option .ej-price {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 15px 0;
+}
+.ej-plan-option .ej-price span {
+  font-size: 13px;
+  font-weight: 400;
+}
+.ej-plan-option ul {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+  display: grid;
+  gap: 10px;
+  font-size: 13px;
+}
+.ej-plan-option li {
+  display: flex;
+  gap: 8px;
+}
+.ej-plan-option li svg {
+  flex-shrink: 0;
+}
+.ej-plan-option button {
+  width: 100%;
+}
+.ej-plan-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  background: #f1d99a;
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-bottom: 13px;
+}
+.ej-dialog-title {
+  font-size: 30px;
+  padding-right: 22px;
+}
+.ej-button-ui {
+  border-radius: 99px !important;
+  min-height: 44px;
+  white-space: normal !important;
+  height: auto !important;
+  line-height: 1.3 !important;
+}
+.ej-button-ui[data-variant="default"],
+.ej-button-ui[data-variant="destructive"] {
+  background: #be402b;
+  color: #fffaf1;
+  border: 1px solid #be402b;
+}
+.ej-button-ui[data-variant="outline"],
+.ej-button-ui[data-variant="secondary"] {
+  background: #e9eedf;
+  color: #173e35;
+  border: 1px solid #cdd8c0;
+}
+.ej-button-ui[data-variant="ghost"] {
+  color: #173e35;
+}
+.ej-button-ui:hover {
+  filter: brightness(0.96);
+}
+.ej-workspace h1,
+.ej-workspace h2,
+.ej-workspace h3 {
+  overflow-wrap: anywhere;
+}
+.ej-dialog-panel [class*="min-h-96"] {
+  min-height: 0;
+}
+.ej-dialog-panel .h-full {
+  height: auto;
+}
+.ej-dialog-panel svg[tabindex] {
+  cursor: pointer;
+}
+@media (max-width: 600px) {
+  .ej-dialog-position {
+    padding: 12px;
+    align-items: flex-end;
+  }
+  .ej-dialog-panel {
+    max-height: calc(100dvh - 24px);
+    padding: 42px 20px 24px;
+    border-radius: 22px;
+  }
+  .ej-plan-options {
+    grid-template-columns: 1fr;
+  }
+  .ej-setting-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .ej-dialog-actions > * {
+    flex: 1;
+  }
+  .ej-dialog-close {
+    top: 8px;
+    right: 8px;
+  }
+  .ej-dialog-panel h3[id],
+  .ej-dialog-panel h2[id] {
+    font-size: 28px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ej-dialog-root * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
