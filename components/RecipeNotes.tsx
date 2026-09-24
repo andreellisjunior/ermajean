@@ -1,190 +1,234 @@
-'use client';
-
-import { DialogTitle } from '@headlessui/react';
-import { FaceFrownIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import React, { useEffect, useState } from 'react';
-import { set } from 'zod';
-import Note from './Note';
-import { Button } from './ui/button';
-import LoadingSpinner from './ui/LoadingSpinner';
-import Modal from './ui/Modal';
-
-const RecipeNotes = ({
+"use client";
+import { DialogTitle } from "@headlessui/react";
+import { useState } from "react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Textarea } from "./ui/textarea";
+import Modal from "./ui/Modal";
+import LoadingSpinner from "./ui/LoadingSpinner";
+import { DeleteWarning } from "./DeleteWarning";
+type CookingNote = {
+  id: number;
+  title: string;
+  note: string;
+  updated_at: string;
+};
+export default function RecipeNotes({
   recipeName,
   recipeId,
   profiles,
+  preview = false,
 }: {
   recipeName: string;
   recipeId: string;
   profiles: { has_access: boolean }[];
-}) => {
+  preview?: boolean;
+}) {
   const [open, setOpen] = useState(false);
-  const [openNote, setOpenNote] = useState(false);
-  const [edit, setEdit] = useState(false);
-  const [deleteWarn, setDeleteWarn] = useState(false);
-  const [formFields, setFormFields] = useState({
-    id: 0,
-    titleText: '',
-    noteText: '',
-  });
-  const [notes, setNotes] = useState<
-    { id: number; title: string; note: string; updated_at: string }[]
-  >([]);
-  const [loadingNotes, setLoadingNotes] = useState(false);
-
-  const getNotes = async () => {
-    setLoadingNotes(true);
-    const res = await fetch(`/api/notes?id=${recipeId}`);
-    const data = await res.json();
-    setNotes(data);
-    setLoadingNotes(false);
-  };
-
-  const note = async (newNote: {
-    recipeId: string;
-    title: string;
-    note: string;
-  }) => {
-    const res = await fetch(`/api/notes`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...newNote,
-      }),
-    });
-
-    const data = await res.json();
-    if (data) await getNotes();
-  };
-
-  const deleteNote = async (id: number) => {
-    const res = await fetch(`/api/notes`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        id,
-      }),
-    });
-
-    const data = await res.json();
-    if (data) await getNotes();
-  };
-
+  const [editor, setEditor] = useState(false);
+  const [notes, setNotes] = useState<CookingNote[]>([]);
+  const [selected, setSelected] = useState<CookingNote | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [remove, setRemove] = useState(false);
+  async function load() {
+    setBusy(true);
+    setError("");
+    try {
+      if (preview) {
+        setNotes([]);
+        return;
+      }
+      const response = await fetch(
+        `/api/notes?id=${encodeURIComponent(recipeId)}`,
+      );
+      if (!response.ok) throw new Error();
+      const rows = await response.json();
+      if (!Array.isArray(rows)) throw new Error();
+      setNotes(rows);
+    } catch {
+      setError("Your notes couldn’t load. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function save(form: HTMLFormElement) {
+    const values = new FormData(form);
+    setBusy(true);
+    setError("");
+    try {
+      if (preview) {
+        setError("Preview only. Your notes have not changed.");
+        return;
+      }
+      const response = await fetch("/api/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipeId,
+          edit: !!selected,
+          id: selected?.id,
+          title: values.get("title"),
+          note: values.get("note"),
+        }),
+      });
+      if (!response.ok) throw new Error();
+      const rows = await response.json();
+      if (!Array.isArray(rows) || !rows.length) throw new Error();
+      setEditor(false);
+      await load();
+    } catch {
+      setError(
+        "Your note couldn’t be saved. Your draft is still here; try again.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <>
-      <button
-        onClick={async () => {
+      <Button
+        variant="outline"
+        onClick={() => {
           setOpen(true);
-          await getNotes();
+          load();
         }}
-        className="block rounded-lg py-2 px-3 transition hover:bg-primary/5 text-xs text-start w-full"
       >
-        <p className="font-semibold text-black">Notes</p>
-        <p className="text-black/50">
-          List all your notes and tips for this recipe.
-        </p>
-      </button>
-      <Modal {...{ open, setOpen }} height="h-full">
-        <DialogTitle
-          as="h3"
-          className="text-xl font-semibold leading-6 text-gray-900 capitalize mb-3 flex items-center justify-between text-left gap-2 w-full"
-        >
-          Notes for {recipeName}
-          <XMarkIcon
-            onClick={() => {
-              setOpen(false);
-            }}
-            className="h-6 w-6 text-primary hover:cursor-pointer"
-          />
-        </DialogTitle>
-        <div className="flex flex-col justify-between h-full">
-          <div className="p-3 w-full min-h-96">
-            {loadingNotes ? (
-              <LoadingSpinner />
-            ) : notes.length ? (
-              notes.map((note, i) => (
-                <div
-                  key={i}
-                  className="hover:cursor-pointer"
-                  onClick={() => {
-                    setEdit(true);
-                    setFormFields({
-                      id: note.id,
-                      titleText: note.title,
-                      noteText: note.note,
-                    });
-                    setOpenNote(true);
-                  }}
-                >
-                  <div key={note?.id} className="mb-2 flex flex-col gap-1">
-                    <p className="text-xs opacity-40 italic font-bold">
-                      {new Date(note?.updated_at).toLocaleString('en', {
-                        dateStyle: 'short',
-                        timeStyle: 'short',
-                      })}
-                    </p>
-                    <h2 className="text-lg font-semibold text-primary">
-                      {note?.title}
-                    </h2>
-                    <p className="text-black/50">{note?.note}</p>
-                  </div>
-                  <hr key={note?.updated_at} className="my-6" />
-                </div>
-              ))
-            ) : (
-              <div className="flex flex-col h-[50vh] text-center max-w-72 mx-auto w-full justify-center gap-4">
-                <FaceFrownIcon className="h-12 w-12 text-primary mx-auto" />
-                <p className="text-xl text-gray-600/75">
-                  Doesn’t look like you have any notes saved yet.
-                </p>
-                <p className="tex-xs font-bold text-primary">
-                  Click "New Note" to get begin.
-                </p>
-              </div>
-            )}
+        Cooking notes
+      </Button>
+      <Modal open={open} setOpen={setOpen}>
+        <DialogTitle>Make it yours.</DialogTitle>
+        <p className="ej-dialog-muted">Notes for {recipeName}</p>
+        {error && (
+          <div role="alert" className="ej-dialog-error">
+            {error}
+            <button onClick={load} disabled={busy}>
+              Try again
+            </button>
           </div>
-          <div className="mt-5 py-3 flex items-center sticky bottom-0 gap-4 w-full">
+        )}
+        {busy ? (
+          <LoadingSpinner />
+        ) : notes.length ? (
+          <div className="ej-note-list">
+            {notes.map((note) => (
+              <button
+                key={note.id}
+                className="ej-note-card"
+                onClick={() => {
+                  setSelected(note);
+                  setError("");
+                  setEditor(true);
+                }}
+              >
+                <small>{new Date(note.updated_at).toLocaleDateString()}</small>
+                <h3>{note.title}</h3>
+                <p>{note.note}</p>
+              </button>
+            ))}
+          </div>
+        ) : (
+          !error && (
+            <div className="ej-dialog-empty">
+              <h3>A little note for next time.</h3>
+              <p>More garlic? A handy shortcut? Save what worked for you.</p>
+            </div>
+          )
+        )}
+        <div className="ej-dialog-actions">
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Done
+          </Button>
+          <Button
+            onClick={() => {
+              setSelected(null);
+              setError("");
+              setEditor(true);
+            }}
+          >
+            New note
+          </Button>
+        </div>
+      </Modal>
+      <Modal open={editor} setOpen={setEditor}>
+        <DialogTitle>
+          {selected ? "Edit your note" : "A note for next time."}
+        </DialogTitle>
+        <form
+          key={selected?.id || "new"}
+          className="ej-dialog-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            save(e.currentTarget);
+          }}
+        >
+          <label>
+            Title
+            <Input
+              name="title"
+              required
+              defaultValue={selected?.title}
+              placeholder="A little more garlic next time"
+            />
+          </label>
+          <label>
+            Your note
+            <Textarea
+              name="note"
+              required
+              defaultValue={selected?.note}
+              placeholder="What worked? What would you change?"
+            />
+          </label>
+          {error && (
+            <p role="alert" className="ej-dialog-error">
+              {error}
+            </p>
+          )}
+          <div className="ej-dialog-actions">
             <Button
               type="button"
-              className="w-full"
-              variant="secondary"
-              onClick={() => setOpen(false)}
+              variant="outline"
+              disabled={busy}
+              onClick={() => setEditor(false)}
             >
               Cancel
             </Button>
-            <Button
-              variant={'default'}
-              className="w-full"
-              type="button"
-              onClick={() => setOpenNote(true)}
-            >
-              New Note
+            <Button type="submit" disabled={busy}>
+              {busy ? "Saving…" : "Save note"}
             </Button>
+            {selected && (
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={busy}
+                onClick={() => setRemove(true)}
+              >
+                Delete
+              </Button>
+            )}
           </div>
-        </div>
+        </form>
       </Modal>
-      {/* Add New Note */}
-      <Note
-        {...{
-          recipeId,
-          openNote,
-          setOpenNote,
-          note,
-          edit,
-          setEdit,
-          formFields,
-          setFormFields,
-          deleteWarn,
-          setDeleteWarn,
-          deleteNote,
+      <DeleteWarning
+        open={remove}
+        setOpen={setRemove}
+        title="Delete note"
+        desc="This note will be permanently removed."
+        action={async () => {
+          if (preview) throw new Error();
+          const response = await fetch("/api/notes", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: selected?.id }),
+          });
+          if (!response.ok) throw new Error();
+          const rows = await response.json();
+          if (!Array.isArray(rows) || !rows.length) throw new Error();
+          setEditor(false);
+          await load();
         }}
       />
     </>
   );
-};
-
-export default RecipeNotes;
+}

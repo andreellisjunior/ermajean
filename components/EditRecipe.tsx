@@ -1,36 +1,57 @@
-'use client';
-import { addNewRecipeAction } from '@/app/actions';
-import ComboInput from '@/components/ui/ComboInput';
-import DropdownInput from '@/components/ui/DropdownInput';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import Modal from '@/components/ui/Modal';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Recipe } from '@/types';
-import { DialogTitle } from '@headlessui/react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
-import { useEffect, useState } from 'react';
+"use client";
+import { addNewRecipeAction } from "@/app/actions";
+import ComboInput from "@/components/ui/ComboInput";
+import DropdownInput from "@/components/ui/DropdownInput";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Modal from "@/components/ui/Modal";
+import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Recipe } from "@/types";
+import { DialogTitle } from "@headlessui/react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import { useEffect, useState } from "react";
 
-export default function EditRecipe({ recipeId }: { recipeId: string }) {
+export default function EditRecipe({
+  recipeId,
+  initialRecipe,
+  preview = false,
+}: {
+  recipeId: string;
+  initialRecipe?: Recipe;
+  preview?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [showNutrition, setShowNutrition] = useState(false);
+  const [error, setError] = useState("");
+  const [saveError, setSaveError] = useState("");
 
   const getRecipe = async () => {
+    if (preview && initialRecipe) {
+      setRecipe(initialRecipe);
+      return;
+    }
     setLoading(true);
-    const res = await fetch(`/api/recipes?id=${recipeId}`);
-    const data = await res.json();
-    console.log({ data: data });
-
-    setRecipe(data);
-    // Show nutrition section if recipe has nutritional data
-    setShowNutrition(data?.calories && data.calories > 0);
-    setLoading(false);
-    console.log({ recipe: recipe });
+    setError("");
+    try {
+      const res = await fetch(
+        `/api/recipes?id=${encodeURIComponent(recipeId)}`,
+      );
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      if (!data?.id) throw new Error();
+      setRecipe(data);
+      setShowNutrition(Boolean(data.calories));
+    } catch {
+      setError("Your recipe could not load. Try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,8 +69,20 @@ export default function EditRecipe({ recipeId }: { recipeId: string }) {
       <Modal {...{ open, setOpen }}>
         <form
           action={async (formData: FormData) => {
-            await addNewRecipeAction(formData);
-            setOpen(false);
+            setSaveError("");
+            if (preview) {
+              setSaveError("Preview only. Your recipe has not changed.");
+              return;
+            }
+            try {
+              await addNewRecipeAction(formData);
+              setOpen(false);
+            } catch (e) {
+              if (e instanceof Error && e.message === "NEXT_REDIRECT") throw e;
+              setSaveError(
+                "Could not save your recipe. Your changes are still here; try again.",
+              );
+            }
           }}
         >
           <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
@@ -58,14 +91,20 @@ export default function EditRecipe({ recipeId }: { recipeId: string }) {
               className="text-xl font-semibold leading-6 text-gray-900 capitalize mb-3 flex items-center justify-between text-left gap-2"
             >
               Edit Recipe
-              <XMarkIcon
-                onClick={() => {
-                  setOpen(false);
-                }}
-                className="h-6 w-6 text-primary"
-              />
             </DialogTitle>
-            {loading ? (
+            {saveError && (
+              <p role="alert" className="ej-dialog-error">
+                {saveError}
+              </p>
+            )}
+            {error ? (
+              <div role="alert" className="ej-dialog-error">
+                {error}
+                <button type="button" onClick={getRecipe}>
+                  Try again
+                </button>
+              </div>
+            ) : loading ? (
               <LoadingSpinner />
             ) : (
               <>
@@ -185,7 +224,7 @@ export default function EditRecipe({ recipeId }: { recipeId: string }) {
                             placeholder="0"
                             min="0"
                             step="1"
-                            defaultValue={recipe?.calories || ''}
+                            defaultValue={recipe?.calories || ""}
                           />
                         </div>
                         <div>
@@ -196,7 +235,7 @@ export default function EditRecipe({ recipeId }: { recipeId: string }) {
                             placeholder="0"
                             min="0"
                             step="0.1"
-                            defaultValue={recipe?.protein || ''}
+                            defaultValue={recipe?.protein || ""}
                           />
                         </div>
                         <div>
@@ -207,7 +246,7 @@ export default function EditRecipe({ recipeId }: { recipeId: string }) {
                             placeholder="0"
                             min="0"
                             step="0.1"
-                            defaultValue={recipe?.carbs || ''}
+                            defaultValue={recipe?.carbs || ""}
                           />
                         </div>
                         <div>
@@ -218,7 +257,7 @@ export default function EditRecipe({ recipeId }: { recipeId: string }) {
                             placeholder="0"
                             min="0"
                             step="0.1"
-                            defaultValue={recipe?.fat || ''}
+                            defaultValue={recipe?.fat || ""}
                           />
                         </div>
                         <div>
@@ -229,7 +268,7 @@ export default function EditRecipe({ recipeId }: { recipeId: string }) {
                             placeholder="0"
                             min="0"
                             step="0.1"
-                            defaultValue={recipe?.fiber || ''}
+                            defaultValue={recipe?.fiber || ""}
                           />
                         </div>
                         <div>
@@ -240,7 +279,7 @@ export default function EditRecipe({ recipeId }: { recipeId: string }) {
                             placeholder="0"
                             min="0"
                             step="0.1"
-                            defaultValue={recipe?.sugar || ''}
+                            defaultValue={recipe?.sugar || ""}
                           />
                         </div>
                         <div className="col-span-2">
@@ -251,7 +290,7 @@ export default function EditRecipe({ recipeId }: { recipeId: string }) {
                             placeholder="0"
                             min="0"
                             step="1"
-                            defaultValue={recipe?.sodium || ''}
+                            defaultValue={recipe?.sodium || ""}
                           />
                         </div>
                       </div>
@@ -259,25 +298,38 @@ export default function EditRecipe({ recipeId }: { recipeId: string }) {
                   </div>
                 )}
 
-                {loading ? (
+                {saveError && (
+                  <p role="alert" className="ej-dialog-error">
+                    {saveError}
+                  </p>
+                )}
+                {error ? (
+                  <div role="alert" className="ej-dialog-error">
+                    {error}
+                    <button type="button" onClick={getRecipe}>
+                      Try again
+                    </button>
+                  </div>
+                ) : loading ? (
                   <LoadingSpinner />
                 ) : (
                   <div className="mt-5 py-3 flex items-center gap-4 sticky bottom-0 right-0">
                     <Button
                       onClick={() => setOpen(false)}
-                      variant={'secondary'}
+                      variant={"secondary"}
                       className="w-full"
                       type="button"
                     >
                       Cancel
                     </Button>
-                    <Button
-                      variant={'default'}
+                    <SubmitButton
+                      pendingText="Saving…"
+                      variant={"default"}
                       className="w-full"
                       type="submit"
                     >
                       Save
-                    </Button>
+                    </SubmitButton>
                   </div>
                 )}
               </>

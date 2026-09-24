@@ -1,12 +1,12 @@
-import { deleteRecipeAction, shareRecipeAction } from '@/app/actions';
-import EditRecipe from '@/components/EditRecipe';
-import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
-import { Cog6ToothIcon } from '@heroicons/react/24/outline';
-import { Dispatch, SetStateAction } from 'react';
-import { toast } from 'react-toastify';
-import { DeleteWarning } from '../DeleteWarning';
-import RecipeNotes from '../RecipeNotes';
-import { Message } from './form-message';
+import { deleteRecipeAction, shareRecipeAction } from "@/app/actions";
+import EditRecipe from "@/components/EditRecipe";
+import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
+import { Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { Dispatch, SetStateAction } from "react";
+import { toast } from "react-toastify";
+import { DeleteWarning } from "../DeleteWarning";
+import RecipeNotes from "../RecipeNotes";
+import { Message } from "./form-message";
 
 export default function RecipeSettings({
   recipeId,
@@ -33,13 +33,16 @@ export default function RecipeSettings({
     <div className="w-full justify-center">
       <div className="flex gap-8">
         <Popover>
-          <PopoverButton className="block text-sm/6 font-semibold text-black focus:outline-none data-[active]:text-primary data-[hover]:text-primary data-[focus]:outline-1">
+          <PopoverButton
+            aria-label="Manage recipe"
+            className="block text-sm/6 font-semibold text-black focus:outline-none data-[active]:text-primary data-[hover]:text-primary data-[focus]:outline-1"
+          >
             <Cog6ToothIcon className="h-6 w-6" />
           </PopoverButton>
           <PopoverPanel
             transition
             anchor="top start"
-            className="z-50 bg-white/5 backdrop-blur-lg divide-y divide-white/5 rounded-xl text-sm/6 transition duration-200 ease-in-out [--anchor-gap:var(--spacing-5)] data-[closed]:-translate-y-1 data-[closed]:opacity-0 shadow-xl border-[0.5px] border-black/10 w-72"
+            className="z-[80] bg-[#faf7ef] text-[#173e35] divide-y divide-white/5 rounded-xl text-sm/6 transition duration-200 ease-in-out [--anchor-gap:var(--spacing-5)] data-[closed]:-translate-y-1 data-[closed]:opacity-0 shadow-xl border-[0.5px] border-black/10 w-72"
           >
             <div className="p-3">
               <EditRecipe recipeId={recipeId} />
@@ -48,9 +51,23 @@ export default function RecipeSettings({
                 onClick={async () => {
                   try {
                     await shareRecipeAction(recipeId);
-                    await navigator.share(shareOptions);
+                    if (navigator.share) await navigator.share(shareOptions);
+                    else {
+                      await navigator.clipboard.writeText(
+                        new URL(shareOptions.url, window.location.origin).href,
+                      );
+                      toast.success("Recipe link copied.");
+                    }
                   } catch (error) {
-                    console.error(error);
+                    if (
+                      !(
+                        error instanceof DOMException &&
+                        error.name === "AbortError"
+                      )
+                    )
+                      toast.error(
+                        "The recipe could not be shared. Please try again.",
+                      );
                   }
                 }}
                 className="block rounded-lg py-2 px-3 transition hover:bg-primary/5 text-xs text-start w-full"
@@ -80,7 +97,7 @@ export default function RecipeSettings({
         setOpen={setDeleteModal}
         open={deleteModal}
         title="Delete Recipe"
-        desc="Are you sure you want to delete your recipe? This is perminant and cannot be undone."
+        desc="Are you sure you want to delete your recipe? This is permanent and cannot be undone."
         action={async () => {
           await deleteRecipeAction(recipeId);
         }}

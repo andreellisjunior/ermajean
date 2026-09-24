@@ -1326,3 +1326,33 @@
     padding: 5px 0;
   }
 }
+.ej-workspace-state {
+  padding: 12vh max(24px, 8vw);
+  display: grid;
+  align-items: center;
+  min-height: 100dvh;
+}
+.ej-workspace-state > div {
+  max-width: 850px;
+}
+.ej-workspace-state h1 {
+  margin: 20px 0;
+  font-size: clamp(38px, 6vw, 70px);
+}
+.ej-workspace-state .ej-button {
+  margin-top: 25px;
+}
+.ej-loading-bars {
+  display: grid;
+  gap: 14px;
+  margin-top: 30px;
+  max-width: 500px;
+}
+.ej-loading-bars span {
+  height: 24px;
+  border-radius: 9px;
+  background: #e1e7d3;
+}
+.ej-loading-bars span:last-child {
+  width: 60%;
+}

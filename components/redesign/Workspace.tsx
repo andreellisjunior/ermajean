@@ -26,6 +26,7 @@ import {
 import { addAIRecipeAction } from "@/app/actions";
 import { createClient } from "@/libs/supabase/client";
 import ProfileSettings from "@/components/ProfileSettings";
+import EditRecipe from "@/components/EditRecipe";
 import AddNewRecipe from "@/components/ui/AddNewRecipe";
 import RecipeSettings from "@/components/ui/RecipeSettings";
 import RecipeNotes from "@/components/RecipeNotes";
@@ -644,15 +645,16 @@ export default function Workspace({
             </div>
             <div className="ej-section-title">
               <p>{filtered.length} saved recipes</p>
-              {!preview && (
+              {
                 <div className="ej-add-recipe">
                   <AddNewRecipe
+                    preview={preview}
                     profiles={[data.profile]}
                     count={data.usageCount || 0}
                     searchParams={{ message: "" }}
                   />
                 </div>
-              )}
+              }
             </div>
             <div className="ej-recipe-grid">
               {filtered.map((r) => (
@@ -685,7 +687,7 @@ export default function Workspace({
                 <p>
                   {search
                     ? "Try another recipe name."
-                    : "Add your first recipe with the plus button. Your future self will thank you."}
+                    : "Add your first recipe with Add recipe. Your future self will thank you."}
                 </p>
               </div>
             )}
@@ -738,18 +740,12 @@ export default function Workspace({
                     <div className="ej-panel ej-notes">
                       <h3>Make it yours.</h3>
                       <p>Save what worked, and what you’d do differently.</p>
-                      {preview ? (
-                        <p>
-                          Personal notes are available in your signed-in recipe
-                          box.
-                        </p>
-                      ) : (
-                        <RecipeNotes
-                          recipeId={recipe.id}
-                          recipeName={recipe.recipe_name}
-                          profiles={[data.profile]}
-                        />
-                      )}
+                      <RecipeNotes
+                        preview={preview}
+                        recipeId={recipe.id}
+                        recipeName={recipe.recipe_name}
+                        profiles={[data.profile]}
+                      />
                     </div>
                   )}
                 </div>
@@ -848,6 +844,13 @@ export default function Workspace({
                     <Printer size={18} />
                     Print recipe
                   </button>
+                  {preview && (
+                    <EditRecipe
+                      recipeId={recipe.id}
+                      initialRecipe={recipe}
+                      preview
+                    />
+                  )}
                   {!preview && (
                     <div>
                       <span className="ej-small">Edit, share & manage</span>
@@ -1116,20 +1119,12 @@ export default function Workspace({
           Got it
         </button>
       </Modal>
-      {!preview && (
-        <ProfileSettings
-          open={profileOpen}
-          setOpen={setProfileOpen}
-          profile={[data.profile]}
-        />
-      )}{" "}
-      {preview && profileOpen && (
-        <Modal open={profileOpen} setOpen={setProfileOpen} height="h-auto">
-          <DialogTitle>Profile preview</DialogTitle>
-          <p>Account settings connect to your real profile after sign-in.</p>
-          <button onClick={() => setProfileOpen(false)}>Close</button>
-        </Modal>
-      )}
+      <ProfileSettings
+        open={profileOpen}
+        setOpen={setProfileOpen}
+        profile={[data.profile]}
+        preview={preview}
+      />
     </div>
   );
 }
