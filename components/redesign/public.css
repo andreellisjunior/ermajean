@@ -896,3 +896,175 @@
     padding-inline: 11px;
   }
 }
+.ej-free-recipes {
+  max-width: 1120px;
+  margin: 40px auto 80px;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 70px;
+  align-items: center;
+}
+.ej-free-recipes h1,
+.ej-completion h1 {
+  font-size: clamp(36px, 4.6vw, 62px);
+  line-height: 1.07;
+  margin: 20px 0;
+  overflow-wrap: anywhere;
+}
+.ej-free-recipes > div > p {
+  font-size: 19px;
+  color: #596054;
+  margin-bottom: 26px;
+}
+.ej-free-recipes figure {
+  padding: 25px;
+  background: #dee6d8;
+  border-radius: 20px;
+  transform: rotate(2deg);
+}
+.ej-free-recipes figure img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+.ej-free-recipes figcaption {
+  font-size: 12px;
+  text-align: center;
+  margin-top: 14px;
+}
+.ej-newsletter label {
+  font-weight: 700;
+  font-size: 14px;
+}
+.ej-newsletter-fields {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.ej-newsletter input {
+  min-width: 0;
+  flex: 1 1 180px;
+  height: 50px;
+  padding: 12px 16px;
+  border: 1px solid #a5b29d;
+  border-radius: 12px;
+  background: #fffdf7;
+  color: #244638;
+}
+.ej-newsletter small {
+  display: block;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #596054;
+  margin: 16px 0;
+}
+.ej-newsletter small a {
+  text-decoration: underline;
+}
+.ej-newsletter button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.ej-form-error {
+  color: #963b29;
+  margin: 12px 0;
+}
+.ej-form-status {
+  margin: 12px 0;
+}
+.ej-download-tip {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #eadba7;
+  padding: 18px;
+  border-radius: 16px;
+  margin-top: 30px;
+}
+.ej-download-tip img {
+  border-radius: 50%;
+}
+.ej-download-tip p {
+  font-size: 14px;
+}
+.ej-download-tip strong {
+  font-family: var(--font-display), serif;
+  font-size: 20px;
+}
+.ej-completion {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 20px 24px 65px;
+  text-align: center;
+}
+.ej-completion > img {
+  border-radius: 50%;
+  margin: 0 auto 24px;
+}
+.ej-completion > .ej-eyebrow {
+  display: block;
+}
+.ej-completion > p {
+  max-width: 560px;
+  margin: 22px auto;
+  font-size: 18px;
+  color: #596054;
+}
+.ej-completion .ej-button {
+  margin: 6px;
+}
+.ej-completion p.ej-completion-note {
+  font-size: 13px;
+}
+.ej-completion > a:last-child {
+  text-decoration: underline;
+}
+.ej-public a:not(.ej-button):hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+@media (max-width: 760px) {
+  .ej-free-recipes {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    margin-top: 8px;
+  }
+  .ej-free-recipes figure {
+    max-width: 350px;
+    justify-self: center;
+  }
+  .ej-completion {
+    margin-top: 15px;
+  }
+  .ej-download-tip img {
+    width: 52px;
+    height: 52px;
+  }
+}
+.ej-header nav a,
+.ej-header-actions > a:not(.ej-button),
+.ej-footer nav a,
+.ej-auth-links a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.ej-auth-card input {
+  padding: 10px 14px;
+  border: 1px solid #a5b29d;
+  width: 100%;
+  min-width: 0;
+}
+.ej-auth-card form [role="alert"] {
+  margin-top: 8px;
+}
+.ej-public,
+.ej-auth {
+  overflow-wrap: break-word;
+}
+.ej-public main,
+.ej-auth-grid > * {
+  min-width: 0;
+}

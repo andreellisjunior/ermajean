@@ -1,40 +1,42 @@
-import Footer from '@/components/Footer';
-import Navigation from '@/components/ui/Navigation';
-import { CheckCircleIcon } from '@heroicons/react/24/outline';
-import React from 'react';
-
-const page = () => {
+import Image from "next/image";
+import Link from "next/link";
+import Brand from "@/components/redesign/Brand";
+export default function ThankYou() {
   return (
-    <>
-      <Navigation />
-      <div className='h-screen flex flex-col items-center justify-center max-w-5xl text-center mx-auto gap-4 px-4'>
-        <CheckCircleIcon className='text-primary w-24 md:w-56 h-auto' />
-        <h1 className='text-4xl md:text-7xl font-heading'>
-          Thank You for Subscribing!
+    <div className="ej-public">
+      <header className="ej-header">
+        <Brand />
+      </header>
+      <main className="ej-completion">
+        <Image
+          src="/redesign/ermajean-portrait.png"
+          alt="ErmaJean"
+          width={140}
+          height={140}
+        />
+        <span className="ej-eyebrow">
+          A LITTLE INSPIRATION FOR YOUR KITCHEN
+        </span>
+        <h1>
+          Your next dinner idea
+          <br />
+          is in here somewhere.
         </h1>
-        <h4 className='max-w-3xl text-lg md:text-xl text-gray-600'>
-          Your 24 free AI-generated recipes are ready to download! This
-          collection includes delicious options for breakfast, lunch, dinner,
-          and dessert with traditional, gluten-free, and vegan variations. Click
-          the button below to get cooking!
-        </h4>
-        <div className='mt-6'>
-          <a
-            href='/24-free-ai-recipes.pdf'
-            download
-            className='inline-block bg-primary text-white px-8 py-4 rounded-md font-medium hover:bg-primary/90 transition-colors text-lg'
-          >
-            Download Your Free Recipes
-          </a>
-        </div>
-        <p className='mt-4 text-sm text-gray-500'>
-          Don't forget to check your email for more cooking inspiration and
-          exclusive offers!
+        <p>
+          Your collection of 24 AI-generated recipes is ready. Save it for the
+          evenings when you could use a little help.
         </p>
-      </div>
-      <Footer />
-    </>
+        <a className="ej-button" href="/24-free-ai-recipes.pdf" download>
+          Download the recipes (PDF) ↓
+        </a>
+        <Link className="ej-button ej-outline" href="/sign-up">
+          Start my recipe box →
+        </Link>
+        <p className="ej-completion-note">
+          If you subscribed, check your inbox for a confirmation email.
+        </p>
+        <Link href="/">Back to ErmaJean</Link>
+      </main>
+    </div>
   );
-};
-
-export default page;
+}
