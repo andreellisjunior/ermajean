@@ -1,27 +1,30 @@
-'use client';
+"use client";
 
-import { updateMacroGoalsModalAction } from '@/app/actions';
-import { MacroGoals } from '@/types';
-import { Activity, Flame, Wheat, Zap } from 'lucide-react';
-import { useState, useTransition } from 'react';
-import { toast } from 'react-toastify';
-import { Button } from './button';
-import { Input } from './input';
-import { Label } from './label';
+import { updateMacroGoalsModalAction } from "@/app/actions";
+import { MacroGoals } from "@/types";
+import { Activity, Flame, Wheat, Zap } from "lucide-react";
+import { useState, useTransition } from "react";
+import { toast } from "react-toastify";
+import { Button } from "./button";
+import { Input } from "./input";
+import { Label } from "./label";
 
 interface MacroGoalsFormProps {
   currentGoals?: MacroGoals;
+  preview?: boolean;
   onClose?: () => void;
   onSave?: () => void;
 }
 
 export default function MacroGoalsForm({
   currentGoals,
+  preview = false,
   onClose,
   onSave,
 }: MacroGoalsFormProps) {
   const [isPending, startTransition] = useTransition();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const defaultGoals = {
     calories: currentGoals?.calories || 2000,
@@ -34,18 +37,23 @@ export default function MacroGoalsForm({
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <Activity className="h-5 w-5 text-primary" />
-        <h3 className="text-lg font-semibold">Daily Macro Goals</h3>
+        <h3 className="text-lg font-semibold">Your daily fuel</h3>
       </div>
 
       <p className="text-sm text-gray-600">
-        Set your daily nutritional targets. These will be used to track your
-        progress in meal planning.
+        Set optional targets that support your energy and routine. These are
+        personal goals, not a scorecard.
       </p>
 
       <form
         onSubmit={async (e) => {
           e.preventDefault();
           const formData = new FormData(e.currentTarget);
+          if (preview) {
+            setError("Preview only. Your goals have not changed.");
+            return;
+          }
+          setError("");
           setIsSubmitting(true);
 
           startTransition(async () => {
@@ -57,10 +65,12 @@ export default function MacroGoalsForm({
                 onSave?.(); // Call the refresh callback
                 onClose?.();
               } else {
-                toast.error(result.message);
+                setError(result.message);
               }
             } catch (error) {
-              toast.error('Failed to update macro goals');
+              setError(
+                "Your goals could not be saved. Try again; your entries are still here.",
+              );
             } finally {
               setIsSubmitting(false);
             }
@@ -77,13 +87,12 @@ export default function MacroGoalsForm({
             <Input
               name="calorieGoal"
               type="number"
+              min={0}
+              step={1}
               placeholder="2000"
               defaultValue={defaultGoals.calories}
               required
             />
-            <p className="text-xs text-gray-500">
-              Recommended: 1800-2500 calories
-            </p>
           </div>
 
           <div className="space-y-2">
@@ -94,13 +103,12 @@ export default function MacroGoalsForm({
             <Input
               name="proteinGoal"
               type="number"
+              min={0}
+              step={1}
               placeholder="150"
               defaultValue={defaultGoals.protein}
               required
             />
-            <p className="text-xs text-gray-500">
-              Recommended: 0.8-1.2g per kg body weight
-            </p>
           </div>
 
           <div className="space-y-2">
@@ -111,13 +119,12 @@ export default function MacroGoalsForm({
             <Input
               name="carbGoal"
               type="number"
+              min={0}
+              step={1}
               placeholder="250"
               defaultValue={defaultGoals.carbs}
               required
             />
-            <p className="text-xs text-gray-500">
-              Recommended: 45-65% of total calories
-            </p>
           </div>
 
           <div className="space-y-2">
@@ -128,13 +135,12 @@ export default function MacroGoalsForm({
             <Input
               name="fatGoal"
               type="number"
+              min={0}
+              step={1}
               placeholder="65"
               defaultValue={defaultGoals.fat}
               required
             />
-            <p className="text-xs text-gray-500">
-              Recommended: 20-35% of total calories
-            </p>
           </div>
         </div>
 
@@ -156,6 +162,11 @@ export default function MacroGoalsForm({
           </div>
         </div>
 
+        {error && (
+          <p role="alert" className="ej-dialog-error">
+            {error}
+          </p>
+        )}
         <div className="flex gap-3 pt-4">
           {onClose && (
             <Button
@@ -169,7 +180,7 @@ export default function MacroGoalsForm({
             </Button>
           )}
           <Button type="submit" className="flex-1" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : 'Save Goals'}
+            {isSubmitting ? "Saving..." : "Save Goals"}
           </Button>
         </div>
       </form>

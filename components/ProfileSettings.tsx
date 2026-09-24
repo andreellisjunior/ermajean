@@ -1,354 +1,234 @@
-'use client';
-
+"use client";
 import {
   deleteUserAction,
   signOutAction,
   updateProfileAction,
-} from '@/app/actions';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import MacroGoalsForm from '@/components/ui/MacroGoalsForm';
-import config from '@/config';
-import apiClient from '@/libs/api';
-import { createClient } from '@/libs/supabase/client';
-import { MacroGoals, Profile } from '@/types';
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogPanel,
-  DialogTitle,
-  TransitionChild,
-} from '@headlessui/react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import { DeleteWarning } from './DeleteWarning';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import PaidFeatureModal from './ui/PaidFeatureModal';
-import { SubmitButton } from './ui/submit-button';
-
+} from "@/app/actions";
+import MacroGoalsForm from "@/components/ui/MacroGoalsForm";
+import apiClient from "@/libs/api";
+import { createClient } from "@/libs/supabase/client";
+import { Profile } from "@/types";
+import { DialogTitle } from "@headlessui/react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { DeleteWarning } from "./DeleteWarning";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import Modal from "./ui/Modal";
+import PaidFeatureModal from "./ui/PaidFeatureModal";
+import { SubmitButton } from "./ui/submit-button";
 export default function ProfileSettings({
   open,
   setOpen,
   profile: initialProfile,
+  preview = false,
 }: {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
   profile: Profile[] | null;
+  preview?: boolean;
 }) {
-  const [dangerOpen, setDangerOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [paidModal, setPaidModal] = useState(false);
-  const [showMacroGoals, setShowMacroGoals] = useState(false);
   const [profile, setProfile] = useState(initialProfile);
-
-  // Update profile state when initialProfile changes
-  useEffect(() => {
-    setProfile(initialProfile);
-  }, [initialProfile]);
-
-  // Function to refresh profile data
-  const refreshProfile = async () => {
-    const supabase = createClient();
+  const [danger, setDanger] = useState(false);
+  const [billing, setBilling] = useState(false);
+  const [goals, setGoals] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  useEffect(() => setProfile(initialProfile), [initialProfile]);
+  const person = profile?.[0];
+  async function refresh() {
+    if (preview) return;
+    const db = createClient();
     const {
       data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      const { data } = await supabase
-        .from('profiles')
-        .select(
-          'name, email, location, has_access, price_id, calorie_goal, protein_goal, carb_goal, fat_goal'
-        )
-        .eq('id', user.id)
-        .single();
-
-      if (data) {
-        setProfile([data]);
-      }
+    } = await db.auth.getUser();
+    if (!user) return;
+    const result = await db
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+    if (result.error) {
+      setError(
+        "Your goals were saved, but the profile could not refresh. Reopen settings to retry.",
+      );
+      return;
     }
-  };
-
+    setProfile([result.data]);
+  }
+  async function manageBilling() {
+    if (preview) {
+      setBilling(true);
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const data = (await apiClient.get("/user")) as { access: boolean };
+      if (!data.access) {
+        setBilling(true);
+        return;
+      }
+      const { url } = (await apiClient.post("/stripe/create-portal", {
+        returnUrl: window.location.href,
+      })) as { url: string };
+      if (!url) throw new Error();
+      window.location.href = url;
+    } catch {
+      setError("Billing couldn’t open. Please try Subscription again.");
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <>
-      <Dialog open={open} onClose={setOpen} className="relative z-10">
-        <DialogBackdrop
-          transition
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity duration-500 ease-in-out data-[closed]:opacity-0"
-        />
-
-        <div className="fixed inset-0 overflow-hidden">
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
-              <DialogPanel
-                transition
-                className="pointer-events-auto relative w-screen max-w-md transform transition duration-500 ease-in-out data-[closed]:translate-x-full"
-              >
-                <TransitionChild>
-                  <div className="absolute left-0 top-0 -ml-8 flex pr-2 pt-4 duration-500 ease-in-out data-[closed]:opacity-0 sm:-ml-10 sm:pr-4">
-                    <button
-                      type="button"
-                      onClick={() => setOpen(false)}
-                      className="relative rounded-md text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
-                    >
-                      <span className="absolute -inset-2.5" />
-                      <span className="sr-only">Close panel</span>
-                      <XMarkIcon aria-hidden="true" className="h-6 w-6" />
-                    </button>
-                  </div>
-                </TransitionChild>
-                <div className="flex h-full flex-col overflow-y-scroll bg-white py-6 shadow-xl">
-                  <div className="px-4 sm:px-6">
-                    <DialogTitle className="text-lg font-semibold text-gray-900">
-                      Account Settings
-                    </DialogTitle>
-                  </div>
-                  <div className="relative mt-6 flex-1 px-4 sm:px-6">
-                    <div className="border-b-2 border-gray-200 pb-8">
-                      <h5 className="text-md font-semibold">
-                        Profile
-                        <p className="text-xs text-gray-500 max-w-64">
-                          Review and update your profile information.
-                        </p>
-                      </h5>
-                      <form
-                        className="h-full w-full"
-                        action={async (formData) => {
-                          await updateProfileAction(formData);
-                          setOpen(false);
-                        }}
-                      >
-                        <div className="mt-4 text-left">
-                          <Label htmlFor="name">Name:</Label>
-                          <Input
-                            name="name"
-                            placeholder="Your name"
-                            defaultValue={profile?.[0]?.name}
-                          />
-                        </div>
-                        <div className="mt-4 text-left">
-                          <Label htmlFor="location">Location:</Label>
-                          <p className="text-xs text-gray-600 italic">
-                            This is only used to calculate more accurate cost
-                            estimates.
-                          </p>
-                          <Input
-                            name="location"
-                            defaultValue={profile?.[0]?.location ?? `USA`}
-                            title="Enter your state, city, or country (default USA)"
-                          />
-                        </div>
-                        <div className="mt-4 text-left">
-                          <Label htmlFor="email">Email:</Label>
-                          <Input
-                            name="email"
-                            value={profile?.[0]?.email}
-                            disabled
-                            title="Updating your email coming soon!"
-                          />
-                        </div>
-                        <div className="mt-5 py-3 w-fit ml-auto">
-                          {/* <Button
-                          variant={'destructive'}
-                          className='w-full gap-2'
-                          
-                        >
-                          Sign Out
-                        </Button> */}
-                          <SubmitButton
-                            size="sm"
-                            variant="outline"
-                            className="text-xs"
-                            type="submit"
-                            pendingText="Updating..."
-                          >
-                            Update
-                          </SubmitButton>
-                        </div>
-                      </form>
-                    </div>
-
-                    {/* Macro Goals Section */}
-                    <div className="border-b-2 border-gray-200 py-8">
-                      {showMacroGoals ? (
-                        <MacroGoalsForm
-                          currentGoals={
-                            profile?.[0]
-                              ? {
-                                  calories: profile[0].calorie_goal || 2000,
-                                  protein: profile[0].protein_goal || 150,
-                                  carbs: profile[0].carb_goal || 250,
-                                  fat: profile[0].fat_goal || 65,
-                                }
-                              : undefined
-                          }
-                          onClose={() => setShowMacroGoals(false)}
-                          onSave={refreshProfile}
-                        />
-                      ) : (
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <h5 className="text-md font-semibold">
-                              Macro Goals
-                            </h5>
-                            <p className="text-xs text-gray-500 max-w-64">
-                              Set your daily nutritional targets for meal
-                              planning.
-                            </p>
-                            {profile?.[0] && (
-                              <div className="mt-2 text-sm text-gray-600">
-                                <span className="inline-block mr-4">
-                                  🔥 {profile[0].calorie_goal || 2000} cal
-                                </span>
-                                <span className="inline-block mr-4">
-                                  ⚡ {profile[0].protein_goal || 150}g protein
-                                </span>
-                                <span className="inline-block mr-4">
-                                  🌾 {profile[0].carb_goal || 250}g carbs
-                                </span>
-                                <span className="inline-block">
-                                  🥑 {profile[0].fat_goal || 65}g fat
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            type="button"
-                            className="text-xs"
-                            onClick={() => setShowMacroGoals(true)}
-                          >
-                            Edit Goals
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="border-b-2 border-gray-200 py-8 flex justify-between items-center">
-                      <h5 className="text-md font-semibold">
-                        Subscription
-                        <p className="text-xs text-gray-500 max-w-64">
-                          Review your subscription and billing information.
-                        </p>
-                      </h5>
-                      {loading ? (
-                        <LoadingSpinner />
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          type="button"
-                          className="text-xs"
-                          onClick={async () => {
-                            setLoading(true);
-                            try {
-                              const data = (await apiClient.get('/user')) as {
-                                access: boolean;
-                              };
-                              if (data.access) {
-                                const { url }: { url: string } =
-                                  await apiClient.post(
-                                    '/stripe/create-portal',
-                                    {
-                                      returnUrl: window.location.href,
-                                    }
-                                  );
-
-                                window.location.href = url;
-                              } else {
-                                // For free users, show the paidModal instead
-                                setLoading(false);
-                                setPaidModal(true);
-                              }
-                            } catch (error) {
-                              setLoading(false);
-                            }
-                          }}
-                        >
-                          Subscription
-                        </Button>
-                      )}
-                    </div>
-                    <div className="border-b-2 border-gray-200 py-8">
-                      <h5 className="text-lg font-semibold">Application</h5>
-                      <div className="flex justify-between items-center py-4 text-sm">
-                        <div>
-                          Refresh Application
-                          <p className="text-xs text-gray-500">
-                            Having trouble in the app? Refresh it.
-                          </p>
-                        </div>
-                        <a href="/">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-xs"
-                          >
-                            Refresh
-                          </Button>
-                        </a>
-                      </div>
-                      <div className="flex justify-between items-center py-4 text-sm">
-                        <div>
-                          Log out
-                          <p className="text-xs text-gray-500">
-                            Simply log out of your account.
-                          </p>
-                        </div>
-                        <a href="/">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            type="button"
-                            className="text-xs"
-                            onClick={() => signOutAction()}
-                          >
-                            Log out
-                          </Button>
-                        </a>
-                      </div>
-                    </div>
-
-                    <div className="border-2 border-red-300 rounded-lg my-8 py-8 px-4 flex flex-col gap-4 text-red-500">
-                      <h5 className="text-md font-semibold">
-                        DANGER ZONE
-                        <p className="text-xs text-gray-500 max-w-64">
-                          Permanently delete your account. This action is
-                          irreversible.
-                        </p>
-                      </h5>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        type="button"
-                        className="text-xs"
-                        onClick={() => setDangerOpen(true)}
-                      >
-                        Delete Account
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </DialogPanel>
-            </div>
+      <Modal open={open} setOpen={setOpen} height="h-auto">
+        <DialogTitle>Your kitchen. Your way.</DialogTitle>
+        <div className="ej-settings-intro">
+          <span className="ej-settings-avatar">{person?.name?.[0] || "Y"}</span>
+          <div>
+            <strong>{person?.name || "Welcome, friend"}</strong>
+            <p className="ej-dialog-muted">
+              Good food starts with what works for you.
+            </p>
           </div>
         </div>
-      </Dialog>
+        {error && (
+          <p className="ej-dialog-error" role="alert">
+            {error}
+          </p>
+        )}
+        <section className="ej-dialog-section">
+          <h3>The basics</h3>
+          <form
+            className="ej-dialog-form"
+            action={async (data) => {
+              if (preview) {
+                setError("Preview only. Your account has not changed.");
+                return;
+              }
+              try {
+                await updateProfileAction(data);
+                setOpen(false);
+              } catch (e) {
+                if (e instanceof Error && e.message === "NEXT_REDIRECT")
+                  throw e;
+                setError(
+                  "Your profile could not be saved. Your entries are still here; try again.",
+                );
+              }
+            }}
+          >
+            <label>
+              Your name
+              <Input
+                name="name"
+                defaultValue={person?.name}
+                autoComplete="name"
+                required
+              />
+            </label>
+            <label>
+              Location
+              <Input
+                name="location"
+                defaultValue={person?.location || "USA"}
+                autoComplete="country-name"
+              />
+              <span className="ej-dialog-muted">
+                Used for local ingredient cost estimates.
+              </span>
+            </label>
+            <label>
+              Email
+              <Input name="email" value={person?.email || ""} disabled />
+            </label>
+            <SubmitButton pendingText="Saving…">Save profile</SubmitButton>
+          </form>
+        </section>
+        <section className="ej-dialog-section">
+          <h3>Fuel, not rules.</h3>
+          <p className="ej-dialog-muted">
+            Your nutrition goals are optional. Make them work for your life.
+          </p>
+          {goals ? (
+            <MacroGoalsForm
+              preview={preview}
+              currentGoals={
+                person
+                  ? {
+                      calories: person.calorie_goal,
+                      protein: person.protein_goal,
+                      carbs: person.carb_goal,
+                      fat: person.fat_goal,
+                    }
+                  : undefined
+              }
+              onSave={refresh}
+              onClose={() => setGoals(false)}
+            />
+          ) : (
+            <div className="ej-setting-row">
+              <p>Set energy, protein, carbohydrate, and fat goals.</p>
+              <Button variant="outline" onClick={() => setGoals(true)}>
+                Edit goals
+              </Button>
+            </div>
+          )}
+        </section>
+        <section className="ej-dialog-section">
+          <h3>Your plan</h3>
+          <div className="ej-setting-row">
+            <div>
+              <strong>
+                {person?.has_access ? "Premium kitchen" : "Free kitchen"}
+              </strong>
+              <p>Review your subscription and billing.</p>
+            </div>
+            <Button variant="outline" disabled={busy} onClick={manageBilling}>
+              {busy ? "Opening…" : "Subscription"}
+            </Button>
+          </div>
+        </section>
+        <section className="ej-dialog-section">
+          <h3>A fresh start</h3>
+          <div className="ej-dialog-actions">
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Refresh app
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() =>
+                preview
+                  ? setError("Preview only. No account is signed in.")
+                  : signOutAction()
+              }
+            >
+              Sign out
+            </Button>
+          </div>
+        </section>
+        <section className="ej-danger">
+          <h3>Delete account</h3>
+          <p className="ej-dialog-muted">
+            Permanently remove your account and recipes. This cannot be undone.
+          </p>
+          <div className="ej-dialog-actions">
+            <Button variant="destructive" onClick={() => setDanger(true)}>
+              Delete account
+            </Button>
+          </div>
+        </section>
+      </Modal>
+      <PaidFeatureModal open={billing} setOpen={setBilling} preview={preview} />
       <DeleteWarning
-        open={dangerOpen}
-        setOpen={setDangerOpen}
-        title={'Delete Account'}
-        desc={
-          'Are you sure you want to delete your account? All of your data (including all shared recipes) will be permanently removed. This action cannot be undone.'
-        }
-        action={deleteUserAction}
-      />
-      <PaidFeatureModal
-        open={paidModal}
-        setOpen={setPaidModal}
-        title="Choose Your Plan"
-        description="Upgrade to unlock unlimited AI recipes, plus sharing and notes features. Choose the plan that works best for you."
+        open={danger}
+        setOpen={setDanger}
+        title="Delete account"
+        desc="Your account, recipes, and shared recipes will be permanently removed. This cannot be undone."
+        action={async () => {
+          if (preview) throw new Error("Preview only");
+          await deleteUserAction();
+        }}
       />
     </>
   );
