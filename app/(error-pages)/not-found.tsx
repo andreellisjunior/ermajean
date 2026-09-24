@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-import ButtonSupport from "@/components/ButtonSupport";
 
 export default function NotFound() {
   return (
@@ -22,7 +21,6 @@ export default function NotFound() {
         <Link href="/" className="ej-secondary-button">
           Back home <span aria-hidden="true">→</span>
         </Link>
-        <ButtonSupport />
       </div>
     </section>
   );

@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import ButtonSupport from "@/components/ButtonSupport";
 
 export default function Error({ reset }: { error: Error; reset: () => void }) {
   return (
@@ -26,7 +25,6 @@ export default function Error({ reset }: { error: Error; reset: () => void }) {
         <Link href="/" className="ej-secondary-button ej-secondary-outline">
           Back home
         </Link>
-        <ButtonSupport />
       </div>
     </section>
   );

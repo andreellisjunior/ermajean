@@ -1,4 +1,5 @@
 "use client";
+import { LoaderCircle } from "lucide-react";
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -15,7 +16,9 @@ function CheckoutSuccessContent() {
   useEffect(() => {
     const handleAutoLogin = async () => {
       if (!sessionId) {
-        setError("No session ID provided");
+        setError(
+          "Open the confirmation link from checkout, or sign in to check your plan.",
+        );
         setIsLoading(false);
         return;
       }
@@ -77,7 +80,7 @@ function CheckoutSuccessContent() {
               </svg>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Login Error
+              Let’s check your plan.
             </h1>
             <p className="text-gray-600 mb-6">{error}</p>
           </div>
@@ -122,7 +125,7 @@ function CheckoutSuccessContent() {
               </svg>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Payment Successful!
+              You’re all set.
             </h1>
             <p className="text-gray-600 mb-6">
               Your payment has been processed successfully! You now have access
@@ -145,9 +148,13 @@ function CheckoutSuccessContent() {
 
   return (
     <div className="ej-secondary-checkout min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="loading loading-spinner loading-lg mb-4"></div>
-        <h1 className="text-2xl font-bold mb-2">Processing your payment...</h1>
+      <div className="text-center" role="status" aria-live="polite">
+        <LoaderCircle
+          className="animate-spin mx-auto mb-4"
+          aria-hidden="true"
+          size={32}
+        />
+        <h1 className="text-2xl font-bold mb-2">Checking your checkout…</h1>
         <p className="text-gray-600">
           Please wait while we confirm your payment and activate your premium
           access.
@@ -162,8 +169,12 @@ export default function CheckoutSuccessPage() {
     <Suspense
       fallback={
         <div className="ej-secondary-checkout min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="loading loading-spinner loading-lg mb-4"></div>
+          <div className="text-center" role="status" aria-live="polite">
+            <LoaderCircle
+              className="animate-spin mx-auto mb-4"
+              aria-hidden="true"
+              size={32}
+            />
             <h1 className="text-2xl font-bold mb-2">Loading...</h1>
           </div>
         </div>

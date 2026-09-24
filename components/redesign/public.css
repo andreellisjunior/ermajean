@@ -517,7 +517,8 @@
   gap: 70px;
   align-items: center;
 }
-.ej-auth-story h1 {
+.ej-auth-story h1,
+.ej-auth-story h2 {
   font:
     750 49px/1.05 var(--font-display),
     Georgia,
@@ -844,7 +845,8 @@
     max-width: 470px;
     margin-top: 0;
   }
-  .ej-auth-story h1 {
+  .ej-auth-story h1,
+  .ej-auth-story h2 {
     font-size: 37px;
   }
   .ej-auth-story p {

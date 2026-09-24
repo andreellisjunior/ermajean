@@ -11,6 +11,9 @@ export default function SecondaryShell({
 }) {
   return (
     <div className="ej-public ej-secondary">
+      <a className="ej-skip" href="#main-content">
+        Skip to content
+      </a>
       <header className="ej-secondary-header">
         <Brand />
         <Link href="/kitchen" className="ej-secondary-button">

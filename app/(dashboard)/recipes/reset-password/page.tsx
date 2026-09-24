@@ -6,6 +6,8 @@ import Image from "next/image";
 import Link from "next/link";
 import "@/components/redesign/public.css";
 
+export const metadata = { title: "Reset your password | ErmaJean" };
+
 export default function ResetPassword({
   searchParams,
 }: {
@@ -18,11 +20,11 @@ export default function ResetPassword({
       </header>
       <main className="ej-auth-grid">
         <section className="ej-auth-story">
-          <h1>
+          <h2>
             A fresh start.
             <br />
             Same good kitchen.
-          </h1>
+          </h2>
           <p>Set a new password, then get back to your keepers.</p>
           <Image
             src="/redesign/ermajean.png"

@@ -58,6 +58,12 @@ export default async function ShareRecipe({
           moment, or find your next dinner with ErmaJean.
         </p>
         <div className="ej-secondary-actions">
+          <a
+            className="ej-secondary-button"
+            href={`/recipe/${encodeURIComponent(params.id)}`}
+          >
+            Try again
+          </a>
           <Link className="ej-secondary-button" href="/kitchen">
             Find dinner →
           </Link>
