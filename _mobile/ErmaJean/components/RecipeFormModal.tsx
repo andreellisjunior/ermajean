@@ -4,7 +4,7 @@
  * Requirements: 7.2, 7.5
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,7 @@ import { validateRecipeForm, ValidationErrors } from '../utils/validation';
 
 export interface RecipeFormModalProps {
   visible: boolean;
+  initialRecipe?: RecipeInput;
   onClose: () => void;
   onSubmit: (recipe: RecipeInput) => Promise<void>;
 }
@@ -51,11 +52,14 @@ const initialFormState: RecipeInput = {
   sodium: undefined,
 };
 
-export function RecipeFormModal({ visible, onClose, onSubmit }: RecipeFormModalProps) {
+export function RecipeFormModal({ visible, onClose, onSubmit, initialRecipe }: RecipeFormModalProps) {
+  const [submitError, setSubmitError] = useState('');
   const [form, setForm] = useState<RecipeInput>(initialFormState);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [showNutrition, setShowNutrition] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(()=>{if(visible){setForm(initialRecipe || initialFormState);setErrors({});setSubmitError('');}},[visible, initialRecipe]);
 
   const updateField = (field: keyof RecipeInput, value: string | number | undefined) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -77,13 +81,14 @@ export function RecipeFormModal({ visible, onClose, onSubmit }: RecipeFormModalP
 
     setIsSubmitting(true);
     try {
+      setSubmitError('');
       await onSubmit(form);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setForm(initialFormState);
       setErrors({});
       onClose();
     } catch (error) {
-      console.error('Error submitting recipe:', error);
+      setSubmitError(error instanceof Error ? error.message : 'Could not save your recipe. Try again.');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setIsSubmitting(false);
@@ -113,14 +118,14 @@ export function RecipeFormModal({ visible, onClose, onSubmit }: RecipeFormModalP
           <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
             <Text style={styles.cancelText}>Cancel</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>Add Recipe</Text>
+          <Text style={styles.title}>{initialRecipe?'Edit recipe':'Add recipe'}</Text>
           <TouchableOpacity
             onPress={handleSubmit}
             style={styles.saveButton}
             disabled={isSubmitting}
           >
             {isSubmitting ? (
-              <ActivityIndicator size="small" color="#10b981" />
+              <ActivityIndicator size="small" color="#B84732" />
             ) : (
               <Text style={styles.saveText}>Save</Text>
             )}
@@ -128,6 +133,7 @@ export function RecipeFormModal({ visible, onClose, onSubmit }: RecipeFormModalP
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {!!submitError && <Text accessibilityRole="alert" style={{color:'#B84732',padding:12}}>{submitError}</Text>}
           {/* Basic Info Section */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Basic Information</Text>
@@ -419,7 +425,7 @@ export function RecipeFormModal({ visible, onClose, onSubmit }: RecipeFormModalP
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#F7F3E8',
   },
   header: {
     flexDirection: 'row',
@@ -430,19 +436,20 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: '#DDDCCF',
   },
   closeButton: {
     padding: 4,
   },
   cancelText: {
+    fontFamily: 'DMSans',
     fontSize: 16,
     color: '#6b7280',
   },
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1f2937',
+    color: '#123B33',
   },
   saveButton: {
     padding: 4,
@@ -450,9 +457,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   saveText: {
+    fontFamily: 'DMSans',
     fontSize: 16,
     fontWeight: '600',
-    color: '#10b981',
+    color: '#B84732',
   },
   content: {
     flex: 1,
@@ -470,9 +478,10 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   sectionTitle: {
+    fontFamily: 'DMSans',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937',
+    color: '#123B33',
     marginBottom: 12,
   },
   inputGroup: {
@@ -491,24 +500,24 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   input: {
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#F7F3E8',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: '#DDDCCF',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 15,
-    color: '#1f2937',
+    color: '#123B33',
   },
   smallInput: {
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#F7F3E8',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: '#DDDCCF',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
     fontSize: 14,
-    color: '#1f2937',
+    color: '#123B33',
     textAlign: 'center',
   },
   inputError: {
@@ -548,11 +557,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#f3f4f6',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: '#DDDCCF',
   },
   optionButtonSelected: {
     backgroundColor: '#d1fae5',
-    borderColor: '#10b981',
+    borderColor: '#B84732',
   },
   optionText: {
     fontSize: 14,
@@ -560,7 +569,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   optionTextSelected: {
-    color: '#059669',
+    color: '#B84732',
   },
   nutritionToggle: {
     flexDirection: 'row',

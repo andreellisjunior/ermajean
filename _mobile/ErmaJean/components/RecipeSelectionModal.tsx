@@ -134,7 +134,7 @@ export function RecipeSelectionModal({
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="#1f2937" />
+            <Ionicons name="close" size={24} color="#123B33" />
           </TouchableOpacity>
           <View style={styles.headerTitle}>
             <Text style={styles.title}>Select Recipe</Text>
@@ -199,7 +199,7 @@ export function RecipeSelectionModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#F7F3E8',
   },
   header: {
     flexDirection: 'row',
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1f2937',
+    color: '#123B33',
   },
   subtitle: {
     fontSize: 13,
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: '#DDDCCF',
   },
   searchBar: {
     flexDirection: 'row',
@@ -251,8 +251,9 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
+    fontFamily: 'DMSans',
     fontSize: 16,
-    color: '#1f2937',
+    color: '#123B33',
   },
   listContent: {
     padding: 24, // Add proper spacing: p-6 for content
@@ -274,9 +275,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   recipeName: {
+    fontFamily: 'DMSans',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937',
+    color: '#123B33',
     marginBottom: 6,
   },
   recipeDetails: {
@@ -302,7 +304,7 @@ const styles = StyleSheet.create({
   courseText: {
     fontSize: 11,
     fontWeight: '500',
-    color: '#059669',
+    color: '#B84732',
   },
   separator: {
     height: 10,

@@ -1,34 +1,33 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import "react-native-reanimated";
 import "../global.css";
-import { useEffect, useRef, useState } from 'react';
-import * as Notifications from 'expo-notifications';
-import { type EventSubscription } from 'expo-modules-core';
-import { registerForPushNotificationsAsync } from '@/libs/notifications';
-import { supabase } from '@/libs/supabase';
-import * as Linking from 'expo-linking';
+import { useEffect, useRef, useState } from "react";
+import * as Notifications from "expo-notifications";
+import { type EventSubscription } from "expo-modules-core";
+import { registerForPushNotificationsAsync } from "@/libs/notifications";
+import * as Linking from "expo-linking";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useFonts } from "expo-font";
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: "(tabs)",
 };
 
 /**
  * Deep linking configuration for ErmaJean mobile app
- * 
+ *
  * This configuration enables the app to handle deep links from:
  * 1. Custom URL scheme: ermajean://recipe/[id]
  * 2. Universal links (iOS): https://ermajean.com/recipe/[id]
  * 3. App links (Android): https://ermajean.com/recipe/[id]
- * 
+ *
  * When a user taps a recipe link (e.g., from a shared message), the app will:
  * - Open automatically if installed
  * - Navigate directly to the recipe detail screen
  * - Fall back to the website if the app is not installed
- * 
+ *
  * Configuration in app.json:
  * - iOS: associatedDomains for universal links
  * - Android: intentFilters for app links with autoVerify
@@ -36,25 +35,25 @@ export const unstable_settings = {
  */
 export const linking = {
   prefixes: [
-    Linking.createURL('/'),
-    'ermajean://',
-    'https://ermajean.com',
-    'https://www.ermajean.com',
+    Linking.createURL("/"),
+    "ermajean://",
+    "https://ermajean.com",
+    "https://www.ermajean.com",
   ],
   config: {
     screens: {
-      '(tabs)': {
+      "(tabs)": {
         screens: {
-          index: '',
-          recipes: 'recipes',
-          generate: 'generate',
-          'meal-plans': 'meal-plans',
-          profile: 'profile',
+          index: "",
+          recipes: "recipes",
+          generate: "generate",
+          "meal-plans": "meal-plans",
+          profile: "profile",
         },
       },
-      'recipe/[id]': 'recipe/:id',
-      '(auth)/sign-in': 'sign-in',
-      modal: 'modal',
+      "recipe/[id]": "recipe/:id",
+      "(auth)/sign-in": "sign-in",
+      modal: "modal",
     },
   },
 };
@@ -70,38 +69,45 @@ try {
     }),
   });
 } catch (error) {
-  console.log('Error setting notification handler:', error);
+  console.log("Error setting notification handler:", error);
 }
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  
-  const [expoPushToken, setExpoPushToken] = useState<string>('');
-  const [notification, setNotification] = useState<Notifications.Notification | undefined>(undefined);
+  const [fontsLoaded, fontError] = useFonts({
+    Fraunces: require("../assets/fonts/Fraunces.ttf"),
+    DMSans: require("../assets/fonts/DMSans.ttf"),
+  });
+
+  const [, setExpoPushToken] = useState<string>("");
+  const [, setNotification] = useState<Notifications.Notification | undefined>(
+    undefined,
+  );
   const notificationListener = useRef<EventSubscription>(undefined);
   const responseListener = useRef<EventSubscription>(undefined);
 
   useEffect(() => {
     registerForPushNotificationsAsync()
-      .then(token => {
+      .then((token) => {
         if (token) {
           setExpoPushToken(token);
         }
       })
-      .catch(error => {
-        console.log('Error registering for push notifications:', error);
+      .catch((error) => {
+        console.log("Error registering for push notifications:", error);
       });
 
     try {
-      notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-        setNotification(notification);
-      });
+      notificationListener.current =
+        Notifications.addNotificationReceivedListener((notification) => {
+          setNotification(notification);
+        });
 
-      responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-        console.log('Notification response:', response);
-      });
+      responseListener.current =
+        Notifications.addNotificationResponseReceivedListener((response) => {
+          console.log("Notification response:", response);
+        });
     } catch (error) {
-      console.log('Error setting up notification listeners:', error);
+      console.log("Error setting up notification listeners:", error);
     }
 
     return () => {
@@ -109,13 +115,14 @@ export default function RootLayout() {
         notificationListener.current?.remove();
         responseListener.current?.remove();
       } catch (error) {
-        console.log('Error removing notification listeners:', error);
+        console.log("Error removing notification listeners:", error);
       }
     };
   }, []);
 
+  if (!fontsLoaded && !fontError) return null;
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={DefaultTheme}>
       <Stack
         screenOptions={{
           headerShown: false,
@@ -124,11 +131,20 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)/sign-in" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="recipe/[id]" options={{ headerShown: true, title: 'Recipe' }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-        <Stack.Screen name="generate-modal" options={{ presentation: 'modal', headerShown: false }} />
+        <Stack.Screen
+          name="recipe/[id]"
+          options={{ headerShown: false, title: "Recipe" }}
+        />
+        <Stack.Screen
+          name="modal"
+          options={{ presentation: "modal", title: "Modal" }}
+        />
+        <Stack.Screen
+          name="generate-modal"
+          options={{ presentation: "modal", headerShown: false }}
+        />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style="dark" />
     </ThemeProvider>
   );
 }

@@ -163,7 +163,7 @@ export function GoalsFormModal({ visible, onClose, currentGoals, onSave }: Goals
             disabled={isSaving}
           >
             {isSaving ? (
-              <ActivityIndicator size="small" color="#10b981" />
+              <ActivityIndicator size="small" color="#B84732" />
             ) : (
               <Text style={styles.saveText}>Save</Text>
             )}
@@ -186,7 +186,7 @@ export function GoalsFormModal({ visible, onClose, currentGoals, onSave }: Goals
               value={goals.calories}
               onChange={(v) => setGoals(prev => ({ ...prev, calories: v }))}
               unit=""
-              color="#10b981"
+              color="#B84732"
               icon="flame-outline"
               min={500}
               max={10000}
@@ -269,7 +269,7 @@ export function GoalsFormModal({ visible, onClose, currentGoals, onSave }: Goals
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#F7F3E8',
   },
   header: {
     flexDirection: 'row',
@@ -280,19 +280,20 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: '#DDDCCF',
   },
   closeButton: {
     padding: 4,
   },
   cancelText: {
+    fontFamily: 'DMSans',
     fontSize: 16,
     color: '#6b7280',
   },
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1f2937',
+    color: '#123B33',
   },
   saveButton: {
     padding: 4,
@@ -300,9 +301,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   saveText: {
+    fontFamily: 'DMSans',
     fontSize: 16,
     fontWeight: '600',
-    color: '#10b981',
+    color: '#B84732',
   },
   content: {
     flex: 1,
@@ -350,9 +352,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   goalLabel: {
+    fontFamily: 'DMSans',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937',
+    color: '#123B33',
   },
   inputRow: {
     flexDirection: 'row',
@@ -372,21 +375,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#F7F3E8',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: '#DDDCCF',
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
   input: {
+    fontFamily: 'Fraunces',
     fontSize: 24,
     fontWeight: '700',
-    color: '#1f2937',
+    color: '#123B33',
     textAlign: 'center',
     minWidth: 80,
   },
   unit: {
+    fontFamily: 'DMSans',
     fontSize: 16,
     color: '#6b7280',
     marginLeft: 4,
@@ -412,7 +417,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: '#DDDCCF',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
