@@ -74,7 +74,7 @@ function Food({
       width={1024}
       height={768}
       sizes="(max-width: 700px) 100vw, 50vw"
-      src={`/redesign/${recipe.id === "demo-pasta" ? "chicken-pasta" : recipe.id === "demo-tacos" ? "chickpea-bowl" : recipe.id === "demo-bowl" ? "chickpea-bowl" : "chicken-rice"}.png`}
+      src={`/redesign/${recipe.id === "demo-pasta" ? "chicken-pasta" : recipe.id === "demo-bowl" ? "chickpea-bowl" : "chicken-rice"}.png`}
       alt={recipe.recipe_name}
     />
   ) : (

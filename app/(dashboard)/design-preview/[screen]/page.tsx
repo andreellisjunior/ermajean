@@ -50,20 +50,6 @@ const recipes = [
     instructions:
       "Warm the chickpeas.\nServe with spinach and your favorite dressing.",
   },
-  {
-    id: "demo-tacos",
-    recipe_name: "Sheet pan chicken tacos",
-    description: "A weeknight keeper.",
-    total_time: "30 min",
-    prep_time: "10 min",
-    cook_time: "20 min",
-    servings: "4",
-    difficulty_level: "Easy",
-    course: "Dinner",
-    ingredients: "8 tortillas\n2 chicken breasts\n2 bell peppers",
-    instructions:
-      "Cook the chicken and peppers.\nFill warm tortillas and serve.",
-  },
 ];
 export default function Page({ params }: { params: { screen: string } }) {
   if (!["kitchen", "recipes", "recipe", "plan", "shop"].includes(params.screen))
