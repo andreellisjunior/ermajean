@@ -144,3 +144,7 @@
         transform: translate(-50%, -50%) rotate(360deg);
     }
 }
+
+/* Shared ErmaJean design tokens. */
+:root { --ej-oat:#f7f3e8; --ej-green:#244638; --ej-tomato:#b84732; --ej-sage:#dee6d8; --ej-butter:#eadba7; --background:44 48% 94%; --foreground:108 8% 15%; --primary:155 32% 21%; --border:80 15% 81%; --radius:1rem; }
+body { font-family:var(--font-body),Arial,sans-serif; }
