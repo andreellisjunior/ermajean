@@ -1,3 +1,4 @@
+export const metadata = { robots: { index: false, follow: false } };
 import Workspace from "@/components/redesign/Workspace";
 import { WorkspaceData } from "@/components/redesign/workspace-data";
 import { notFound } from "next/navigation";
