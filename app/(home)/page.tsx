@@ -1,9 +1,11 @@
-import { createClient } from '@/libs/supabase/server';
-import { redirect } from 'next/navigation';
-import PublicLanding from '@/components/redesign/PublicLanding';
+import { createClient } from "@/libs/supabase/server";
+import { redirect } from "next/navigation";
+import PublicLanding from "@/components/redesign/PublicLanding";
 
 export default async function Index() {
-  const { data: { user } } = await createClient().auth.getUser();
-  if (user) redirect('/kitchen');
+  const {
+    data: { user },
+  } = await createClient().auth.getUser();
+  if (user) redirect("/kitchen");
   return <PublicLanding />;
 }
