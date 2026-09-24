@@ -1,46 +1,50 @@
-import { useEffect, useState } from "react";
-import { View, ActivityIndicator, Text } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { Text } from "react-native";
 import { Redirect } from "expo-router";
-import { supabase } from "@/libs/supabase";
 import { Session } from "@supabase/supabase-js";
-
+import { supabase } from "@/libs/supabase";
+import { Page, Title, S, Status } from "@/components/redesign/ui";
+import { designPreview } from "@/utils/design-preview";
 export default function Index() {
-    const [session, setSession] = useState<Session | null | undefined>(undefined);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session }, error }) => {
-            if (error) {
-                console.error("Error getting session:", error);
-            }
-            setSession(session);
-            setIsLoading(false);
-        });
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
-            setIsLoading(false);
-        });
-
-        return () => {
-            subscription.unsubscribe();
-        };
-    }, []);
-
-    // Show loading state while checking auth
-    if (isLoading) {
-        return (
-            <View className="flex-1 justify-center items-center bg-white">
-                <ActivityIndicator size="large" color="#10b981" />
-                <Text className="mt-4 text-gray-600">Loading...</Text>
-            </View>
-        );
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      setSession(data.session);
+    } catch (e) {
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Could not open your kitchen. Try again.",
+      );
+    } finally {
+      setLoading(false);
     }
-
-    // Redirect based on auth state
-    if (!session) {
-        return <Redirect href="/(auth)/sign-in" />;
-    }
-
-    return <Redirect href="/(tabs)" />;
+  }, []);
+  useEffect(() => {
+    void load();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, next) => {
+      setSession(next);
+      setLoading(false);
+      setError("");
+    });
+    return () => subscription.unsubscribe();
+  }, [load]);
+  if (designPreview) return <Redirect href="/(tabs)" />;
+  if (loading || error)
+    return (
+      <Page header={false}>
+        <Title>ermajean.</Title>
+        <Text style={S.body}>Getting your kitchen ready.</Text>
+        <Status loading={loading} error={error} onRetry={load} />
+      </Page>
+    );
+  return <Redirect href={session ? "/(tabs)" : "/(auth)/sign-in"} />;
 }

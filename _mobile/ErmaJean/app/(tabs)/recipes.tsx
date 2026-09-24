@@ -75,6 +75,9 @@ export default function Recipes() {
             <View style={S.row}>
               {[false, true].map((value) => (
                 <Pressable
+                  accessibilityRole="radio"
+                  aria-checked={quick === value}
+                  accessibilityState={{ checked: quick === value }}
                   key={String(value)}
                   onPress={() => setQuick(value)}
                   style={{

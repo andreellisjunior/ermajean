@@ -1,598 +1,279 @@
-/**
- * RecipeFormModal Component
- * Form for manual recipe entry with all recipe fields and optional nutrition section
- * Requirements: 7.2, 7.5
- */
-
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  Modal,
-  TouchableOpacity,
-  ScrollView,
-  TextInput,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-import { RecipeInput } from '../types/config';
-import { validateRecipeForm, ValidationErrors } from '../utils/validation';
-
+import { useEffect, useState } from "react";
+import { Text, View, Pressable, Switch } from "react-native";
+import { RecipeInput } from "@/types/config";
+import { validateRecipeForm, ValidationErrors } from "@/utils/validation";
+import { Haptic } from "@/utils/haptics";
+import { Sheet } from "./redesign/sheet";
+import { S, C, Field, Action } from "./redesign/ui";
 export interface RecipeFormModalProps {
   visible: boolean;
   initialRecipe?: RecipeInput;
   onClose: () => void;
   onSubmit: (recipe: RecipeInput) => Promise<void>;
 }
-
-const DIFFICULTY_OPTIONS = ['Easy', 'Medium', 'Hard'];
-const COURSE_OPTIONS = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert', 'Appetizer'];
-
-const initialFormState: RecipeInput = {
-  recipe_name: '',
-  description: '',
-  prep_time: '',
-  cook_time: '',
-  total_time: '',
-  servings: '',
-  difficulty_level: 'Medium',
-  course: 'Dinner',
-  ingredients: '',
-  instructions: '',
-  calories: undefined,
-  protein: undefined,
-  carbs: undefined,
-  fat: undefined,
-  fiber: undefined,
-  sugar: undefined,
-  sodium: undefined,
+const blank: RecipeInput = {
+  recipe_name: "",
+  description: "",
+  prep_time: "",
+  cook_time: "",
+  total_time: "",
+  servings: "",
+  difficulty_level: "Easy",
+  course: "Dinner",
+  ingredients: "",
+  instructions: "",
 };
-
-export function RecipeFormModal({ visible, onClose, onSubmit, initialRecipe }: RecipeFormModalProps) {
-  const [submitError, setSubmitError] = useState('');
-  const [form, setForm] = useState<RecipeInput>(initialFormState);
+const fields: {
+  key: keyof RecipeInput;
+  label: string;
+  placeholder: string;
+  multiline?: boolean;
+}[] = [
+  {
+    key: "recipe_name",
+    label: "Recipe name",
+    placeholder: "Give this keeper a name",
+  },
+  {
+    key: "description",
+    label: "A little about it",
+    placeholder: "Why is this one worth repeating?",
+    multiline: true,
+  },
+  {
+    key: "ingredients",
+    label: "Ingredients",
+    placeholder: "One ingredient per line, including quantities",
+    multiline: true,
+  },
+  {
+    key: "instructions",
+    label: "Steps",
+    placeholder: "One step per line. Keep it practical.",
+    multiline: true,
+  },
+  { key: "prep_time", label: "Prep time", placeholder: "e.g. 10 min" },
+  { key: "cook_time", label: "Cook time", placeholder: "e.g. 20 min" },
+  { key: "total_time", label: "Total time", placeholder: "e.g. 30 min" },
+  { key: "servings", label: "Servings", placeholder: "e.g. 4" },
+];
+const nutrition = [
+  "calories",
+  "protein",
+  "carbs",
+  "fat",
+  "fiber",
+  "sugar",
+  "sodium",
+] as const;
+export function RecipeFormModal({
+  visible,
+  onClose,
+  onSubmit,
+  initialRecipe,
+}: RecipeFormModalProps) {
+  const [form, setForm] = useState<RecipeInput>(blank);
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
   const [showNutrition, setShowNutrition] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(()=>{if(visible){setForm(initialRecipe || initialFormState);setErrors({});setSubmitError('');}},[visible, initialRecipe]);
-
-  const updateField = (field: keyof RecipeInput, value: string | number | undefined) => {
-    setForm(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+  useEffect(() => {
+    if (visible) {
+      setForm(initialRecipe || blank);
+      setErrors({});
+      setError("");
+      setShowNutrition(initialRecipe?.calories != null);
     }
-  };
-
-  const handleSubmit = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    
-    const validationErrors = validateRecipeForm(form);
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+  }, [visible, initialRecipe]);
+  function update(
+    key: keyof RecipeInput,
+    value: string | boolean | number | undefined,
+  ) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    setErrors((prev) => ({ ...prev, [key]: undefined }));
+  }
+  async function save() {
+    const found = validateRecipeForm(form);
+    for (const key of nutrition) {
+      if (
+        form[key] !== undefined &&
+        (!Number.isFinite(form[key]) || form[key]! < 0)
+      )
+        found[key] = "Enter a number of zero or more.";
+    }
+    if (Object.keys(found).length) {
+      setErrors(found);
+      setError("A few details need your attention below.");
+      Haptic.error();
       return;
     }
-
-    setIsSubmitting(true);
+    setBusy(true);
+    setError("");
     try {
-      setSubmitError('');
       await onSubmit(form);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setForm(initialFormState);
-      setErrors({});
+      Haptic.success();
       onClose();
-    } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Could not save your recipe. Try again.');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } catch (e) {
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Could not save your recipe. Try again.",
+      );
+      Haptic.error();
     } finally {
-      setIsSubmitting(false);
+      setBusy(false);
     }
-  };
-
-  const handleClose = () => {
-    setForm(initialFormState);
-    setErrors({});
-    setShowNutrition(false);
-    onClose();
-  };
-
+  }
   return (
-    <Modal
+    <Sheet
       visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={handleClose}
+      onClose={onClose}
+      title={initialRecipe ? "Edit your keeper" : "Add a keeper"}
+      busy={busy}
     >
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-            <Text style={styles.cancelText}>Cancel</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>{initialRecipe?'Edit recipe':'Add recipe'}</Text>
-          <TouchableOpacity
-            onPress={handleSubmit}
-            style={styles.saveButton}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator size="small" color="#B84732" />
-            ) : (
-              <Text style={styles.saveText}>Save</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {!!submitError && <Text accessibilityRole="alert" style={{color:'#B84732',padding:12}}>{submitError}</Text>}
-          {/* Basic Info Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Basic Information</Text>
-            
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Recipe Name *</Text>
-              <TextInput
-                style={[styles.input, errors.recipe_name && styles.inputError]}
-                value={form.recipe_name}
-                onChangeText={(v) => updateField('recipe_name', v)}
-                placeholder="Enter recipe name"
-                placeholderTextColor="#9ca3af"
-              />
-              {errors.recipe_name && (
-                <Text style={styles.errorText}>{errors.recipe_name}</Text>
-              )}
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Description *</Text>
-              <TextInput
-                style={[styles.input, styles.textArea, errors.description && styles.inputError]}
-                value={form.description}
-                onChangeText={(v) => updateField('description', v)}
-                placeholder="Brief description of the recipe"
-                placeholderTextColor="#9ca3af"
-                multiline
-                numberOfLines={3}
-              />
-              {errors.description && (
-                <Text style={styles.errorText}>{errors.description}</Text>
-              )}
-            </View>
-          </View>
-
-
-          {/* Time & Servings Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Time & Servings</Text>
-            
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, styles.halfWidth]}>
-                <Text style={styles.label}>Prep Time</Text>
-                <TextInput
-                  style={styles.input}
-                  value={form.prep_time}
-                  onChangeText={(v) => updateField('prep_time', v)}
-                  placeholder="e.g., 15 mins"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View>
-              <View style={[styles.inputGroup, styles.halfWidth]}>
-                <Text style={styles.label}>Cook Time</Text>
-                <TextInput
-                  style={styles.input}
-                  value={form.cook_time}
-                  onChangeText={(v) => updateField('cook_time', v)}
-                  placeholder="e.g., 30 mins"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View>
-            </View>
-
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, styles.halfWidth]}>
-                <Text style={styles.label}>Total Time</Text>
-                <TextInput
-                  style={styles.input}
-                  value={form.total_time}
-                  onChangeText={(v) => updateField('total_time', v)}
-                  placeholder="e.g., 45 mins"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View>
-              <View style={[styles.inputGroup, styles.halfWidth]}>
-                <Text style={styles.label}>Servings</Text>
-                <TextInput
-                  style={styles.input}
-                  value={form.servings}
-                  onChangeText={(v) => updateField('servings', v)}
-                  placeholder="e.g., 4"
-                  placeholderTextColor="#9ca3af"
-                  keyboardType="numeric"
-                />
-              </View>
-            </View>
-          </View>
-
-          {/* Category Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Category</Text>
-            
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Difficulty</Text>
-              <View style={styles.optionsRow}>
-                {DIFFICULTY_OPTIONS.map((option) => (
-                  <TouchableOpacity
-                    key={option}
-                    style={[
-                      styles.optionButton,
-                      form.difficulty_level === option && styles.optionButtonSelected,
-                    ]}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      updateField('difficulty_level', option);
-                    }}
-                  >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        form.difficulty_level === option && styles.optionTextSelected,
-                      ]}
-                    >
-                      {option}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Course</Text>
-              <View style={styles.optionsRow}>
-                {COURSE_OPTIONS.map((option) => (
-                  <TouchableOpacity
-                    key={option}
-                    style={[
-                      styles.optionButton,
-                      form.course === option && styles.optionButtonSelected,
-                    ]}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      updateField('course', option);
-                    }}
-                  >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        form.course === option && styles.optionTextSelected,
-                      ]}
-                    >
-                      {option}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          </View>
-
-          {/* Ingredients & Instructions Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Recipe Details</Text>
-            
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Ingredients *</Text>
-              <TextInput
-                style={[styles.input, styles.largeTextArea, errors.ingredients && styles.inputError]}
-                value={form.ingredients}
-                onChangeText={(v) => updateField('ingredients', v)}
-                placeholder="Enter each ingredient on a new line"
-                placeholderTextColor="#9ca3af"
-                multiline
-                numberOfLines={6}
-              />
-              {errors.ingredients && (
-                <Text style={styles.errorText}>{errors.ingredients}</Text>
-              )}
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Instructions *</Text>
-              <TextInput
-                style={[styles.input, styles.largeTextArea, errors.instructions && styles.inputError]}
-                value={form.instructions}
-                onChangeText={(v) => updateField('instructions', v)}
-                placeholder="Enter each step on a new line"
-                placeholderTextColor="#9ca3af"
-                multiline
-                numberOfLines={6}
-              />
-              {errors.instructions && (
-                <Text style={styles.errorText}>{errors.instructions}</Text>
-              )}
-            </View>
-          </View>
-
-
-          {/* Nutrition Section (Optional) */}
-          <View style={styles.section}>
-            <TouchableOpacity
-              style={styles.nutritionToggle}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setShowNutrition(!showNutrition);
-              }}
+      <Text style={S.body}>
+        Good dinners don’t need to be fancy. Just worth making again.
+      </Text>
+      {!!error && (
+        <Text accessibilityRole="alert" style={[S.body, { color: C.tomato }]}>
+          {error}
+        </Text>
+      )}
+      {fields.map(({ key, label, placeholder, multiline }) => (
+        <View key={key} style={{ gap: 8 }}>
+          <Text style={[S.body, { fontWeight: "700" }]}>{label}</Text>
+          <Field
+            accessibilityLabel={label}
+            editable={!busy}
+            value={String(form[key] ?? "")}
+            onChangeText={(value) => update(key, value)}
+            placeholder={placeholder}
+            multiline={multiline}
+          />
+          {!!errors[key] && (
+            <Text
+              accessibilityRole="alert"
+              style={[S.small, { color: C.tomato }]}
             >
-              <View style={styles.nutritionToggleLeft}>
-                <Ionicons
-                  name={showNutrition ? 'chevron-down' : 'chevron-forward'}
-                  size={20}
-                  color="#6b7280"
-                />
-                <Text style={styles.sectionTitle}>Nutrition (Optional)</Text>
-              </View>
-              <Text style={styles.optionalBadge}>Optional</Text>
-            </TouchableOpacity>
-
-            {showNutrition && (
-              <View style={styles.nutritionGrid}>
-                <View style={[styles.inputGroup, styles.thirdWidth]}>
-                  <Text style={styles.smallLabel}>Calories</Text>
-                  <TextInput
-                    style={styles.smallInput}
-                    value={form.calories?.toString() || ''}
-                    onChangeText={(v) => updateField('calories', v ? parseInt(v) : undefined)}
-                    placeholder="0"
-                    placeholderTextColor="#9ca3af"
-                    keyboardType="numeric"
-                  />
-                </View>
-                <View style={[styles.inputGroup, styles.thirdWidth]}>
-                  <Text style={styles.smallLabel}>Protein (g)</Text>
-                  <TextInput
-                    style={styles.smallInput}
-                    value={form.protein?.toString() || ''}
-                    onChangeText={(v) => updateField('protein', v ? parseInt(v) : undefined)}
-                    placeholder="0"
-                    placeholderTextColor="#9ca3af"
-                    keyboardType="numeric"
-                  />
-                </View>
-                <View style={[styles.inputGroup, styles.thirdWidth]}>
-                  <Text style={styles.smallLabel}>Carbs (g)</Text>
-                  <TextInput
-                    style={styles.smallInput}
-                    value={form.carbs?.toString() || ''}
-                    onChangeText={(v) => updateField('carbs', v ? parseInt(v) : undefined)}
-                    placeholder="0"
-                    placeholderTextColor="#9ca3af"
-                    keyboardType="numeric"
-                  />
-                </View>
-                <View style={[styles.inputGroup, styles.thirdWidth]}>
-                  <Text style={styles.smallLabel}>Fat (g)</Text>
-                  <TextInput
-                    style={styles.smallInput}
-                    value={form.fat?.toString() || ''}
-                    onChangeText={(v) => updateField('fat', v ? parseInt(v) : undefined)}
-                    placeholder="0"
-                    placeholderTextColor="#9ca3af"
-                    keyboardType="numeric"
-                  />
-                </View>
-                <View style={[styles.inputGroup, styles.thirdWidth]}>
-                  <Text style={styles.smallLabel}>Fiber (g)</Text>
-                  <TextInput
-                    style={styles.smallInput}
-                    value={form.fiber?.toString() || ''}
-                    onChangeText={(v) => updateField('fiber', v ? parseInt(v) : undefined)}
-                    placeholder="0"
-                    placeholderTextColor="#9ca3af"
-                    keyboardType="numeric"
-                  />
-                </View>
-                <View style={[styles.inputGroup, styles.thirdWidth]}>
-                  <Text style={styles.smallLabel}>Sugar (g)</Text>
-                  <TextInput
-                    style={styles.smallInput}
-                    value={form.sugar?.toString() || ''}
-                    onChangeText={(v) => updateField('sugar', v ? parseInt(v) : undefined)}
-                    placeholder="0"
-                    placeholderTextColor="#9ca3af"
-                    keyboardType="numeric"
-                  />
-                </View>
-              </View>
-            )}
+              {errors[key]}
+            </Text>
+          )}
+        </View>
+      ))}
+      {(
+        [
+          {
+            key: "difficulty_level",
+            label: "Difficulty",
+            options: ["Easy", "Medium", "Hard"],
+          },
+          {
+            key: "course",
+            label: "Meal",
+            options: [
+              "Breakfast",
+              "Lunch",
+              "Dinner",
+              "Snack",
+              "Dessert",
+              "Appetizer",
+            ],
+          },
+        ] as const
+      ).map((group) => (
+        <View key={group.key} style={{ gap: 10 }}>
+          <Text style={S.heading}>{group.label}</Text>
+          <View style={[S.row, { flexWrap: "wrap" }]}>
+            {group.options.map((option) => (
+              <Pressable
+                key={option}
+                accessibilityRole="radio"
+                aria-checked={form[group.key] === option}
+                accessibilityState={{
+                  checked: form[group.key] === option,
+                  disabled: busy,
+                }}
+                disabled={busy}
+                onPress={() => update(group.key, option)}
+                style={{
+                  minHeight: 48,
+                  padding: 13,
+                  borderRadius: 24,
+                  backgroundColor:
+                    form[group.key] === option ? C.green : C.sage,
+                }}
+              >
+                <Text
+                  style={[
+                    S.body,
+                    { color: form[group.key] === option ? C.white : C.ink },
+                  ]}
+                >
+                  {option}
+                </Text>
+              </Pressable>
+            ))}
           </View>
-
-          {/* Bottom padding for scroll */}
-          <View style={{ height: 40 }} />
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </Modal>
+        </View>
+      ))}
+      <View style={[S.row, { justifyContent: "space-between" }]}>
+        <Text style={[S.body, { flex: 1 }]}>Kid-friendly</Text>
+        <Switch
+          accessibilityLabel="Kid-friendly recipe"
+          disabled={busy}
+          value={!!form.is_kid_friendly}
+          onValueChange={(value) => update("is_kid_friendly", value)}
+          trackColor={{ true: C.green }}
+        />
+      </View>
+      <Action
+        secondary
+        label={
+          showNutrition
+            ? "Hide nutrition fields"
+            : "Add nutrition estimates (optional)"
+        }
+        onPress={() => setShowNutrition(!showNutrition)}
+      />
+      {showNutrition && (
+        <>
+          <Text style={S.small}>
+            Use the recipe’s original serving basis. Estimates are a guide,
+            never a score.
+          </Text>
+          {nutrition.map((key) => (
+            <View key={key} style={{ gap: 6 }}>
+              <Text style={S.body}>
+                {key[0].toUpperCase() + key.slice(1)}
+                {key === "calories"
+                  ? " (kcal)"
+                  : key === "sodium"
+                    ? " (mg)"
+                    : " (g)"}
+              </Text>
+              <Field
+                accessibilityLabel={key}
+                keyboardType="decimal-pad"
+                value={form[key]?.toString() ?? ""}
+                onChangeText={(value) =>
+                  update(key, value === "" ? undefined : Number(value))
+                }
+              />
+            </View>
+          ))}
+        </>
+      )}
+      {!!error && (
+        <Text accessibilityRole="alert" style={[S.body, { color: C.tomato }]}>
+          {error}
+        </Text>
+      )}
+      <Action
+        label={busy ? "Saving your keeper…" : "Save recipe"}
+        disabled={busy}
+        onPress={() => void save()}
+      />
+    </Sheet>
   );
 }
-
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F7F3E8',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 16 : 24,
-    paddingBottom: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#DDDCCF',
-  },
-  closeButton: {
-    padding: 4,
-  },
-  cancelText: {
-    fontFamily: 'DMSans',
-    fontSize: 16,
-    color: '#6b7280',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#123B33',
-  },
-  saveButton: {
-    padding: 4,
-    minWidth: 50,
-    alignItems: 'flex-end',
-  },
-  saveText: {
-    fontFamily: 'DMSans',
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#B84732',
-  },
-  content: {
-    flex: 1,
-    padding: 16,
-  },
-  section: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  sectionTitle: {
-    fontFamily: 'DMSans',
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#123B33',
-    marginBottom: 12,
-  },
-  inputGroup: {
-    marginBottom: 12,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
-    marginBottom: 6,
-  },
-  smallLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#6b7280',
-    marginBottom: 4,
-  },
-  input: {
-    backgroundColor: '#F7F3E8',
-    borderWidth: 1,
-    borderColor: '#DDDCCF',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: '#123B33',
-  },
-  smallInput: {
-    backgroundColor: '#F7F3E8',
-    borderWidth: 1,
-    borderColor: '#DDDCCF',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: 14,
-    color: '#123B33',
-    textAlign: 'center',
-  },
-  inputError: {
-    borderColor: '#ef4444',
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  largeTextArea: {
-    minHeight: 120,
-    textAlignVertical: 'top',
-  },
-  errorText: {
-    fontSize: 12,
-    color: '#ef4444',
-    marginTop: 4,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  halfWidth: {
-    flex: 1,
-  },
-  thirdWidth: {
-    width: '30%',
-  },
-  optionsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  optionButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#f3f4f6',
-    borderWidth: 1,
-    borderColor: '#DDDCCF',
-  },
-  optionButtonSelected: {
-    backgroundColor: '#d1fae5',
-    borderColor: '#B84732',
-  },
-  optionText: {
-    fontSize: 14,
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  optionTextSelected: {
-    color: '#B84732',
-  },
-  nutritionToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  nutritionToggleLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  optionalBadge: {
-    fontSize: 12,
-    color: '#9ca3af',
-    fontStyle: 'italic',
-  },
-  nutritionGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    justifyContent: 'space-between',
-  },
-});
-
 export default RecipeFormModal;

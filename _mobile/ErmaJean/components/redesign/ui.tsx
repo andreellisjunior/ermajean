@@ -9,11 +9,13 @@ import {
   TextInputProps,
   ActivityIndicator,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { ArrowLeft, ArrowRight, ChefHat } from "lucide-react-native";
+import { ArrowLeft, ArrowRight, ChefHat, UserRound } from "lucide-react-native";
 import { Haptic } from "@/utils/haptics";
 import { Recipe } from "@/types/config";
 export const C = {
@@ -79,41 +81,46 @@ export function Page({
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: C.oat }}
-      edges={["top", "left", "right"]}
+      edges={["top", "left", "right", "bottom"]}
     >
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{
-          padding: 22,
-          paddingBottom: 36,
-          gap: 20,
-          maxWidth: 620,
-          width: "100%",
-          alignSelf: "center",
-        }}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        {back ? (
-          <Pressable
-            accessibilityRole="button"
-            onPress={() =>
-              router.canGoBack() ? router.back() : router.replace("/(tabs)")
-            }
-            style={[S.row, { minHeight: 48 }]}
-          >
-            <ArrowLeft color={C.ink} />
-            <Text style={S.body}>{back}</Text>
-          </Pressable>
-        ) : header ? (
-          <Brand />
-        ) : null}
-        {designPreview && (
-          <Text style={[S.small, { color: C.tomato }]}>
-            DESIGN PREVIEW · Illustrative sample data
-          </Text>
-        )}
-        {children}
-      </ScrollView>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerStyle={{
+            padding: 22,
+            paddingBottom: 36,
+            gap: 20,
+            maxWidth: 620,
+            width: "100%",
+            alignSelf: "center",
+          }}
+        >
+          {back ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() =>
+                router.canGoBack() ? router.back() : router.replace("/(tabs)")
+              }
+              style={[S.row, { minHeight: 48 }]}
+            >
+              <ArrowLeft color={C.ink} />
+              <Text style={S.body}>{back}</Text>
+            </Pressable>
+          ) : header ? (
+            <Brand />
+          ) : null}
+          {designPreview && (
+            <Text style={[S.small, { color: C.tomato }]}>
+              DESIGN PREVIEW · Illustrative sample data
+            </Text>
+          )}
+          {children}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -143,13 +150,17 @@ export function Brand() {
           justifyContent: "center",
         }}
       >
-        <Text style={[S.body, { fontWeight: "700" }]}>You</Text>
+        <UserRound color={C.ink} size={23} />
       </Pressable>
     </View>
   );
 }
 export function Title({ children }: { children: React.ReactNode }) {
-  return <Text style={S.title}>{children}</Text>;
+  return (
+    <Text accessibilityRole="header" style={S.title}>
+      {children}
+    </Text>
+  );
 }
 export function Action({
   label,
@@ -180,6 +191,7 @@ export function Action({
         alignItems: "center",
         justifyContent: "center",
         paddingHorizontal: 20,
+        paddingVertical: 12,
         opacity: disabled ? 0.5 : pressed ? 0.8 : 1,
       })}
     >
@@ -239,7 +251,13 @@ export function Status({
   onRetry: () => void;
 }) {
   if (loading)
-    return <ActivityIndicator color={C.green} style={{ padding: 24 }} />;
+    return (
+      <ActivityIndicator
+        accessibilityLabel="Loading your kitchen"
+        color={C.green}
+        style={{ padding: 24 }}
+      />
+    );
   if (error)
     return (
       <View style={S.card}>

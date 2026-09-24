@@ -128,6 +128,9 @@ export default function Plan() {
       <View style={S.row}>
         {(["Breakfast", "Lunch", "Dinner"] as MealType[]).map((type) => (
           <Pressable
+            accessibilityRole="radio"
+            aria-checked={mealType === type}
+            accessibilityState={{ checked: mealType === type }}
             key={type}
             onPress={() => setMealType(type)}
             style={{
@@ -185,6 +188,7 @@ export default function Plan() {
             </Pressable>
             {slot && (
               <Pressable
+                accessibilityRole="button"
                 accessibilityLabel={`Remove ${slot.recipeName}`}
                 style={{
                   minHeight: 48,

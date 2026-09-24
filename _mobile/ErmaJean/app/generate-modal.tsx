@@ -1,5 +1,8 @@
+import { useKitchenPreferences } from "@/hooks/use-kitchen-preferences";
+import { UpgradeSheet } from "@/components/redesign/upgrade-sheet";
+import { isAxiosError } from "axios";
 import { designPreview } from "@/utils/design-preview";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import { router } from "expo-router";
 import {
@@ -15,14 +18,19 @@ import apiClient from "@/libs/api";
 import { createRecipe } from "@/services/recipeService";
 import { RecipeInput } from "@/types/config";
 export default function Generate() {
+  const { preferences: defaults } = useKitchenPreferences();
   const [ingredients, setIngredients] = useState<string[]>([]);
   const [input, setInput] = useState("");
   const [time, setTime] = useState(20);
   const [servings, setServings] = useState(4);
   const [preferences, setPreferences] = useState("");
   const [busy, setBusy] = useState(false);
+  const [upgrade, setUpgrade] = useState(false);
   const [error, setError] = useState("");
   const [drafts, setDrafts] = useState<RecipeInput[]>([]);
+  useEffect(() => {
+    setPreferences(defaults.dietary);
+  }, [defaults.dietary]);
   async function generate() {
     if (designPreview) {
       setError("Preview only — sign in to generate a real dinner.");
@@ -54,6 +62,7 @@ export default function Generate() {
         throw Error("No recipes came back. Try a different combination.");
       setDrafts(response);
     } catch (e) {
+      if (isAxiosError(e) && e.response?.status === 403) setUpgrade(true);
       setError(
         e instanceof Error ? e.message : "Could not find dinner. Try again.",
       );
@@ -103,6 +112,7 @@ export default function Generate() {
       <View style={[S.row, { flexWrap: "wrap" }]}>
         {ingredients.map((ingredient, i) => (
           <Pressable
+            accessibilityRole="button"
             accessibilityLabel={`Remove ${ingredient}`}
             key={`${ingredient}-${i}`}
             onPress={() =>
@@ -123,6 +133,9 @@ export default function Generate() {
       <View style={S.row}>
         {[15, 20, 30].map((value) => (
           <Pressable
+            accessibilityRole="radio"
+            aria-checked={time === value}
+            accessibilityState={{ checked: time === value }}
             key={value}
             onPress={() => setTime(value)}
             style={{
@@ -194,6 +207,7 @@ export default function Generate() {
           />
         </View>
       ))}
+      <UpgradeSheet visible={upgrade} onClose={() => setUpgrade(false)} />
     </Page>
   );
 }

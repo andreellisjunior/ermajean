@@ -1,3 +1,6 @@
+import { useKitchenPreferences } from "@/hooks/use-kitchen-preferences";
+import { UpgradeSheet } from "@/components/redesign/upgrade-sheet";
+import { isAxiosError } from "axios";
 import { RecipeFormModal } from "@/components/RecipeFormModal";
 import { RecipeNotes } from "@/components/redesign/recipe-notes";
 import apiClient from "@/libs/api";
@@ -26,6 +29,7 @@ import {
 } from "@/services/recipeService";
 import { Recipe } from "@/types/config";
 export default function RecipeDetail() {
+  const { preferences } = useKitchenPreferences();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,6 +37,7 @@ export default function RecipeDetail() {
   const [editing, setEditing] = useState(false);
   const [tab, setTab] = useState("Ingredients");
   const [checked, setChecked] = useState<number[]>([]);
+  const [upgrade, setUpgrade] = useState(false);
   const [nutritionBusy, setNutritionBusy] = useState(false);
   const [confirm, setConfirm] = useState(false);
   async function load() {
@@ -158,14 +163,14 @@ export default function RecipeDetail() {
           <Tip>
             Read it through, get your ingredients ready, then make it your own.
           </Tip>
-          {recipe.calories != null && (
+          {preferences.nutrition && recipe.calories != null && (
             <Text style={S.small}>
               Nutrition estimate: {recipe.calories} kcal ·{" "}
               {recipe.protein ?? "—"}g protein. Check the recipe’s serving
               basis.
             </Text>
           )}
-          {recipe.calories == null && (
+          {preferences.nutrition && recipe.calories == null && (
             <Action
               secondary
               label={nutritionBusy ? "Estimating…" : "Estimate nutrition"}
@@ -182,6 +187,8 @@ export default function RecipeDetail() {
                   });
                   setRecipe({ ...recipe, ...estimates });
                 } catch (e) {
+                  if (isAxiosError(e) && e.response?.status === 403)
+                    setUpgrade(true);
                   setError(
                     e instanceof Error
                       ? e.message
@@ -251,6 +258,7 @@ export default function RecipeDetail() {
           )}
         </>
       )}
+      <UpgradeSheet visible={upgrade} onClose={() => setUpgrade(false)} />
     </Page>
   );
 }
