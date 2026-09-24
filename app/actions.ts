@@ -59,11 +59,7 @@ export const signInAction = async (formData: FormData) => {
   if (error) {
     return { status: 500, message: error.message };
   } else {
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
-        return redirect('/recipes?refresh=true');
-      }
-    });
+    return { status: 200, message: 'Signed in' };
   }
 };
 

@@ -1,71 +1,17 @@
-import { Comfortaa } from 'next/font/google';
+import { brandFonts } from '@/libs/fonts';
 import '../globals.css';
-import BackgroundWrapper from '@/components/ui/BackgroundWrapper';
-import Head from 'next/head';
+import '@/components/redesign/public.css';
+import Brand from '@/components/redesign/Brand';
 import { ReactNode } from 'react';
+import Image from 'next/image';
 import { createClient } from '@/libs/supabase/server';
 import { redirect } from 'next/navigation';
 import 'react-toastify/dist/ReactToastify.css';
-import {ToastContainer} from "react-toastify";
+import { ToastContainer } from 'react-toastify';
 
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : 'http://localhost:3000';
-
-export const metadata = {
-  metadataBase: new URL(defaultUrl),
-  title: 'Recipes | ErmaJean',
-  description: 'A collection of recipes from ErmaJean',
-};
-
-const comfortaa = Comfortaa({
-  subsets: ['latin'],
-});
-
-export default async function RootLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  const supabase = createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (user) {
-    redirect('/recipes');
-  }
-  return (
-    <html lang='en' className={comfortaa.className} suppressHydrationWarning>
-      <Head>
-        <link
-          rel='icon'
-          type='image/png'
-          href='/favicon-48x48.png'
-          sizes='48x48'
-        />
-        <link rel='icon' type='image/svg+xml' href='./favicon.svg' />
-        <link rel='shortcut icon' href='./favicon.ico' />
-        <link
-          rel='apple-touch-icon'
-          sizes='180x180'
-          href='/apple-touch-icon.png'
-        />
-        <meta name='apple-mobile-web-app-title' content='ermajean' />
-        <link rel='manifest' href='/site.webmanifest' />
-        <meta name='apple-mobile-web-app-capable' content='yes' />
-        <meta
-          name='apple-mobile-web-app-status-bar-style'
-          content='black-translucent'
-        />
-      </Head>
-      <body className='bg-background text-foreground bg-[#F7F7ED]'>
-        <BackgroundWrapper>
-          <div className='p-4 max-w-xl mx-auto'>{children}</div>
-          <ToastContainer />
-        </BackgroundWrapper>
-      </body>
-    </html>
-  );
+export const metadata = { title: 'Welcome to the kitchen | ErmaJean' };
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const { data: { user } } = await createClient().auth.getUser();
+  if (user) redirect('/kitchen');
+  return <html lang="en" className={brandFonts}><body className="ej-auth"><header className="ej-auth-header"><Brand/></header><main className="ej-auth-grid"><div className="ej-auth-story"><h1>Good food.<br/>A little less figuring it out.</h1><p>Your kitchen. Your pace. A little help from ErmaJean.</p><Image width={400} height={480} sizes="400px" src="/redesign/ermajean.png" alt="ErmaJean, your helpful home cook"/></div><div className="ej-auth-card">{children}</div></main><ToastContainer/></body></html>;
 }

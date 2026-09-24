@@ -1,59 +1,10 @@
-import { forgotPasswordAction } from "@/app/actions";
-import { FormMessage, Message } from "@/components/ui/form-message";
-import { SubmitButton } from "@/components/ui/submit-button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Link from "next/link";
-import Logo from "../../assets/Logo.svg";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
+import { forgotPasswordAction } from '@/app/actions';
+import { FormMessage, Message } from '@/components/ui/form-message';
+import { SubmitButton } from '@/components/ui/submit-button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 
-export default function ForgotPassword({
-  searchParams,
-}: {
-  searchParams: Message;
-}) {
-  return (
-    <>
-      <div className="flex flex-col justify-evenly items-center w-full h-screen p-2">
-        {/* Hero/Logo */}
-        <div className="flex flex-col items-center justify-center text-center">
-          <h3>welcome to</h3>
-          <Image src={Logo} alt="logo" width={500} height={500} />
-          <p>Your personal recipe management and creation tool.</p>
-        </div>
-        {/* Sign up/Sign in Section */}
-        <div className="w-full flex flex-col">
-          {"success" in searchParams ? (
-            <div className="text-foreground flex flex-col gap-4">
-              <FormMessage message={searchParams} />
-              <Link href="/sign-in">
-                <Button className="w-full">Sign In</Button>
-              </Link>
-            </div>
-          ) : (
-            <form className="flex-1 flex flex-col w-full gap-2 text-foreground [&>input]:mb-6 min-w-64">
-              <div>
-                <h1 className="text-2xl font-medium">Reset Password</h1>
-                <p className="text-sm text-secondary-foreground text-right">
-                  Already have an account?{" "}
-                  <Link className="text-primary underline" href="/">
-                    Sign in
-                  </Link>
-                </p>
-              </div>
-              <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
-                <Label htmlFor="email">Email</Label>
-                <Input name="email" placeholder="you@example.com" required />
-                <SubmitButton formAction={forgotPasswordAction}>
-                  Reset Password
-                </SubmitButton>
-                <FormMessage message={searchParams} />
-              </div>
-            </form>
-          )}
-        </div>
-      </div>
-    </>
-  );
+export default function ForgotPassword({ searchParams }: { searchParams: Message }) {
+  return <><h1>Let’s get you back in.</h1><p>Enter your email and we’ll send a password reset link.</p>{!('success' in searchParams) && <form action={forgotPasswordAction}><Label htmlFor="email">Email</Label><Input id="email" type="email" autoComplete="email" name="email" placeholder="you@example.com" required/><SubmitButton pendingText="Sending link…">Send reset link</SubmitButton></form>}<FormMessage message={searchParams}/><div className="ej-auth-links"><Link href="/sign-in">Back to sign in</Link></div></>;
 }
