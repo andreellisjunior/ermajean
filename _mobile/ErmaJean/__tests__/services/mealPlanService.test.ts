@@ -7,6 +7,7 @@ jest.mock('../../libs/supabase', () => ({
       getUser: jest.fn(),
     },
     from: jest.fn(),
+    rpc: jest.fn(),
   },
 }));
 
@@ -55,6 +56,7 @@ describe('mealPlanService', () => {
 
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual({
+        id: 'mp-1',
         date: '2026-02-16',
         mealType: 'Breakfast',
         recipeId: 'recipe-1',
@@ -101,29 +103,16 @@ describe('mealPlanService', () => {
   });
 
   describe('addMealToPlan', () => {
-    it('inserts a meal after removing existing slot', async () => {
-      // Mock for removeMealFromPlan (called internally)
-      // removeMealFromPlan chains: .delete().eq().eq().eq() (3 eq calls)
-      const deleteChain: any = {
-        delete: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        then: (resolve: Function) => resolve({ error: null }),
-      };
-
-      // Mock for insert
-      const insertChain: any = {
-        insert: jest.fn().mockResolvedValue({ error: null }),
-      };
-
-      let callCount = 0;
-      (supabase.from as jest.Mock).mockImplementation(() => {
-        callCount++;
-        // First call is for delete (removeMealFromPlan), second is for insert
-        if (callCount <= 1) return deleteChain;
-        return insertChain;
-      });
-
-      await expect(addMealToPlan('2026-02-16', 'Breakfast', 'recipe-1')).resolves.toBeUndefined();
+    it('replaces a slot atomically without a client-side delete', async () => {
+      (supabase.rpc as jest.Mock).mockResolvedValue({error:null});
+      await addMealToPlan('2026-02-16','Breakfast','12');
+      expect(supabase.rpc).toHaveBeenCalledWith('replace_meal_plan',{p_date:'2026-02-16',p_meal_type:'Breakfast',p_recipe_id:'12'});
+      expect(supabase.from).not.toHaveBeenCalled();
+    });
+    it('surfaces failed replacement without deleting the original meal', async () => {
+      (supabase.rpc as jest.Mock).mockResolvedValue({error:{message:'Recipe unavailable'}});
+      await expect(addMealToPlan('2026-02-16','Breakfast','12')).rejects.toThrow();
+      expect(supabase.from).not.toHaveBeenCalled();
     });
 
     it('throws when user is not authenticated', async () => {

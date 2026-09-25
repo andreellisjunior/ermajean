@@ -4,23 +4,22 @@
  */
 
 /**
- * Gets the start of the week (Sunday) for a given date
+ * Gets the start of the week (Monday) for a given date
  */
 export function getWeekStart(date: Date): Date {
   const d = new Date(date);
-  const day = d.getDay();
+  const day = (d.getDay()+6)%7;
   d.setDate(d.getDate() - day);
   d.setHours(0, 0, 0, 0);
   return d;
 }
 
 /**
- * Gets the end of the week (Saturday) for a given date
+ * Gets the end of the week (Sunday) for a given date
  */
 export function getWeekEnd(date: Date): Date {
-  const d = new Date(date);
-  const day = d.getDay();
-  d.setDate(d.getDate() + (6 - day));
+  const d = getWeekStart(date);
+  d.setDate(d.getDate() + 6);
   d.setHours(23, 59, 59, 999);
   return d;
 }
@@ -37,7 +36,7 @@ export function formatDate(date: Date): string {
 
 /**
  * Gets an array of all days in the week containing the given date
- * Returns 7 Date objects from Sunday to Saturday
+ * Returns 7 Date objects from Monday to Sunday
  */
 export function getDaysInWeek(date: Date): Date[] {
   const weekStart = getWeekStart(date);

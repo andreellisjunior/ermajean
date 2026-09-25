@@ -10,6 +10,7 @@ import { Recipe, MealSlot, ShoppingListItem } from '../types/config';
  */
 export interface ParsedIngredient {
   quantity: number;
+  quantityKnown: boolean;
   unit: string;
   name: string;
   original: string;
@@ -176,76 +177,21 @@ const UNIT_ALIASES: Record<string, string> = {
  */
 export function parseIngredient(ingredientStr: string): ParsedIngredient {
   const original = ingredientStr.trim();
-  const cleaned = original.toLowerCase();
-  
-  // Pattern to match quantity (including fractions), unit, and ingredient name
-  // Examples: "2 cups flour", "1/2 tsp salt", "3 large eggs", "1 1/2 cups sugar"
-  const quantityPattern = /^([\d\s\/\.]+)?\s*([a-zA-Z]+(?:\s+[a-zA-Z]+)?)?\s*(.+)?$/;
-  const match = cleaned.match(quantityPattern);
-  
-  if (!match) {
-    return {
-      quantity: 1,
-      unit: '',
-      name: original,
-      original,
-    };
-  }
-  
-  let [, quantityStr, unitStr, nameStr] = match;
-  
-  // Parse quantity (handle fractions like "1/2" or "1 1/2")
-  let quantity = 1;
-  if (quantityStr) {
-    quantityStr = quantityStr.trim();
-    if (quantityStr.includes('/')) {
-      // Handle fractions
-      const parts = quantityStr.split(/\s+/);
-      quantity = parts.reduce((sum, part) => {
-        if (part.includes('/')) {
-          const [num, denom] = part.split('/').map(Number);
-          return sum + (denom ? num / denom : 0);
-        }
-        return sum + (parseFloat(part) || 0);
-      }, 0);
-    } else {
-      quantity = parseFloat(quantityStr) || 1;
-    }
-  }
-  
-  // Normalize unit
-  let unit = '';
-  if (unitStr) {
-    unitStr = unitStr.trim().toLowerCase();
-    unit = UNIT_ALIASES[unitStr] || unitStr;
-    
-    // Check if the "unit" is actually part of the ingredient name
-    const isActualUnit = Object.keys(UNIT_ALIASES).includes(unitStr) || 
-                         Object.values(UNIT_ALIASES).includes(unitStr);
-    if (!isActualUnit && nameStr) {
-      // The "unit" is likely part of the name
-      nameStr = `${unitStr} ${nameStr}`;
-      unit = '';
-    } else if (!isActualUnit && !nameStr) {
-      // The "unit" is actually the ingredient name
-      nameStr = unitStr;
-      unit = '';
-    }
-  }
-  
-  // Clean up ingredient name
-  let name = (nameStr || unitStr || '').trim();
-  // Remove common prefixes/suffixes that don't affect the ingredient identity
-  name = name.replace(/^(fresh|dried|chopped|minced|diced|sliced|grated|shredded|crushed|ground|whole|organic|raw|cooked)\s+/gi, '');
-  name = name.replace(/,.*$/, '').trim(); // Remove anything after comma (often preparation notes)
-  name = name.replace(/\s*\(.*\)\s*/g, '').trim(); // Remove parenthetical notes
-  
-  return {
-    quantity: quantity || 1,
-    unit,
-    name: name || original,
-    original,
-  };
+  const fractions: Record<string, string> = {'½':'1/2','¼':'1/4','¾':'3/4','⅓':'1/3','⅔':'2/3','⅛':'1/8','⅜':'3/8','⅝':'5/8','⅞':'7/8'};
+  const normalized = original.replace(/(\d)([½¼¾⅓⅔⅛⅜⅝⅞])/g, '$1 $2').replace(/[½¼¾⅓⅔⅛⅜⅝⅞]/g, v => fractions[v]).toLowerCase();
+  // Ambiguous ranges and malformed fractions retain their complete label.
+  const match = normalized.match(/^(\d+\s+\d+\/\d+|\d+\/\d+|\d*\.\d+|\d+)\s+(.+)$/);
+  if (!match) return {quantity: 0, quantityKnown:false, unit:'', name:original, original};
+  const quantity = match[1].split(/\s+/).reduce((sum, part) => {
+    const [n,d] = part.split('/').map(Number);
+    return sum + (d === undefined ? n : n/d);
+  },0);
+  if (!Number.isFinite(quantity)) return {quantity:0,quantityKnown:false,unit:'',name:original,original};
+  const words=match[2].split(/\s+/);
+  const candidate=words[0].replace(/\.$/,'');
+  const unit=UNIT_ALIASES[candidate] || (Object.values(UNIT_ALIASES).includes(candidate)?candidate:'');
+  if(unit) words.shift();
+  return {quantity,quantityKnown:true,unit,name:words.join(' ') || original,original};
 }
 
 /**
@@ -345,7 +291,7 @@ export function aggregateIngredients(
     items.push({
       id: `item-${idCounter++}`,
       ingredient: parsed.name,
-      quantity: quantityStr,
+      quantity: parsed.quantityKnown ? quantityStr : "",
       unit: parsed.unit,
       category,
       checked: false,

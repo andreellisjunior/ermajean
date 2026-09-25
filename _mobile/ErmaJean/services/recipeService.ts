@@ -28,7 +28,7 @@ export async function getRecipes(): Promise<Recipe[]> {
     throw new Error(`Failed to fetch recipes: ${error.message}`);
   }
 
-  return data || [];
+  return (data || []).map(recipe=>({...recipe,id:String(recipe.id)}));
 }
 
 /**
@@ -57,7 +57,7 @@ export async function getRecipeById(id: string): Promise<Recipe | null> {
     throw new Error(`Failed to fetch recipe: ${error.message}`);
   }
 
-  return data;
+  return data ? {...data,id:String(data.id)} : data;
 }
 
 
@@ -104,7 +104,7 @@ export async function createRecipe(recipe: RecipeInput): Promise<Recipe> {
     throw new Error(`Failed to create recipe: ${error.message}`);
   }
 
-  return data;
+  return data ? {...data,id:String(data.id)} : data;
 }
 
 /**
@@ -155,7 +155,7 @@ export async function updateRecipe(
     throw new Error(`Failed to update recipe: ${error.message}`);
   }
 
-  return data;
+  return data ? {...data,id:String(data.id)} : data;
 }
 
 /**

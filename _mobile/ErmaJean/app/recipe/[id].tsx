@@ -165,7 +165,7 @@ export default function RecipeDetail() {
           </Tip>
           {preferences.nutrition && recipe.calories != null && (
             <Text style={S.small}>
-              Nutrition estimate: {recipe.calories} kcal ·{" "}
+              Estimated per serving: {recipe.calories} kcal ·{" "}
               {recipe.protein ?? "—"}g protein. Check the recipe’s serving
               basis.
             </Text>

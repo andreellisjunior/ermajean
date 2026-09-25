@@ -49,9 +49,10 @@ export async function getMealPlans(weekStart: Date, weekEnd: Date): Promise<Meal
 
   // Transform database records to MealSlot format
   const mealSlots: MealSlot[] = (data || []).map((plan: any) => ({
+    id: plan.id,
     date: plan.date,
     mealType: plan.meal_type as MealType,
-    recipeId: plan.recipe_id,
+    recipeId: String(plan.recipe_id),
     recipeName: plan.recipes?.recipe_name,
   }));
 
@@ -76,17 +77,12 @@ export async function addMealToPlan(
     throw new Error('User not authenticated');
   }
 
-  // First, remove any existing meal in this slot (upsert behavior)
-  await removeMealFromPlan(date, mealType);
-
-  const { error } = await supabase
-    .from('meal_plans')
-    .insert({
-      user_id: user.user.id,
-      date,
-      meal_type: mealType,
-      recipe_id: recipeId,
-    });
+  // One server transaction preserves the existing slot if replacement fails.
+  const { error } = await supabase.rpc('replace_meal_plan', {
+    p_date: date,
+    p_meal_type: mealType,
+    p_recipe_id: recipeId,
+  });
 
   if (error) {
     throw new Error(`Failed to add meal to plan: ${error.message}`);

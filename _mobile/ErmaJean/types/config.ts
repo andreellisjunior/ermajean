@@ -1,4 +1,5 @@
 export type Recipe = {
+    content_version?: number;
     id: string;
     recipe_name: string;
     total_time: string;
@@ -46,6 +47,7 @@ export interface MealPlan {
 }
 
 export interface MealSlot {
+    id?: string;
     date: string;
     mealType: 'Breakfast' | 'Lunch' | 'Dinner';
     recipeId?: string;

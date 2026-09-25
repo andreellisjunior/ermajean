@@ -2,7 +2,8 @@ import { designPreview } from "@/utils/design-preview";
 import { useCallback, useState } from "react";
 import { View, Text, Pressable, Share } from "react-native";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Crypto from "expo-crypto";
+import {deriveShoppingItems,loadShoppingItems,saveShoppingItem} from "@/services/shoppingService";
 import {
   Page,
   Title,
@@ -17,15 +18,15 @@ import { getRecipes } from "@/services/recipeService";
 import { getMealPlans } from "@/services/mealPlanService";
 import { getWeekStart, getWeekEnd } from "@/utils/dateUtils";
 import {
-  aggregateIngredients,
   formatShoppingList,
 } from "@/utils/shoppingListUtils";
 import { ShoppingListItem } from "@/types/config";
-import { supabase } from "@/libs/supabase";
+
 export default function Shop() {
   const { week } = useLocalSearchParams<{ week?: string }>();
   const [items, setItems] = useState<ShoppingListItem[]>([]);
   const [key, setKey] = useState("");
+  const [saving,setSaving]=useState(false);
   const [bought, setBought] = useState(false);
   const [adding, setAdding] = useState(false);
   const [newItem, setNewItem] = useState("");
@@ -75,29 +76,11 @@ export default function Shop() {
         setCount(3);
         return;
       }
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) throw Error("Please sign in to build your list.");
-      const storageKey = `shop:${data.user.id}:${getWeekStart(date).toISOString().slice(0, 10)}`;
-      setKey(storageKey);
-      const [recipes, meals, saved] = await Promise.all([
-        getRecipes(),
-        getMealPlans(getWeekStart(date), getWeekEnd(date)),
-        AsyncStorage.getItem(storageKey),
-      ]);
-      const previous: ShoppingListItem[] = saved ? JSON.parse(saved) : [];
-      const list = aggregateIngredients(
-        meals,
-        new Map(recipes.map((r) => [r.id, r])),
-      );
-      setItems([
-        ...list.map((item) => ({
-          ...item,
-          checked:
-            previous.find((p) => p.ingredient === item.ingredient)?.checked ||
-            false,
-        })),
-        ...previous.filter((p) => p.id.startsWith("manual:")),
-      ]);
+      const start=getWeekStart(date);
+      const weekKey=`${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,'0')}-${String(start.getDate()).padStart(2,'0')}`;
+      setKey(weekKey);
+      const [recipes, meals] = await Promise.all([getRecipes(),getMealPlans(start,getWeekEnd(date))]);
+      setItems(await loadShoppingItems(weekKey,deriveShoppingItems(meals,new Map(recipes.map(r=>[r.id,r])))));
       setCount(meals.length);
     } catch (e) {
       setError(String(e));
@@ -111,14 +94,16 @@ export default function Shop() {
     }, [load]),
   );
   async function update(next: ShoppingListItem[]) {
+    const previous=items;
+    const changed=next.filter(item=> !previous.some(p=>p.id===item.id && p.checked===item.checked));
     setItems(next);
-    if (designPreview) return;
-    try {
-      await AsyncStorage.setItem(key, JSON.stringify(next));
-    } catch {
-      setError("Could not save this list on your device. Try again.");
-    }
+    if(designPreview)return;
+    setSaving(true);setError('');
+    try {for(const item of changed)await saveShoppingItem(key,item);}
+    catch(e){setItems(previous);setError(String(e));}
+    finally{setSaving(false);}
   }
+
   const visible = items.filter((i) => i.checked === bought);
   return (
     <Page>
@@ -172,6 +157,7 @@ export default function Shop() {
             .filter((i) => i.category === category)
             .map((item) => (
               <Pressable
+                disabled={saving}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: item.checked }}
                 key={item.id}
@@ -220,6 +206,7 @@ export default function Shop() {
       )}
       <Action
         secondary
+        disabled={saving || loading}
         label={adding ? "Save item" : "+ Add an item"}
         onPress={() => {
           if (!adding) {
@@ -230,7 +217,7 @@ export default function Shop() {
           void update([
             ...items,
             {
-              id: `manual:${Date.now()}`,
+              id: `manual:${Crypto.randomUUID()}`,
               ingredient: newItem.trim(),
               quantity: "",
               unit: "",
@@ -243,7 +230,7 @@ export default function Shop() {
         }}
       />
       <Text style={[S.small, { textAlign: "center" }]}>
-        From {count} planned meals · Saved on this device
+        From {count} planned meals · {designPreview ? "Preview only" : "Synced to your account"}
       </Text>
       <Action
         label="Share list"
