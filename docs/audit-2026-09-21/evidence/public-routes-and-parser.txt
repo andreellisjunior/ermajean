@@ -1,0 +1,12 @@
+Read-only public GETs, 2026-09-21:
+/pricing -> 404
+/auth/callback?type=recovery -> 404
+/.well-known/apple-app-site-association -> 404
+/.well-known/assetlinks.json -> 404
+
+Actual parseIngredient function transpiled with TypeScript and executed locally:
+2 cups flour -> quantity 2, unit empty, name cups flour
+1/2 tsp salt -> quantity 0.5, unit empty, name tsp salt
+1 1/2 cups sugar -> quantity 1.5, unit empty, name cups sugar
+2 tbsp olive oil -> quantity 2, unit empty, name tbsp olive oil
+3 cloves garlic -> quantity 3, unit empty, name cloves garlic

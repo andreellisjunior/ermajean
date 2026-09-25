@@ -1,0 +1,90 @@
+
+> ermajean@1.0.0 lint
+> expo lint
+
+env: load .env.local
+env: export EXPO_PUBLIC_SUPABASE_URL EXPO_PUBLIC_SUPABASE_ANON_KEY EXPO_PUBLIC_DEV_BYPASS_AUTH
+
+/Users/marcuslee/Documents/projects/ermajean/_mobile/ErmaJean/app/(auth)/sign-in.tsx
+  8:40  warning  'ChefHat' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/marcuslee/Documents/projects/ermajean/_mobile/ErmaJean/app/(tabs)/_layout.tsx
+   2:10  warning  'View' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+   2:42  warning  'Pressable' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+   4:10  warning  'Colors' is defined but never used                                                                            @typescript-eslint/no-unused-vars
+  86:6   warning  React Hook useEffect has a missing dependency: 'scaleAnim'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/marcuslee/Documents/projects/ermajean/_mobile/ErmaJean/app/(tabs)/generate.tsx
+    7:10   warning  'Recipe' is defined but never used                               @typescript-eslint/no-unused-vars
+   12:10   warning  'Haptic' is defined but never used                               @typescript-eslint/no-unused-vars
+   13:10   warning  'Colors' is defined but never used                               @typescript-eslint/no-unused-vars
+  353:94   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  434:104  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+/Users/marcuslee/Documents/projects/ermajean/_mobile/ErmaJean/app/(tabs)/index.tsx
+   6:79  warning  'Leaf' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+  14:10  warning  'loading' is assigned a value but never used                                                                  @typescript-eslint/no-unused-vars
+  69:6   warning  React Hook useEffect has a missing dependency: 'pulseAnim'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/marcuslee/Documents/projects/ermajean/_mobile/ErmaJean/app/(tabs)/meal-plans.tsx
+    2:68  warning  'ActivityIndicator' is defined but never used                                                                    @typescript-eslint/no-unused-vars
+    4:10  warning  'Colors' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+    5:28  warning  'MacroGoals' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+   30:10  warning  'loading' is assigned a value but never used                                                                     @typescript-eslint/no-unused-vars
+   92:6   warning  React Hook useEffect has a missing dependency: 'selectedDate'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  123:14  warning  'error' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+  136:14  warning  'error' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+
+/Users/marcuslee/Documents/projects/ermajean/_mobile/ErmaJean/app/(tabs)/profile.tsx
+  9:10  warning  'Settings' is defined but never used  @typescript-eslint/no-unused-vars
+  9:60  warning  'User' is defined but never used      @typescript-eslint/no-unused-vars
+
+/Users/marcuslee/Documents/projects/ermajean/_mobile/ErmaJean/app/(tabs)/recipes.tsx
+   40:10  warning  'Colors' is defined but never used                                                                          @typescript-eslint/no-unused-vars
+   40:18  warning  'Spacing' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+   40:27  warning  'Typography' is defined but never used                                                                      @typescript-eslint/no-unused-vars
+   40:39  warning  'Shadows' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+   40:48  warning  'BorderRadius' is defined but never used                                                                    @typescript-eslint/no-unused-vars
+   50:16  warning  'SCREEN_WIDTH' is assigned a value but never used                                                           @typescript-eslint/no-unused-vars
+   65:6   warning  React Hook useEffect has a missing dependency: 'opacity'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  216:16  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                             react/no-unescaped-entities
+  443:40  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                             react/no-unescaped-entities
+  443:49  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                             react/no-unescaped-entities
+
+/Users/marcuslee/Documents/projects/ermajean/_mobile/ErmaJean/app/_layout.tsx
+  10:10  warning  'supabase' is defined but never used                @typescript-eslint/no-unused-vars
+  79:10  warning  'expoPushToken' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  80:10  warning  'notification' is assigned a value but never used   @typescript-eslint/no-unused-vars
+
+/Users/marcuslee/Documents/projects/ermajean/_mobile/ErmaJean/app/auth/callback.tsx
+  12:6  warning  React Hook useEffect has a missing dependency: 'handleCallback'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/marcuslee/Documents/projects/ermajean/_mobile/ErmaJean/app/generate-modal.tsx
+    1:82   warning  'KeyboardAvoidingView' is defined but never used                 @typescript-eslint/no-unused-vars
+    1:104  warning  'Platform' is defined but never used                             @typescript-eslint/no-unused-vars
+    5:45   warning  'ArrowRight' is defined but never used                           @typescript-eslint/no-unused-vars
+   87:78   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  142:81   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+/Users/marcuslee/Documents/projects/ermajean/_mobile/ErmaJean/app/recipe/[id].tsx
+   3:10  warning  'SafeAreaView' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+  10:54  warning  'Users' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+  11:10  warning  'Colors' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+  24:8   warning  React Hook useEffect has a missing dependency: 'fetchRecipe'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/marcuslee/Documents/projects/ermajean/_mobile/ErmaJean/components/AddRecipeFAB.tsx
+  22:3   warning  'interpolate' is defined but never used            @typescript-eslint/no-unused-vars
+  26:10  warning  'Colors' is defined but never used                 @typescript-eslint/no-unused-vars
+  26:18  warning  'Shadows' is defined but never used                @typescript-eslint/no-unused-vars
+  26:27  warning  'BorderRadius' is defined but never used           @typescript-eslint/no-unused-vars
+  28:16  warning  'SCREEN_WIDTH' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  90:10  warning  'isPressed' is assigned a value but never used     @typescript-eslint/no-unused-vars
+
+/Users/marcuslee/Documents/projects/ermajean/_mobile/ErmaJean/components/animated/AnimatedCard.tsx
+  17:47  warning  '/Users/marcuslee/Documents/projects/ermajean/_mobile/ErmaJean/constants/design.ts' imported multiple times  import/no-duplicates
+  86:1   warning  Import in body of module; reorder to top                                                                     import/first
+  86:33  warning  '/Users/marcuslee/Documents/projects/ermajean/_mobile/ErmaJean/constants/design.ts' imported multiple times  import/no-duplicates
+
+✖ 54 problems (7 errors, 47 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+

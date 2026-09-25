@@ -1,0 +1,41 @@
+env: load .env.local
+env: export EXPO_PUBLIC_DEV_BYPASS_AUTH EXPO_PUBLIC_SUPABASE_ANON_KEY EXPO_PUBLIC_SUPABASE_URL
+Running 18 checks on your project...
+16/18 checks passed. 2 checks failed. Possible issues detected:
+Use the --verbose flag to see more details about passed checks.
+
+✖ Check Expo config (app.json/ app.config.js) schema
+Error validating fields in /Users/marcuslee/Documents/projects/ermajean/_mobile/ErmaJean/app.json:
+ should NOT have additional property 'intentFilters'.
+Advice:
+Resolve schema errors in your app config. Learn more: https://docs.expo.dev/workflow/configuration/
+
+✖ Check that packages match versions required by installed Expo SDK
+
+🔧 Patch version mismatches
+package             expected  found    
+expo                ~54.0.37  54.0.33  
+expo-auth-session   ~7.0.11   7.0.10   
+expo-constants      ~18.0.14  18.0.13  
+expo-font           ~14.0.12  14.0.11  
+expo-linking        ~8.0.12   8.0.11   
+expo-notifications  ~0.32.17  0.32.16  
+expo-router         ~6.0.24   6.0.23   
+expo-web-browser    ~15.0.11  15.0.10  
+jest-expo           ~54.0.18  54.0.17  
+
+Changelogs:
+- expo-auth-session → https://github.com/expo/expo/blob/sdk-54/packages/expo-auth-session/CHANGELOG.md
+- expo-constants → https://github.com/expo/expo/blob/sdk-54/packages/expo-constants/CHANGELOG.md
+- expo-font → https://github.com/expo/expo/blob/sdk-54/packages/expo-font/CHANGELOG.md
+- expo-linking → https://github.com/expo/expo/blob/sdk-54/packages/expo-linking/CHANGELOG.md
+- expo-notifications → https://github.com/expo/expo/blob/sdk-54/packages/expo-notifications/CHANGELOG.md
+- expo-router → https://github.com/expo/expo/blob/sdk-54/packages/expo-router/CHANGELOG.md
+- expo-web-browser → https://github.com/expo/expo/blob/sdk-54/packages/expo-web-browser/CHANGELOG.md
+
+9 packages out of date.
+Advice:
+Use 'npx expo install --check' to review and upgrade your dependencies.
+To ignore specific packages, add them to "expo.install.exclude" in package.json. Learn more: https://expo.fyi/dependency-validation
+
+2 checks failed, indicating possible issues with the project.
