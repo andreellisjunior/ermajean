@@ -1,12 +1,8 @@
-import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
+import { DefaultTheme, ThemeProvider } from "expo-router";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import "../global.css";
-import { useEffect, useRef, useState } from "react";
-import * as Notifications from "expo-notifications";
-import { type EventSubscription } from "expo-modules-core";
-import { registerForPushNotificationsAsync } from "@/libs/notifications";
 import * as Linking from "expo-linking";
 
 import { useFonts } from "expo-font";
@@ -58,67 +54,11 @@ export const linking = {
   },
 };
 
-try {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: false,
-      shouldSetBadge: false,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
-  });
-} catch (error) {
-  console.log("Error setting notification handler:", error);
-}
-
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Fraunces: require("../assets/fonts/Fraunces.ttf"),
     DMSans: require("../assets/fonts/DMSans.ttf"),
   });
-
-  const [, setExpoPushToken] = useState<string>("");
-  const [, setNotification] = useState<Notifications.Notification | undefined>(
-    undefined,
-  );
-  const notificationListener = useRef<EventSubscription>(undefined);
-  const responseListener = useRef<EventSubscription>(undefined);
-
-  useEffect(() => {
-    registerForPushNotificationsAsync()
-      .then((token) => {
-        if (token) {
-          setExpoPushToken(token);
-        }
-      })
-      .catch((error) => {
-        console.log("Error registering for push notifications:", error);
-      });
-
-    try {
-      notificationListener.current =
-        Notifications.addNotificationReceivedListener((notification) => {
-          setNotification(notification);
-        });
-
-      responseListener.current =
-        Notifications.addNotificationResponseReceivedListener((response) => {
-          console.log("Notification response:", response);
-        });
-    } catch (error) {
-      console.log("Error setting up notification listeners:", error);
-    }
-
-    return () => {
-      try {
-        notificationListener.current?.remove();
-        responseListener.current?.remove();
-      } catch (error) {
-        console.log("Error removing notification listeners:", error);
-      }
-    };
-  }, []);
 
   if (!fontsLoaded && !fontError) return null;
   return (

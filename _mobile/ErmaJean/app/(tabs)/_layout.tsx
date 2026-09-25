@@ -1,5 +1,5 @@
 import { useWindowDimensions } from "react-native";
-import { Tabs } from "expo-router";
+import { Tabs } from "expo-router/js-tabs";
 import {
   Home,
   BookOpen,
