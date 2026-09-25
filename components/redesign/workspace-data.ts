@@ -25,7 +25,7 @@ export type WorkspaceData = {
   usageCount?: number;
 };
 export async function loadWorkspace(): Promise<WorkspaceData> {
-  const db = createClient();
+  const db = await createClient();
   const {
     data: { user },
   } = await db.auth.getUser();
@@ -42,37 +42,23 @@ export async function loadWorkspace(): Promise<WorkspaceData> {
       .select("id,date,meal_type,recipe_id")
       .eq("user_id", user.id),
   ]);
-  const plan = getPlanType(
-    profile.data?.has_access || false,
-    profile.data?.price_id,
-  );
-  let usageCount = 0;
-  if (plan !== "unlimited") {
-    let query = db
-      .from("recipe_usage")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .eq("source", plan === "monthly" ? "monthly" : "free");
-    if (plan === "monthly") {
-      const month = new Date();
-      month.setDate(1);
-      month.setHours(0, 0, 0, 0);
-      query = query.gte("created_at", month.toISOString());
-    }
-    usageCount = (await query).count || 0;
-  }
+  const allowance = await db.rpc("generation_allowance");
+  const usageCount = allowance.data?.used;
   return {
     usageCount,
-    recipes: recipes.data || [],
+    recipes: (recipes.data || []).map((r) => ({ ...r, id: String(r.id) })),
     profile: profile.data || {
       name: "Friend",
       email: user.email || "",
       has_access: false,
     },
-    meals: meals.data || [],
+    meals: (meals.data || []).map((m) => ({
+      ...m,
+      recipe_id: String(m.recipe_id),
+    })),
     userId: user.id,
     error:
-      recipes.error || meals.error || profile.error
+      recipes.error || meals.error || profile.error || allowance.error
         ? "Some kitchen data could not load. Refresh to try again."
         : undefined,
   };

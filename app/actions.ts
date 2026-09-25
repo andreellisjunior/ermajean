@@ -1,1251 +1,424 @@
-'use server';
+"use server";
 
-import { aiPrompt } from '@/libs/openai';
-import { getPlanType, getRecipeLimit } from '@/libs/planUtils';
-import { createClient } from '@/libs/supabase/server';
-import { encodedRedirect } from '@/libs/utils';
-import { Recipe } from '@/types';
-import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { generateRecipe } from "@/libs/ai/generation";
+import { requireUser, ApiError } from "@/libs/auth";
+import { saveRecipe, deleteOwnedRecipe } from "@/libs/recipe-service";
+import { z } from "zod";
+import { randomUUID } from "node:crypto";
+import { createClient } from "@/libs/supabase/server";
+import { encodedRedirect } from "@/libs/utils";
+import { redirect } from "next/navigation";
 
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://ermajean.com`
-  : 'http://localhost:3000';
-
+const defaultUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ermajean.com";
+const emailValue = (form: FormData) => {
+  const value = form.get("email");
+  return typeof value === "string" &&
+    value.length <= 254 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+    ? value.trim()
+    : null;
+};
+const passwordValue = (form: FormData, key = "password") => {
+  const value = form.get(key);
+  return typeof value === "string" && value.length >= 8 && value.length <= 128
+    ? value
+    : null;
+};
 export const signUpAction = async (formData: FormData) => {
-  const email = formData.get('email')?.toString();
-  const password = formData.get('password')?.toString();
-  const supabase = createClient();
-  const origin = headers().get('origin');
-
-  if (!email || !password) {
+  const email = emailValue(formData),
+    password = passwordValue(formData);
+  if (!email || !password)
     return encodedRedirect(
-      'error',
-      '/sign-up',
-      'Email and password are required'
+      "error",
+      "/sign-up",
+      "Enter a valid email and a password of 8–128 characters.",
     );
-  }
-
+  const supabase = await createClient();
   const { error } = await supabase.auth.signUp({
     email,
     password,
-    options: {
-      emailRedirectTo: `${origin}/api/auth/callback`,
-    },
+    options: { emailRedirectTo: `${defaultUrl}/api/auth/callback` },
   });
-
-  if (error) {
-    console.error(error.code + ' ' + error.message);
-    return encodedRedirect('error', '/sign-up', error.message);
-  } else {
-    return encodedRedirect(
-      'success',
-      '/sign-up',
-      "Thanks for signing up! Please check your email for a verification link. Don't forget to check spam!"
-    );
-  }
+  return encodedRedirect(
+    error ? "error" : "success",
+    "/sign-up",
+    error
+      ? "Unable to create account. Please try again."
+      : "Check your email for a verification link.",
+  );
 };
-
 export const signInAction = async (formData: FormData) => {
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
-  const supabase = createClient();
-
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (error) {
-    return { status: 500, message: error.message };
-  } else {
-    return { status: 200, message: 'Signed in' };
-  }
+  const email = emailValue(formData),
+    password = formData.get("password");
+  if (
+    !email ||
+    typeof password !== "string" ||
+    !password ||
+    password.length > 128
+  )
+    return { status: 400, message: "Enter your email and password." };
+  const { error } = await (
+    await createClient()
+  ).auth.signInWithPassword({ email, password });
+  return error
+    ? {
+        status: 401,
+        message: "Unable to sign in. Check your email and password.",
+      }
+    : { status: 200, message: "Signed in" };
 };
-
 export const googleAuth = async () => {
-  const supabase = createClient();
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: `${defaultUrl}/api/auth/callback`,
-    },
+  const { data, error } = await (
+    await createClient()
+  ).auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: `${defaultUrl}/api/auth/callback` },
   });
-
-  if (data.url) {
-    redirect(data.url); // use the redirect API for your server framework
-  }
+  if (error || !data.url)
+    return encodedRedirect(
+      "error",
+      "/sign-in",
+      "Unable to sign in. Please try again.",
+    );
+  redirect(data.url);
 };
-
 export const forgotPasswordAction = async (formData: FormData) => {
-  const email = formData.get('email')?.toString();
-  const supabase = createClient();
-  const origin = headers().get('origin');
-  const callbackUrl = formData.get('callbackUrl')?.toString();
-
-  if (!email) {
-    return encodedRedirect('error', '/forgot-password', 'Email is required');
-  }
-
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/api/auth/callback?redirect_to=/recipes/reset-password`,
-  });
-
-  if (error) {
-    console.error(error.message);
+  const email = emailValue(formData);
+  if (!email)
     return encodedRedirect(
-      'error',
-      '/forgot-password',
-      'Could not reset password'
+      "error",
+      "/forgot-password",
+      "Enter a valid email address.",
     );
-  }
-
-  if (callbackUrl) {
-    return redirect(callbackUrl);
-  }
-
+  const { error } = await (
+    await createClient()
+  ).auth.resetPasswordForEmail(email, {
+    redirectTo: `${defaultUrl}/api/auth/callback?redirect_to=/recipes/reset-password`,
+  });
+  // Never redirect to caller-controlled callbackUrl or expose account existence.
   return encodedRedirect(
-    'success',
-    '/forgot-password',
-    'Check your email for a link to reset your password.'
+    error ? "error" : "success",
+    "/forgot-password",
+    error
+      ? "Unable to send the link right now. Please try again."
+      : "If an account exists, you’ll receive a password reset link.",
   );
 };
-
 export const resetPasswordAction = async (formData: FormData) => {
-  const supabase = createClient();
-
-  const password = formData.get('password') as string;
-  const confirmPassword = formData.get('confirmPassword') as string;
-
-  if (!password || !confirmPassword) {
-    encodedRedirect(
-      'error',
-      '/recipes/reset-password',
-      'Password and confirm password are required'
+  const password = passwordValue(formData),
+    confirmation = passwordValue(formData, "confirmPassword");
+  if (!password || password !== confirmation)
+    return encodedRedirect(
+      "error",
+      "/recipes/reset-password",
+      "Use matching passwords of 8–128 characters.",
     );
-  }
-
-  if (password !== confirmPassword) {
-    encodedRedirect(
-      'error',
-      '/recipes/reset-password',
-      'Passwords do not match'
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user)
+    return encodedRedirect(
+      "error",
+      "/forgot-password",
+      "Request a new password reset link.",
     );
-  }
-
-  const { error } = await supabase.auth.updateUser({
-    password: password,
-  });
-
-  if (error) {
-    encodedRedirect(
-      'error',
-      '/recipes/reset-password',
-      'Password update failed'
-    );
-  }
-
-  encodedRedirect('success', '/recipes/reset-password', 'Password updated');
+  const { error } = await supabase.auth.updateUser({ password });
+  return encodedRedirect(
+    error ? "error" : "success",
+    "/recipes/reset-password",
+    error
+      ? "Password update failed. Please request a new link."
+      : "Password updated",
+  );
 };
-
 export const signOutAction = async () => {
-  const supabase = createClient();
-  await supabase.auth.signOut();
-  return redirect('/');
+  await (await createClient()).auth.signOut();
+  return redirect("/");
 };
 
-export const addNewRecipeAction = async (formData: FormData) => {
-  const supabase = createClient();
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-  const id = formData.get('id') as string;
-
-  const recipe_name = formData.get('recipeName')?.toString();
-  const description = formData.get('desc')?.toString();
-  const prep_time = formData.get('prepTime')?.toString();
-  const cook_time = formData.get('cookTime')?.toString();
-  const total_time = formData.get('estTotalTime')?.toString();
-  const servings = formData.get('servings')?.toString();
-  const difficulty_level =
-    formData.get('level[name]')?.toString() ||
-    formData.get('level')?.toString();
-  const course =
-    formData.get('course[name]')?.toString() ||
-    formData.get('course')?.toString();
-  const ingredients = formData.get('ingredients')?.toString();
-  const instructions = formData.get('instructions')?.toString();
-
-  // Nutritional information
-  const calories = formData.get('calories')
-    ? Number(formData.get('calories'))
-    : null;
-  const protein = formData.get('protein')
-    ? Number(formData.get('protein'))
-    : null;
-  const carbs = formData.get('carbs') ? Number(formData.get('carbs')) : null;
-  const fat = formData.get('fat') ? Number(formData.get('fat')) : null;
-  const fiber = formData.get('fiber') ? Number(formData.get('fiber')) : null;
-  const sugar = formData.get('sugar') ? Number(formData.get('sugar')) : null;
-  const sodium = formData.get('sodium') ? Number(formData.get('sodium')) : null;
-
-  if (id) {
-    const { data, error } = await supabase
-      .from('recipes')
-      .update({
-        recipe_name,
-        description,
-        prep_time,
-        cook_time,
-        total_time,
-        servings,
-        difficulty_level,
-        course,
-        ingredients,
-        instructions,
-        calories,
-        protein,
-        carbs,
-        fat,
-        fiber,
-        sugar,
-        sodium,
-        is_kid_friendly: formData.get('isKidFriendly') === 'true',
-      })
-      .eq('id', id)
-      .eq('user_id', userId);
-
-    const { data: shared, error: err } = await supabase
-      .from('share_recipes')
-      .update({
-        recipe_name,
-        description,
-        prep_time,
-        cook_time,
-        total_time,
-        servings,
-        difficulty_level,
-        course,
-        ingredients,
-        instructions,
-        calories,
-        protein,
-        carbs,
-        fat,
-        fiber,
-        sugar,
-        sodium,
-      })
-      .eq('recipe_id', id);
-
-    if (error || err) {
-      console.error(error.message || err);
-      return encodedRedirect('error', '/recipes', 'Could not edit recipe');
-    }
-
-    return encodedRedirect(
-      'success',
-      '/recipes',
-      'Recipe updated successfully'
-    );
-  } else {
-    const { data, error } = await supabase
-      .from('recipes')
-      .insert([
-        {
-          recipe_name,
-          description,
-          prep_time,
-          cook_time,
-          total_time,
-          servings,
-          difficulty_level,
-          course,
-          ingredients,
-          instructions,
-          calories,
-          protein,
-          carbs,
-          fat,
-          fiber,
-          sugar,
-          sodium,
-          user_id: userId,
-        },
-      ])
-      .select();
-
-    if (error) {
-      console.error(error.message);
-      return encodedRedirect('error', '/recipes', 'Could not add recipe');
-    }
-    return redirect('/recipes');
-  }
-};
-
-export const addAIRecipeAction = async (formData: FormData) => {
-  const supabase = createClient();
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-
-  // Get user's plan information
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('has_access, price_id')
-    .eq('id', userId)
-    .single();
-
-  const planType = getPlanType(profile?.has_access || false, profile?.price_id);
-  const recipeLimit = getRecipeLimit(planType);
-
-  // Check limits based on user's plan
-  if (planType === 'free' && recipeLimit) {
-    const { count: freeCount } = await supabase
-      .from('recipe_usage')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('source', 'free');
-
-    if (freeCount >= recipeLimit) {
-      return encodedRedirect(
-        'error',
-        '/recipes',
-        "You've reached your limit of 3 free AI recipes. Upgrade to Premium for unlimited AI recipes!"
-      );
-    }
-  } else if (planType === 'monthly' && recipeLimit) {
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const { count: monthlyCount } = await supabase
-      .from('recipe_usage')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('source', 'monthly')
-      .gte('created_at', startOfMonth.toISOString());
-
-    if (monthlyCount >= recipeLimit) {
-      return encodedRedirect(
-        'error',
-        '/recipes',
-        "You've reached your monthly limit of 8 AI recipes. Your limit will reset next month, or upgrade to unlimited for no limits!"
-      );
-    }
-  }
-  // Unlimited plans have no limits, so no check needed
-
-  const taste = formData.get('taste')?.toString();
-  const ingredients = formData.get('ingredients')?.toString();
-  const serving = formData.get('serving')?.toString();
-  const total_time = formData.get('totalTime')?.toString();
-  const course = formData.get('course')?.toString();
-  const restrictions = formData.get('restrictions')?.toString();
-  const location = formData.get('location')?.toString();
-  const is_kid_friendly = formData.get('isKidFriendly') === 'true';
-
-  const aiData = await aiPrompt(
-    taste,
-    ingredients,
-    serving,
-    total_time,
-    course,
-    restrictions,
-    location,
-    is_kid_friendly
-  );
-
-  const result = JSON.parse(aiData.choices[0].message.content!);
-  console.log(result);
-  const { data, error } = await supabase
-    .from('recipes')
-    .insert([
-      {
-        recipe_name: result.recipe_name,
-        description: result.description,
-        prep_time: result.prep_time,
-        cook_time: result.cook_time,
-        total_time: result.total_time,
-        servings: result.servings,
-        difficulty_level: result.difficulty_level,
-        course: result.course,
-        ingredients: result.ingredients.join('\n'),
-        instructions: result.instructions.join('\n'),
-        est_cost: result.estimated_cost_per_serving,
-        est_savings: result.estimated_savings_per_serving,
-        user_id: userId,
-        is_kid_friendly: is_kid_friendly,
-      },
-    ])
-    .select();
-
-  // Determine source based on user's plan
-  let source = 'free';
-  if (planType === 'monthly') {
-    source = 'monthly';
-  } else if (planType === 'unlimited') {
-    source = 'unlimited';
-  }
-
-  const { error: usageError } = await supabase.from('recipe_usage').insert([
-    {
-      user_id: userId,
-      recipe_id: data[0].id,
-      source: source,
-    },
-  ]);
-
-  if (usageError) {
-    console.error(usageError.message);
-    return encodedRedirect('error', '/recipes', 'Could not add recipe usage');
-  }
-
-  if (error) {
-    console.error(error.message);
-    return encodedRedirect('error', '/recipes', 'Could not add recipe');
-  }
-
-  return redirect('/recipes');
-};
-
-// copy the recipe to the share_recipes table
-export const shareRecipeAction = async (recipeId: string) => {
-  const supabase = createClient();
-
-  // check if the recipe exists in the share_recipes table
-  const { data: recipeExists, error: recipeErr } = (await supabase
-    .from('share_recipes')
-    .select('*')
-    .eq('recipe_id', recipeId)
-    .single()) as { data: Recipe; error: any };
-
-  const { data: singleRecipe, error: err } = (await supabase
-    .from('recipes')
-    .select('*')
-    .eq('id', recipeId)
-    .single()) as { data: Recipe; error: any };
-
-  if (recipeExists) {
-    return encodedRedirect('success', '/recipes', 'Recipe shared successfully');
-  } else {
-    const { data, error } = await supabase.from('share_recipes').insert([
-      {
-        recipe_name: singleRecipe.recipe_name,
-        description: singleRecipe.description,
-        prep_time: singleRecipe.prep_time,
-        cook_time: singleRecipe.cook_time,
-        total_time: singleRecipe.total_time,
-        servings: singleRecipe.servings,
-        difficulty_level: singleRecipe.difficulty_level,
-        course: singleRecipe.course,
-        ingredients: singleRecipe.ingredients,
-        instructions: singleRecipe.instructions,
-        recipe_id: singleRecipe.id,
-        is_kid_friendly: singleRecipe.is_kid_friendly,
-      },
-    ]);
-
-    if (error || err) {
-      console.error(error?.message || err?.message);
-      return encodedRedirect('error', '/recipes', 'Could not share recipe');
-    }
-    return encodedRedirect('success', '/recipes', 'Recipe shared successfully');
-  }
-};
-
-// deletes a recipe from the recipes table
-export const deleteRecipeAction = async (recipeId: string) => {
-  const supabase = createClient();
-
-  const { data, error } = await supabase
-    .from('recipes')
-    .delete()
-    .eq('id', recipeId);
-
-  if (error) {
-    console.error(error.message);
-    return encodedRedirect('error', '/recipes', 'Could not delete recipe');
-  }
-
-  return encodedRedirect('success', '/recipes', 'Recipe deleted successfully');
-};
-
-// adds name to the profiles table
-export const addProfileNameAction = async (formData: FormData) => {
-  const supabase = createClient();
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-
-  const name = formData.get('name')?.toString();
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .update([{ name }])
-    .eq('id', userId);
-
-  if (error) {
-    console.error(error.message);
-    return encodedRedirect('error', '/recipes', 'Could not add profile name');
-  }
-
-  return encodedRedirect(
-    'success',
-    '/recipes',
-    'Profile name added successfully'
-  );
-};
-
-export const updateProfileAction = async (formData: FormData) => {
-  const supabase = createClient();
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-
-  const name = formData.get('name')?.toString();
-  const location = formData.get('location')?.toString();
-  // const email = formData.get('email')?.toString();
-
-  // const { data: userEmail, error: userError } = await supabase.auth.updateUser({
-  //   email,
-  // });
-
-  // if (userError) {
-  //   console.error(userError.message);
-  //   return encodedRedirect('error', '/recipes', 'Could not update email');
-  // }
-
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      name,
-      location,
-      kid_friendly_preference: formData.get('kidFriendlyPreference') === 'true',
-    })
-    .eq('id', userId);
-
-  if (error) {
-    console.error(error.message);
-    return encodedRedirect('error', '/recipes', 'Could not update profile');
-  }
-
-  return encodedRedirect('success', '/recipes', 'Profile updated successfully');
-};
-
-export const updateMacroGoalsAction = async (formData: FormData) => {
-  const supabase = createClient();
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-
-  const calorie_goal = formData.get('calorieGoal')
-    ? Number(formData.get('calorieGoal'))
-    : 2000;
-  const protein_goal = formData.get('proteinGoal')
-    ? Number(formData.get('proteinGoal'))
-    : 150;
-  const carb_goal = formData.get('carbGoal')
-    ? Number(formData.get('carbGoal'))
-    : 250;
-  const fat_goal = formData.get('fatGoal')
-    ? Number(formData.get('fatGoal'))
-    : 65;
-
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      calorie_goal,
-      protein_goal,
-      carb_goal,
-      fat_goal,
-    })
-    .eq('id', userId);
-
-  if (error) {
-    console.error(error.message);
-    return encodedRedirect('error', '/recipes', 'Could not update macro goals');
-  }
-
-  return encodedRedirect(
-    'success',
-    '/recipes',
-    'Macro goals updated successfully'
-  );
-};
-
-// Non-redirecting version for modal usage
-export const updateMacroGoalsModalAction = async (formData: FormData) => {
-  const supabase = createClient();
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-
-  const calorie_goal = formData.get('calorieGoal')
-    ? Number(formData.get('calorieGoal'))
-    : 2000;
-  const protein_goal = formData.get('proteinGoal')
-    ? Number(formData.get('proteinGoal'))
-    : 150;
-  const carb_goal = formData.get('carbGoal')
-    ? Number(formData.get('carbGoal'))
-    : 250;
-  const fat_goal = formData.get('fatGoal')
-    ? Number(formData.get('fatGoal'))
-    : 65;
-
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      calorie_goal,
-      protein_goal,
-      carb_goal,
-      fat_goal,
-    })
-    .eq('id', userId);
-
-  if (error) {
-    console.error(error.message);
-    return { success: false, message: 'Could not update macro goals' };
-  }
-
-  return { success: true, message: 'Macro goals updated successfully' };
-};
-
-// delete a user
-export const deleteUserAction = async () => {
-  const supabase = createClient();
-
-  await supabase.rpc('delete_user');
-
-  supabase.auth.signOut();
-
-  return redirect('/');
-};
-
-// Meal Plan Actions
-export const addMealToPlanAction = async (formData: FormData) => {
-  const supabase = createClient();
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-
-  const recipeId = formData.get('recipeId')?.toString();
-  const date = formData.get('date')?.toString();
-  const mealType = formData.get('mealType')?.toString();
-
-  if (!recipeId || !date || !mealType) {
-    return encodedRedirect('error', '/meal-plans', 'Missing required fields');
-  }
-
-  // Check if meal already exists for this slot
-  const { data: existingMeal } = await supabase
-    .from('meal_plans')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('date', date)
-    .eq('meal_type', mealType)
-    .single();
-
-  if (existingMeal) {
-    // Update existing meal
-    const { error } = await supabase
-      .from('meal_plans')
-      .update({ recipe_id: recipeId })
-      .eq('user_id', userId)
-      .eq('date', date)
-      .eq('meal_type', mealType);
-
-    if (error) {
-      console.error(error.message);
-      return encodedRedirect(
-        'error',
-        '/meal-plans',
-        'Could not update meal plan'
-      );
-    }
-  } else {
-    // Insert new meal
-    const { error } = await supabase.from('meal_plans').insert([
-      {
-        user_id: userId,
-        recipe_id: recipeId,
-        date,
-        meal_type: mealType,
-      },
-    ]);
-
-    if (error) {
-      console.error(error.message);
-      return encodedRedirect(
-        'error',
-        '/meal-plans',
-        'Could not add meal to plan'
-      );
-    }
-  }
-
-  return encodedRedirect(
-    'success',
-    '/meal-plans',
-    'Meal added to plan successfully'
-  );
-};
-
-export const removeMealFromPlanAction = async (formData: FormData) => {
-  const supabase = createClient();
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-
-  const date = formData.get('date')?.toString();
-  const mealType = formData.get('mealType')?.toString();
-
-  if (!date || !mealType) {
-    return encodedRedirect('error', '/meal-plans', 'Missing required fields');
-  }
-
-  const { error } = await supabase
-    .from('meal_plans')
-    .delete()
-    .eq('user_id', userId)
-    .eq('date', date)
-    .eq('meal_type', mealType);
-
-  if (error) {
-    console.error(error.message);
-    return encodedRedirect(
-      'error',
-      '/meal-plans',
-      'Could not remove meal from plan'
-    );
-  }
-
-  return encodedRedirect(
-    'success',
-    '/meal-plans',
-    'Meal removed from plan successfully'
-  );
-};
-
-export const clearWeekMealPlanAction = async (formData: FormData) => {
-  const supabase = createClient();
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-
-  const weekStart = formData.get('weekStart')?.toString();
-  const weekEnd = formData.get('weekEnd')?.toString();
-
-  if (!weekStart || !weekEnd) {
-    return encodedRedirect('error', '/meal-plans', 'Missing week dates');
-  }
-
-  const { error } = await supabase
-    .from('meal_plans')
-    .delete()
-    .eq('user_id', userId)
-    .gte('date', weekStart)
-    .lte('date', weekEnd);
-
-  if (error) {
-    console.error(error.message);
-    return encodedRedirect('error', '/meal-plans', 'Could not clear week');
-  }
-
-  return encodedRedirect('success', '/meal-plans', 'Week cleared successfully');
-};
-
-// Non-redirecting versions for modal usage
-export const addNewRecipeModalAction = async (formData: FormData) => {
-  const supabase = createClient();
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-  const id = formData.get('id') as string;
-
-  const recipe_name = formData.get('recipeName')?.toString();
-  const description = formData.get('desc')?.toString();
-  const prep_time = formData.get('prepTime')?.toString();
-  const cook_time = formData.get('cookTime')?.toString();
-  const total_time = formData.get('estTotalTime')?.toString();
-  const servings = formData.get('servings')?.toString();
-  const difficulty_level =
-    formData.get('level[name]')?.toString() ||
-    formData.get('level')?.toString();
-  const course =
-    formData.get('course[name]')?.toString() ||
-    formData.get('course')?.toString();
-  const ingredients = formData.get('ingredients')?.toString();
-  const instructions = formData.get('instructions')?.toString();
-
-  // Nutritional information
-  const calories = formData.get('calories')
-    ? Number(formData.get('calories'))
-    : null;
-  const protein = formData.get('protein')
-    ? Number(formData.get('protein'))
-    : null;
-  const carbs = formData.get('carbs') ? Number(formData.get('carbs')) : null;
-  const fat = formData.get('fat') ? Number(formData.get('fat')) : null;
-  const fiber = formData.get('fiber') ? Number(formData.get('fiber')) : null;
-  const sugar = formData.get('sugar') ? Number(formData.get('sugar')) : null;
-  const sodium = formData.get('sodium') ? Number(formData.get('sodium')) : null;
-
-  if (id) {
-    const { data, error } = await supabase
-      .from('recipes')
-      .update({
-        recipe_name,
-        description,
-        prep_time,
-        cook_time,
-        total_time,
-        servings,
-        difficulty_level,
-        course,
-        ingredients,
-        instructions,
-        calories,
-        protein,
-        carbs,
-        fat,
-        fiber,
-        sugar,
-        sodium,
-      })
-      .eq('id', id)
-      .eq('user_id', userId);
-
-    const { data: shared, error: err } = await supabase
-      .from('share_recipes')
-      .update({
-        recipe_name,
-        description,
-        prep_time,
-        cook_time,
-        total_time,
-        servings,
-        difficulty_level,
-        course,
-        ingredients,
-        instructions,
-        calories,
-        protein,
-        carbs,
-        fat,
-        fiber,
-        sugar,
-        sodium,
-      })
-      .eq('recipe_id', id);
-
-    if (error || err) {
-      console.error(error?.message || err?.message);
-      return { success: false, message: 'Could not edit recipe' };
-    }
-
-    return { success: true, message: 'Recipe updated successfully' };
-  } else {
-    const { data, error } = await supabase
-      .from('recipes')
-      .insert([
-        {
-          recipe_name,
-          description,
-          prep_time,
-          cook_time,
-          total_time,
-          servings,
-          difficulty_level,
-          course,
-          ingredients,
-          instructions,
-          calories,
-          protein,
-          carbs,
-          fat,
-          fiber,
-          sugar,
-          sodium,
-          user_id: userId,
-        },
-      ])
-      .select();
-
-    if (error) {
-      console.error(error.message);
-      return { success: false, message: 'Could not add recipe' };
-    }
-    return { success: true, message: 'Recipe created successfully', data };
-  }
-};
-
-export const addAIRecipeModalAction = async (formData: FormData) => {
-  const supabase = createClient();
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-
-  // Get user's plan information
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('has_access, price_id')
-    .eq('id', userId)
-    .single();
-
-  const planType = getPlanType(profile?.has_access || false, profile?.price_id);
-  const recipeLimit = getRecipeLimit(planType);
-
-  // Check limits based on user's plan
-  if (planType === 'free' && recipeLimit) {
-    const { count: freeCount } = await supabase
-      .from('recipe_usage')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('source', 'free');
-
-    if (freeCount >= recipeLimit) {
-      return {
-        success: false,
-        message:
-          "You've reached your limit of 3 free AI recipes. Upgrade to Premium for unlimited AI recipes!",
-      };
-    }
-  } else if (planType === 'monthly' && recipeLimit) {
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const { count: monthlyCount } = await supabase
-      .from('recipe_usage')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('source', 'monthly')
-      .gte('created_at', startOfMonth.toISOString());
-
-    if (monthlyCount >= recipeLimit) {
-      return {
-        success: false,
-        message:
-          "You've reached your monthly limit of 8 AI recipes. Your limit will reset next month, or upgrade to unlimited for no limits!",
-      };
-    }
-  }
-  // Unlimited plans have no limits, so no check needed
-
-  const taste = formData.get('taste')?.toString();
-  const ingredients = formData.get('ingredients')?.toString();
-  const serving = formData.get('serving')?.toString();
-  const total_time = formData.get('totalTime')?.toString();
-  const course = formData.get('course')?.toString();
-  const restrictions = formData.get('restrictions')?.toString();
-  const location = formData.get('location')?.toString();
-
+const field = (f: FormData, k: string, fallback = "") =>
+  f.get(k)?.toString() || fallback;
+const failure = (error: unknown) => ({
+  success: false as const,
+  message:
+    error instanceof ApiError
+      ? error.message
+      : error instanceof z.ZodError
+        ? "Please check the form values."
+        : "Could not complete your request. Please try again.",
+});
+async function saveForm(form: FormData) {
+  const { supabase, user } = await requireUser();
+  const input: Record<string, unknown> = {
+    recipe_name: field(form, "recipeName"),
+    description: field(form, "desc"),
+    prep_time: field(form, "prepTime"),
+    cook_time: field(form, "cookTime"),
+    total_time: field(form, "estTotalTime"),
+    servings: field(form, "servings"),
+    difficulty_level: field(form, "level[name]", field(form, "level")),
+    course: field(form, "course[name]", field(form, "course")),
+    ingredients: field(form, "ingredients"),
+    instructions: field(form, "instructions"),
+    is_kid_friendly: field(form, "isKidFriendly") === "true",
+  };
+  for (const k of [
+    "calories",
+    "protein",
+    "carbs",
+    "fat",
+    "fiber",
+    "sugar",
+    "sodium",
+  ])
+    if (form.has(k)) input[k] = field(form, k) ? Number(field(form, k)) : null;
+  return saveRecipe(supabase, user.id, input, field(form, "id") || undefined);
+}
+export const addNewRecipeModalAction = async (form: FormData) => {
   try {
-    const aiData = await aiPrompt(
-      taste,
-      ingredients,
-      serving,
-      total_time,
-      course,
-      restrictions,
-      location
-    );
-
-    const result = JSON.parse(aiData.choices[0].message.content!);
-    console.log(result);
-
-    const { data, error } = await supabase
-      .from('recipes')
-      .insert([
-        {
-          recipe_name: result.recipe_name,
-          description: result.description,
-          prep_time: result.prep_time,
-          cook_time: result.cook_time,
-          total_time: result.total_time,
-          servings: result.servings,
-          difficulty_level: result.difficulty_level,
-          course: result.course,
-          ingredients: result.ingredients.join('\n'),
-          instructions: result.instructions.join('\n'),
-          est_cost: result.estimated_cost_per_serving,
-          est_savings: result.estimated_savings_per_serving,
-          user_id: userId,
-        },
-      ])
-      .select();
-
-    // Determine source based on user's plan
-    let source = 'free';
-    if (planType === 'monthly') {
-      source = 'monthly';
-    } else if (planType === 'unlimited') {
-      source = 'unlimited';
-    }
-
-    const { error: usageError } = await supabase.from('recipe_usage').insert([
-      {
-        user_id: userId,
-        recipe_id: data[0].id,
-        source: source,
-      },
-    ]);
-
-    if (usageError) {
-      console.error(usageError.message);
-      return { success: false, message: 'Could not add recipe usage' };
-    }
-
-    if (error) {
-      console.error(error.message);
-      return { success: false, message: 'Could not add recipe' };
-    }
-
-    return { success: true, message: 'AI recipe generated successfully', data };
-  } catch (error) {
-    console.error('AI recipe generation failed:', error);
-    return { success: false, message: 'Failed to generate AI recipe' };
-  }
-};
-
-// Generate shopping list from meal plan
-export const generateShoppingListAction = async (formData: FormData) => {
-  const supabase = createClient();
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-
-  const weekStart = formData.get('weekStart')?.toString();
-  const weekEnd = formData.get('weekEnd')?.toString();
-
-  if (!weekStart || !weekEnd) {
-    return { success: false, message: 'Missing week dates' };
-  }
-
-  try {
-    // Get all meals for the week
-    const { data: mealPlans, error: mealError } = await supabase
-      .from('meal_plans')
-      .select(
-        `
-        date,
-        meal_type,
-        recipes (
-          id,
-          recipe_name,
-          ingredients,
-          servings
-        )
-      `
-      )
-      .eq('user_id', userId)
-      .gte('date', weekStart)
-      .lte('date', weekEnd);
-
-    if (mealError) {
-      console.error(mealError.message);
-      return { success: false, message: 'Could not fetch meal plans' };
-    }
-
-    if (!mealPlans || mealPlans.length === 0) {
-      return { success: false, message: 'No meals planned for this week' };
-    }
-
-    // Process ingredients and create shopping list
-    const ingredientMap = new Map<
-      string,
-      { quantity: string; unit: string; recipes: string[] }
-    >();
-
-    mealPlans.forEach((meal: any) => {
-      if (meal.recipes && meal.recipes.ingredients) {
-        const ingredients = meal.recipes.ingredients.split('\n');
-        const recipeName = meal.recipes.recipe_name;
-
-        ingredients.forEach((ingredient: string) => {
-          const trimmedIngredient = ingredient.trim();
-          if (trimmedIngredient) {
-            // Parse ingredient (basic parsing - could be enhanced)
-            const parsed = parseIngredient(trimmedIngredient);
-            const key = parsed.name.toLowerCase();
-
-            if (ingredientMap.has(key)) {
-              const existing = ingredientMap.get(key)!;
-              existing.recipes.push(recipeName);
-              // For now, just combine quantities as strings
-              // In a more sophisticated version, you'd parse and add quantities
-              if (
-                parsed.quantity &&
-                !existing.quantity.includes(parsed.quantity)
-              ) {
-                existing.quantity += ` + ${parsed.quantity}`;
-              }
-            } else {
-              ingredientMap.set(key, {
-                quantity: parsed.quantity || '',
-                unit: parsed.unit || '',
-                recipes: [recipeName],
-              });
-            }
-          }
-        });
-      }
-    });
-
-    // Convert map to array and organize by category
-    const shoppingList = Array.from(ingredientMap.entries()).map(
-      ([name, details]) => ({
-        name: name.charAt(0).toUpperCase() + name.slice(1),
-        quantity: details.quantity,
-        unit: details.unit,
-        recipes: Array.from(new Set(details.recipes)), // Remove duplicates
-        category: categorizeIngredient(name),
-      })
-    );
-
-    // Sort by category
-    shoppingList.sort((a, b) => {
-      if (a.category !== b.category) {
-        return a.category.localeCompare(b.category);
-      }
-      return a.name.localeCompare(b.name);
-    });
-
     return {
-      success: true,
-      message: 'Shopping list generated successfully',
+      success: true as const,
+      message: "Recipe saved",
+      data: [await saveForm(form)],
+    };
+  } catch (error) {
+    return failure(error);
+  }
+};
+export const addNewRecipeAction = async (form: FormData) => {
+  const result = await addNewRecipeModalAction(form);
+  return encodedRedirect(
+    result.success ? "success" : "error",
+    "/recipes",
+    result.message,
+  );
+};
+export const addAIRecipeModalAction = async (form: FormData) => {
+  try {
+    const { supabase, user } = await requireUser();
+    const result = await generateRecipe(
+      user.id,
+      {
+        taste: field(form, "taste", "something savory"),
+        ingredients: field(form, "ingredients"),
+        serving: field(form, "serving", "4"),
+        total_time: field(form, "totalTime", "30 minutes"),
+        course: field(form, "course", "Dinner"),
+        restrictions: field(form, "restrictions"),
+        is_kid_friendly: field(form, "isKidFriendly") === "true",
+      },
+      field(form, "requestId") || randomUUID(),
+    );
+    const { data, error } = await supabase.rpc("save_generated_recipe", {
+      p_key: result.requestId,
+    });
+    if (error)
+      throw new ApiError(
+        503,
+        "Recipe generated but could not be saved. Retry with the same request.",
+      );
+    return { success: true as const, message: "Recipe saved", data: [data] };
+  } catch (error) {
+    return failure(error);
+  }
+};
+export const addAIRecipeAction = async (form: FormData) => {
+  const result = await addAIRecipeModalAction(form);
+  return encodedRedirect(
+    result.success ? "success" : "error",
+    "/recipes",
+    result.message,
+  );
+};
+export const shareRecipeAction = async (recipeId: string) => {
+  try {
+    const { supabase } = await requireUser();
+    const { error } = await supabase.rpc("publish_recipe", {
+      p_recipe_id: z.coerce.number().int().positive().parse(recipeId),
+    });
+    if (error) throw new Error();
+  } catch {
+    return encodedRedirect("error", "/recipes", "Could not share recipe");
+  }
+  return redirect(`/recipe/${recipeId}`);
+};
+export const deleteRecipeAction = async (recipeId: string) => {
+  try {
+    const { supabase } = await requireUser();
+    await deleteOwnedRecipe(supabase, recipeId);
+  } catch {
+    return encodedRedirect("error", "/recipes", "Could not delete recipe");
+  }
+  return redirect("/recipes");
+};
+async function updateProfileFields(input: Record<string, unknown>) {
+  const { supabase, user } = await requireUser();
+  const { error } = await supabase
+    .from("profiles")
+    .update(input)
+    .eq("id", user.id);
+  if (error) throw new Error("Profile update failed");
+}
+export const addProfileNameAction = async (form: FormData) => {
+  try {
+    await updateProfileFields({
+      name: z.string().trim().min(1).max(100).parse(field(form, "name")),
+    });
+  } catch {
+    return encodedRedirect("error", "/recipes", "Could not update name");
+  }
+  return encodedRedirect("success", "/recipes", "Name updated");
+};
+export const updateProfileAction = async (form: FormData) => {
+  try {
+    await updateProfileFields({
+      name: z.string().trim().min(1).max(100).parse(field(form, "name")),
+      location: z.string().trim().max(200).parse(field(form, "location")),
+      kid_friendly_preference: field(form, "kidFriendlyPreference") === "true",
+    });
+  } catch {
+    return encodedRedirect("error", "/recipes", "Could not update profile");
+  }
+  return encodedRedirect("success", "/recipes", "Profile updated");
+};
+export const updateMacroGoalsModalAction = async (form: FormData) => {
+  try {
+    const goals: Record<string, number> = {};
+    for (const [key, fieldName, defaultValue, max] of [
+      ["calorie_goal", "calorieGoal", 2000, 20000],
+      ["protein_goal", "proteinGoal", 150, 2000],
+      ["carb_goal", "carbGoal", 250, 5000],
+      ["fat_goal", "fatGoal", 65, 2000],
+    ] as const)
+      goals[key] = z.coerce
+        .number()
+        .int()
+        .min(0)
+        .max(max)
+        .parse(field(form, fieldName, String(defaultValue)));
+    await updateProfileFields(goals);
+    return { success: true as const, message: "Macro goals updated" };
+  } catch (error) {
+    return failure(error);
+  }
+};
+export const updateMacroGoalsAction = async (form: FormData) => {
+  const result = await updateMacroGoalsModalAction(form);
+  return encodedRedirect(
+    result.success ? "success" : "error",
+    "/recipes",
+    result.message,
+  );
+};
+export const deleteUserAction = async () => {
+  const { supabase } = await requireUser();
+  const { error } = await supabase.rpc("delete_user");
+  if (error)
+    return encodedRedirect("error", "/recipes", error.code==="55000"?"Complete billing closure with support before deleting this account.":"Could not delete account");
+  await supabase.auth.signOut();
+  return redirect("/");
+};
+const dateValue = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((v) => !Number.isNaN(Date.parse(v)));
+const mealValue = z.enum(["Breakfast", "Lunch", "Dinner"]);
+export const addMealToPlanAction = async (form: FormData) => {
+  try {
+    const { supabase } = await requireUser();
+    const { error } = await supabase.rpc("replace_meal_plan", {
+      p_date: dateValue.parse(field(form, "date")),
+      p_meal_type: mealValue.parse(field(form, "mealType")),
+      p_recipe_id: z.coerce
+        .number()
+        .int()
+        .positive()
+        .parse(field(form, "recipeId")),
+    });
+    if (error) throw new Error();
+  } catch {
+    return encodedRedirect("error", "/meal-plans", "Could not save meal");
+  }
+  return encodedRedirect("success", "/meal-plans", "Meal saved");
+};
+export const removeMealFromPlanAction = async (form: FormData) => {
+  try {
+    const { supabase, user } = await requireUser();
+    const { error } = await supabase
+      .from("meal_plans")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("date", dateValue.parse(field(form, "date")))
+      .eq("meal_type", mealValue.parse(field(form, "mealType")));
+    if (error) throw new Error();
+  } catch {
+    return encodedRedirect("error", "/meal-plans", "Could not remove meal");
+  }
+  return encodedRedirect("success", "/meal-plans", "Meal removed");
+};
+export const clearWeekMealPlanAction = async (form: FormData) => {
+  try {
+    const { supabase, user } = await requireUser();
+    const start = dateValue.parse(field(form, "weekStart")),
+      end = dateValue.parse(field(form, "weekEnd"));
+    if (end < start || Date.parse(end) - Date.parse(start) > 7 * 86400000)
+      throw new Error();
+    const { error } = await supabase
+      .from("meal_plans")
+      .delete()
+      .eq("user_id", user.id)
+      .gte("date", start)
+      .lte("date", end);
+    if (error) throw new Error();
+  } catch {
+    return encodedRedirect("error", "/meal-plans", "Could not clear week");
+  }
+  return encodedRedirect("success", "/meal-plans", "Week cleared");
+};
+export const generateShoppingListAction = async (form: FormData) => {
+  try {
+    const { supabase, user } = await requireUser();
+    const weekStart = dateValue.parse(field(form, "weekStart")),
+      weekEnd = dateValue.parse(field(form, "weekEnd"));
+    if (
+      weekEnd < weekStart ||
+      Date.parse(weekEnd) - Date.parse(weekStart) > 7 * 86400000
+    )
+      throw new Error();
+    const { data, error } = await supabase
+      .from("meal_plans")
+      .select("recipes(id,recipe_name,ingredients)")
+      .eq("user_id", user.id)
+      .gte("date", weekStart)
+      .lte("date", weekEnd);
+    if (error) throw new Error();
+    const recipes = (data || []).flatMap((m: any) =>
+      m.recipes ? [m.recipes] : [],
+    );
+    return {
+      success: true as const,
+      message: "Shopping list ready",
       data: {
-        shoppingList,
         weekStart,
         weekEnd,
-        totalRecipes: Array.from(
-          new Set(
-            mealPlans.map((m: any) => m.recipes?.recipe_name).filter(Boolean)
-          )
-        ).length,
+        totalRecipes: new Set(recipes.map((r: any) => r.id)).size,
+        shoppingList: recipes.flatMap((r: any) =>
+          r.ingredients
+            .split("\n")
+            .filter((s: string) => s.trim())
+            .map((name: string) => ({
+              name: name.trim(),
+              quantity: "",
+              unit: "",
+              recipes: [r.recipe_name],
+              category: "Other",
+            })),
+        ),
       },
     };
   } catch (error) {
-    console.error('Shopping list generation failed:', error);
-    return { success: false, message: 'Failed to generate shopping list' };
+    return failure(error);
   }
 };
-
-// Helper function to parse ingredient strings
-function parseIngredient(ingredient: string): {
-  name: string;
-  quantity: string;
-  unit: string;
-} {
-  // Basic regex to extract quantity, unit, and ingredient name
-  const match = ingredient.match(/^(\d+(?:\/\d+)?(?:\.\d+)?)\s*(\w+)?\s+(.+)$/);
-
-  if (match) {
-    return {
-      quantity: match[1],
-      unit: match[2] || '',
-      name: match[3],
-    };
-  }
-
-  // If no quantity found, treat entire string as ingredient name
-  return {
-    quantity: '',
-    unit: '',
-    name: ingredient,
-  };
-}
-
-// Helper function to categorize ingredients
-function categorizeIngredient(ingredient: string): string {
-  const categories = {
-    Produce: [
-      'onion',
-      'garlic',
-      'tomato',
-      'potato',
-      'carrot',
-      'celery',
-      'bell pepper',
-      'lettuce',
-      'spinach',
-      'broccoli',
-      'cucumber',
-      'mushroom',
-      'lemon',
-      'lime',
-      'apple',
-      'banana',
-      'orange',
-      'avocado',
-      'herbs',
-      'parsley',
-      'cilantro',
-      'basil',
-      'thyme',
-      'rosemary',
-    ],
-    'Meat & Seafood': [
-      'chicken',
-      'beef',
-      'pork',
-      'turkey',
-      'fish',
-      'salmon',
-      'tuna',
-      'shrimp',
-      'crab',
-      'lobster',
-      'bacon',
-      'ham',
-      'sausage',
-      'ground beef',
-      'ground turkey',
-    ],
-    'Dairy & Eggs': [
-      'milk',
-      'cheese',
-      'butter',
-      'yogurt',
-      'cream',
-      'sour cream',
-      'eggs',
-      'egg',
-      'mozzarella',
-      'cheddar',
-      'parmesan',
-    ],
-    Pantry: [
-      'flour',
-      'sugar',
-      'salt',
-      'pepper',
-      'oil',
-      'olive oil',
-      'vinegar',
-      'rice',
-      'pasta',
-      'bread',
-      'oats',
-      'quinoa',
-      'beans',
-      'lentils',
-      'chickpeas',
-      'canned tomatoes',
-      'tomato sauce',
-      'broth',
-      'stock',
-      'soy sauce',
-      'honey',
-      'vanilla',
-      'baking powder',
-      'baking soda',
-    ],
-    'Spices & Seasonings': [
-      'cumin',
-      'paprika',
-      'oregano',
-      'bay leaves',
-      'cinnamon',
-      'nutmeg',
-      'ginger',
-      'turmeric',
-      'chili powder',
-      'red pepper flakes',
-      'black pepper',
-      'garlic powder',
-      'onion powder',
-    ],
-    Frozen: ['frozen vegetables', 'frozen fruit', 'ice cream', 'frozen pizza'],
-    Other: [] as string[],
-  };
-
-  const lowerIngredient = ingredient.toLowerCase();
-
-  for (const [category, items] of Object.entries(categories)) {
-    if (items.some((item) => lowerIngredient.includes(item))) {
-      return category;
-    }
-  }
-
-  return 'Other';
-}

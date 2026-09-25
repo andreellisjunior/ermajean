@@ -120,6 +120,9 @@ export default function Workspace({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [checked, setChecked] = useState<string[]>([]);
+  const [manualShopping, setManualShopping] = useState<
+    { key: string; text: string; recipe: string }[]
+  >([]);
   const [tab, setTab] = useState("Ingredients");
   const [cook, setCook] = useState(false);
   const [step, setStep] = useState(0);
@@ -167,16 +170,21 @@ export default function Workspace({
   const end = format(days[6], "yyyy-MM-dd");
   const start = format(week, "yyyy-MM-dd");
   const weekMeals = meals.filter((m) => m.date >= start && m.date <= end);
-  const shopping = weekMeals.flatMap((m) => {
-    const r = data.recipes.find((r) => r.id === m.recipe_id);
-    return r
-      ? lines(r.ingredients).map((text, i) => ({
-          key: `${m.id}-${i}`,
-          text,
-          recipe: r.recipe_name,
-        }))
-      : [];
-  });
+  const shopping = [
+    ...weekMeals.flatMap((m) => {
+      const r = data.recipes.find((r) => r.id === m.recipe_id);
+      return r
+        ? lines(r.ingredients)
+            .map((text, i) => ({
+              key: `meal:${m.id}:recipe:${r.id}:v:${(r as Recipe & { content_version?: number }).content_version ?? 1}:ingredient:${i}`,
+              text,
+              recipe: r.recipe_name,
+            }))
+            .filter((item) => !item.text.endsWith(":"))
+        : [];
+    }),
+    ...manualShopping,
+  ];
   const addIngredient = () => {
     const value = ingredient.trim();
     if (value && !ingredients.includes(value)) {
@@ -211,26 +219,16 @@ export default function Workspace({
           throw new Error(
             "Choose an empty slot to move this meal. Use Swap to replace a planned recipe.",
           );
-        const payload = {
-          user_id: data.userId,
-          date: slot,
-          meal_type: mealType,
-          recipe_id: choice,
-        };
-        const result =
-          moveId || existing
-            ? await db
-                .from("meal_plans")
-                .update(payload)
-                .eq("id", moveId || existing!.id)
-                .eq("user_id", data.userId)
-                .select()
-                .single()
-            : await db.from("meal_plans").insert(payload).select().single();
+        const result = await db.rpc("replace_meal_plan", {
+          p_date: slot,
+          p_meal_type: mealType,
+          p_recipe_id: choice,
+          p_move_id: moveId || null,
+        });
         if (result.error) throw result.error;
         setMeals((old) => [
           ...old.filter((m) => m.id !== (moveId || existing?.id)),
-          result.data,
+          { ...result.data, recipe_id: String(result.data.recipe_id) },
         ]);
         router.refresh();
       }
@@ -274,10 +272,70 @@ export default function Workspace({
     setMoveId(move || null);
     setMessage("");
   };
-  const toggle = (key: string) =>
+  useEffect(() => {
+    if (preview) return;
+    let active = true;
+    void createClient()
+      .from("shopping_items")
+      .select("item_key,checked,manual,label,quantity,unit")
+      .eq("user_id", data.userId)
+      .eq("week_start", start)
+      .then(({ data: rows, error }) => {
+        if (!active) return;
+        if (error) setMessage("Your shopping checks could not sync.");
+        else {
+          setManualShopping(
+            (rows || [])
+              .filter((r) => r.manual)
+              .map((r) => ({
+                key: r.item_key,
+                text: [r.quantity, r.unit, r.label].filter(Boolean).join(" "),
+                recipe: "Added to your list",
+              })),
+          );
+          setChecked(
+            (rows || []).filter((r) => r.checked).map((r) => r.item_key),
+          );
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [preview, data.userId, start]);
+  async function toggle(key: string) {
+    const next = !checked.includes(key);
+    const item = shopping.find((i) => i.key === key);
+    if (!item) {
+      setChecked((old) =>
+        next ? [...old, key] : old.filter((v) => v !== key),
+      );
+      return;
+    }
+    if (!preview) {
+      const { error } = await createClient()
+        .from("shopping_items")
+        .upsert(
+          {
+            user_id: data.userId,
+            week_start: start,
+            item_key: key,
+            label: item.text,
+            quantity: "",
+            unit: "",
+            checked: next,
+            manual: key.startsWith("manual:"),
+          },
+          { onConflict: "user_id,week_start,item_key" },
+        );
+      if (error) {
+        setMessage("That shopping check could not save. Please try again.");
+        return;
+      }
+    }
     setChecked((old) =>
-      old.includes(key) ? old.filter((v) => v !== key) : [...old, key],
+      next ? [...new Set([...old, key])] : old.filter((v) => v !== key),
     );
+  }
   const shoppingPane = (
     <aside className="ej-shopping ej-panel">
       <h2>
@@ -439,8 +497,24 @@ export default function Workspace({
                         )
                     : addAIRecipeAction
                 }
+                onSubmit={(event) => {
+                  const form = event.currentTarget;
+                  const input = form.elements.namedItem(
+                    "requestId",
+                  ) as HTMLInputElement;
+                  const preferences = JSON.stringify(
+                    Array.from(new FormData(form).entries()).filter(
+                      ([k]) => k !== "requestId",
+                    ),
+                  );
+                  if (form.dataset.requestInput !== preferences) {
+                    input.value = crypto.randomUUID();
+                    form.dataset.requestInput = preferences;
+                  }
+                }}
                 className="ej-ingredient-panel"
               >
+                <input type="hidden" name="requestId" />
                 <div className="ej-ingredient-controls">
                   <h2>What are we working with?</h2>
                   <div className="ej-ingredient-entry">

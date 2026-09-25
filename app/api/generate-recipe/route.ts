@@ -1,44 +1,20 @@
-import { aiPrompt } from '@/libs/openai';
-import { Recipe } from '@/types';
-import { NextRequest, NextResponse } from 'next/server';
-
-export async function POST(req: NextRequest) {
-  const {
-    taste,
-    ingredients,
-    serving,
-    total_time,
-    course,
-    restrictions,
-    is_kid_friendly,
-  } = await req.json();
-
-  console.log(req.json());
-
-  const aiData = await aiPrompt(
-    taste,
-    ingredients,
-    serving,
-    total_time,
-    course,
-    restrictions,
-    undefined,
-    is_kid_friendly
-  );
-
-  const result = JSON.parse(aiData.choices[0].message.content!).map(
-    (recipe: Recipe & { ingredients: string[]; instructions: string[] }) => ({
-      recipe_name: recipe.recipe_name,
-      description: recipe.description,
-      prep_time: recipe.prep_time,
-      cook_time: recipe.cook_time,
-      total_time: recipe.total_time,
-      servings: recipe.servings,
-      difficulty_level: recipe.difficulty_level,
-      course: recipe.course,
-      ingredients: recipe.ingredients.join('\n'),
-      instructions: recipe.instructions.join('\n'),
-    })
-  );
-  return NextResponse.json(result);
+import { NextRequest, NextResponse } from "next/server";
+import { requireUser, readJson, apiError } from "@/libs/auth";
+import { generateRecipe } from "@/libs/ai/generation";
+export async function POST(request: NextRequest) {
+  try {
+    const { user } = await requireUser(request);
+    return NextResponse.json(
+      await generateRecipe(
+        user.id,
+        await readJson(request),
+        request.headers.get("Idempotency-Key"),
+      ),
+    );
+  } catch (error) {
+    return apiError(error);
+  }
 }
+
+export const maxDuration = 60;
+export const runtime = "nodejs";

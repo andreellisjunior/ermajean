@@ -22,6 +22,7 @@ export default function AddNewRecipe({
   preview?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [requestId, setRequestId] = useState("");
   const [mode, setMode] = useState<"manual" | "ai" | null>(null);
   const [paid, setPaid] = useState(false);
   const [error, setError] = useState("");
@@ -35,6 +36,7 @@ export default function AddNewRecipe({
         <Button
           aria-label="Add a recipe"
           onClick={() => {
+            setRequestId(crypto.randomUUID());
             setOpen(true);
             setMode(null);
             setError("");
@@ -100,6 +102,7 @@ export default function AddNewRecipe({
               }
             }}
           >
+            <input type="hidden" name="requestId" value={requestId} />
             {mode === "ai" ? (
               <>
                 <label>
