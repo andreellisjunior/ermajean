@@ -2,7 +2,7 @@
 
 ## Overview
 
-Expo SDK 54 / React Native 0.81.5 mobile app for the ErmaJean recipe platform. Uses Expo Router 6 for file-based navigation, NativeWind for Tailwind-style styling, and Supabase as the backend.
+Expo SDK 57 / React Native 0.86.3 mobile app for the ErmaJean recipe platform. Uses Expo Router 57 for file-based navigation, NativeWind for Tailwind-style styling, and Supabase as the backend.
 
 - **Bundle ID**: `com.ermajean.app` (iOS and Android)
 - **Orientation**: Portrait only
@@ -14,9 +14,9 @@ Expo SDK 54 / React Native 0.81.5 mobile app for the ErmaJean recipe platform. U
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Expo SDK 54, React Native 0.81.5, React 19.1 |
-| Router | Expo Router 6 (file-based) |
-| Language | TypeScript 5.9 |
+| Framework | Expo SDK 57, React Native 0.86.3, React 19.2.3 |
+| Router | Expo Router 57 (file-based) |
+| Language | TypeScript 6.0 |
 | Styling | NativeWind 4.2.1 (Tailwind for RN) |
 | Backend | Supabase JS SDK 2.86 |
 | API Client | Axios → `https://ermajean.com/api` |

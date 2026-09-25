@@ -4,8 +4,8 @@
 
 ErmaJean is a recipe management SaaS. Users create, save, and share recipes with AI-powered generation, meal planning, and nutrition tracking. The product has two clients and a shared backend:
 
-- **Web app** (root directory): Next.js 14 with App Router, deployed on Vercel at ermajean.com
-- **Mobile app** (`_mobile/ErmaJean/`): Expo SDK 54 / React Native — see its own AGENTS.md for mobile-specific guidance
+- **Web app** (root directory): Next.js 16 with App Router, deployed on Vercel at ermajean.com
+- **Mobile app** (`_mobile/ErmaJean/`): Expo SDK 57 / React Native — see its own AGENTS.md for mobile-specific guidance
 - **Backend**: Supabase (PostgreSQL, Auth, Realtime) — shared by both clients
 - **Payments**: Stripe (Free / Monthly $11.99 / Yearly $99)
 

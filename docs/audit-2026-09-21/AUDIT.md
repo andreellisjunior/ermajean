@@ -168,3 +168,7 @@ No checked-in CI pipeline or complete web test harness found; README is minimal.
 4. Authenticated end-to-end journeys on staging, including email links and recovery, quota races and sharing.
 5. Native iOS/Android builds, physical devices, app links, offline handling, accessibility, tablets and release/update rollback.
 6. Actual latency, crash rate, Core Web Vitals, AI quality/cost, activation/retention and acquisition economics. No numeric performance or business baseline is invented here.
+
+## Implementation follow-up — 24 September 2026
+
+Backend remediation, framework upgrades, verification and remaining live-deployment gates are tracked in [the backend implementation report](../backend-2026-09-24/README.md). The original findings above remain the historical audit, not the current branch status. Local migrations/tests do not prove production configuration has changed.

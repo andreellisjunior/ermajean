@@ -1,0 +1,71 @@
+Verification performed 2026-09-24 on codex/redesign. Live providers not exercised.
+
+test
+
+> ermajean@0.1.0 test
+> tsx --test tests/*.test.ts
+
+✔ only exact production catalog grants entitlement (0.364167ms)
+✔ return URLs reject external origin, credentials, unsupported paths (0.124208ms)
+✔ session details require matching authenticated owner (0.053459ms)
+✔ current complete state overrides stale invoice/cancellation snapshots (0.094625ms)
+✔ duplicate and busy events do not read or apply state (0.077709ms)
+✔ failed commit is released for retry and fresh state is read again (0.2155ms)
+✔ real PostgreSQL owner isolation, protected billing, atomic plans, publication and nutrition (4811.89625ms)
+✔ generation rejects oversized and unexpected input before provider spending (1.364375ms)
+✔ canonical output is a single draft with newline text, no invented savings (0.858667ms)
+✔ refusals, empty, oversized and invalid yield outputs cannot be stored (0.27775ms)
+✔ explicit malformed credentials never downgrade to cookie authentication (9.566041ms)
+✔ identity verification rejects expired or missing users (0.399542ms)
+✔ body limit checks actual streamed bytes without trusting content length (3.027833ms)
+✔ recipe payload cannot write ownership, ids, billing or content version (1.288834ms)
+✔ IDs and note edits reject coercion traps and missing identifiers (0.378541ms)
+✔ per-serving estimates do not scale with recipe yield or caller portions (0.266916ms)
+✔ private recipe reads and updates always filter both id and user (0.252958ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4876.202083
+
+mobile-test
+
+> ermajean@1.0.0 test
+> jest --runInBand
+
+watchman warning:  Recrawled this watch 17 times, most recently because:
+MustScanSubDirs UserDroppedTo resolve, please review the information on
+https://facebook.github.io/watchman/docs/troubleshooting.html#recrawl
+To clear this warning, run:
+`watchman watch-del '/Users/marcuslee/Documents/projects/ermajean' ; watchman watch-project '/Users/marcuslee/Documents/projects/ermajean'`
+
+PASS __tests__/utils/dateUtils.test.ts
+PASS __tests__/components/GoalsFormModal.test.tsx
+PASS __tests__/services/recipeService.test.ts
+PASS __tests__/utils/router-decoding.test.ts
+PASS __tests__/services/mealPlanService.test.ts
+PASS __tests__/utils/shoppingListUtils.test.ts
+PASS __tests__/services/profileService.test.ts
+
+Test Suites: 7 passed, 7 total
+Tests:       51 passed, 51 total
+Snapshots:   0 total
+Time:        0.886 s, estimated 1 s
+Ran all test suites.
+
+mobile-doctor
+env: load .env.local
+env: export EXPO_PUBLIC_DEV_BYPASS_AUTH EXPO_PUBLIC_SUPABASE_ANON_KEY EXPO_PUBLIC_SUPABASE_URL
+Running 21 checks on your project...
+21/21 checks passed. No issues detected!
+
+mobile-ts
+
+Web production build: passed (dummy process environment, no production credentials).
+Web TypeScript: passed. Web lint: 0 errors, 29 warnings.
+Mobile lint: 0 errors, 28 warnings. Mobile web export: passed.
+Both npm dependency audits: 0 vulnerabilities. Mobile npm ci verified vendor override resolution.
+Runtime smoke: web sign-in and kitchen preview rendered; invalid bearer requests to generate-recipe, recipes, notes, session-details and user returned401. Disabled inbound Mailgun and template lead returned503.

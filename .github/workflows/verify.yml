@@ -1,0 +1,46 @@
+name: verify
+on: [push, pull_request]
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: docker run -d --name ermajean-tests -e POSTGRES_PASSWORD=local-test-only postgres:17
+      - run: until docker exec ermajean-tests pg_isready -U postgres; do sleep 1; done
+      - run: npm test
+        env:
+          ERMAJEAN_TEST_POSTGRES_CONTAINER: ermajean-tests
+      - run: npm run lint
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: build-only-not-a-secret
+          NEXT_PUBLIC_SITE_URL: https://ermajean.com
+      - run: npm audit --audit-level=high
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: _mobile/ErmaJean
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: _mobile/ErmaJean/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: npm test -- --runInBand
+      - run: npx expo-doctor
+      - run: npm audit --audit-level=high
+      - run: npx expo export --platform web --output-dir /tmp/mobile-export
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: build-only-not-a-secret
