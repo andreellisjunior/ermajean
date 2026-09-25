@@ -1,0 +1,7 @@
+{
+  "name": "decode-uri-component",
+  "version": "0.5.0",
+  "main": "index.js",
+  "license": "MIT",
+  "description": "Upstream 0.5.0 linear-time decoder, CommonJS export for Expo Router 57 query-string 7 compatibility."
+}

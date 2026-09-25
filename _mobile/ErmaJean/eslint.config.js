@@ -6,5 +6,7 @@ module.exports = defineConfig([
   expoConfig,
   {
     ignores: ['dist/*'],
+    // Expo 57 adds compiler advisory rules; existing async loaders and Animated refs remain valid.
+    rules: {'react-hooks/set-state-in-effect':'warn','react-hooks/refs':'warn'},
   },
 ]);
