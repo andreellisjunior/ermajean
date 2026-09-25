@@ -9,10 +9,10 @@ create table if not exists public.billing_webhook_locks (
 );
 alter table public.billing_webhook_events enable row level security;
 alter table public.billing_webhook_locks enable row level security;
-revoke all on public.billing_webhook_events,public.billing_webhook_locks from anon,authenticated;
+revoke all on public.billing_webhook_events,public.billing_webhook_locks from public,anon,authenticated;
 grant all on public.billing_webhook_events,public.billing_webhook_locks to service_role;
 create or replace function public.begin_billing_event(p_event text,p_customer text,p_token uuid)
-returns text language plpgsql security definer set search_path=public as $$
+returns text language plpgsql security definer set search_path=public,pg_temp as $$
 begin
  if exists(select 1 from billing_webhook_events where event_id=p_event) then return 'processed'; end if;
  insert into billing_webhook_locks values(p_customer,p_token,now()+interval '2 minutes')
@@ -22,7 +22,7 @@ begin
  return 'acquired';
 end;$$;
 create or replace function public.finish_billing_event(p_event text,p_customer text,p_token uuid,p_user uuid,p_price text,p_access boolean)
-returns void language plpgsql security definer set search_path=public as $$
+returns void language plpgsql security definer set search_path=public,pg_temp as $$
 declare profile_id uuid;
 begin
  perform 1 from billing_webhook_locks where customer_id=p_customer and token=p_token and expires_at>now() for update;
@@ -37,7 +37,7 @@ begin
  delete from billing_webhook_locks where customer_id=p_customer and token=p_token;
 end;$$;
 create or replace function public.release_billing_event(p_customer text,p_token uuid)
-returns void language sql security definer set search_path=public as $$
+returns void language sql security definer set search_path=public,pg_temp as $$
  delete from billing_webhook_locks where customer_id=p_customer and token=p_token;
 $$;
 revoke all on function public.begin_billing_event(text,text,uuid),public.finish_billing_event(text,text,uuid,uuid,text,boolean),public.release_billing_event(text,uuid) from public,anon,authenticated;
