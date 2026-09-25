@@ -83,6 +83,21 @@ export default function AddNewRecipe({
         ) : (
           <form
             className="ej-dialog-form"
+            onSubmit={(event) => {
+              const form = event.currentTarget;
+              const input = form.elements.namedItem(
+                "requestId",
+              ) as HTMLInputElement;
+              const body = JSON.stringify(
+                Array.from(new FormData(form).entries()).filter(
+                  ([k]) => k !== "requestId",
+                ),
+              );
+              if (form.dataset.requestInput !== body) {
+                input.value = crypto.randomUUID();
+                form.dataset.requestInput = body;
+              }
+            }}
             action={async (form) => {
               setError("");
               if (preview) {

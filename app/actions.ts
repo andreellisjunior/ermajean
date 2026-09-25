@@ -316,7 +316,13 @@ export const deleteUserAction = async () => {
   const { supabase } = await requireUser();
   const { error } = await supabase.rpc("delete_user");
   if (error)
-    return encodedRedirect("error", "/recipes", error.code==="55000"?"Complete billing closure with support before deleting this account.":"Could not delete account");
+    return encodedRedirect(
+      "error",
+      "/recipes",
+      error.code === "55000"
+        ? "Complete billing closure with support before deleting this account."
+        : "Could not delete account",
+    );
   await supabase.auth.signOut();
   return redirect("/");
 };
