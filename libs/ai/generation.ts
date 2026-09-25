@@ -3,6 +3,7 @@ import { z } from "zod";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { createClient } from "@supabase/supabase-js";
 import { getOpenAI } from "../openai";
+import { modelSettings } from "./models";
 import { ApiError } from "../security/errors";
 import {
   generationInput,
@@ -49,12 +50,8 @@ export async function generateRecipe(
         : "Recipe limit reached. Please try later or review your plan.",
     );
   try {
-    const model = process.env.OPENAI_RECIPE_MODEL || "gpt-5-mini";
     const result = await getOpenAI().chat.completions.parse({
-      model,
-      ...(model.startsWith("gpt-5")
-        ? { reasoning_effort: "low" as const }
-        : {}),
+      ...modelSettings("recipe"),
       messages: [
         { role: "system", content: recipePrompt },
         { role: "user", content: JSON.stringify(preferences) },

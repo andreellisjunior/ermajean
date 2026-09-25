@@ -39,7 +39,7 @@ ErmaJean is a recipe management SaaS. Users create, save, and share recipes with
 
 | Route | Method | Purpose |
 |-------|--------|---------|
-| `/api/generate-recipe` | POST | AI recipe generation (OpenAI GPT-4 mini). Called by both web and mobile |
+| `/api/generate-recipe` | POST | AI recipe generation (OpenAI; defaults in `libs/ai/models.ts`). Called by both web and mobile |
 | `/api/recipes` | GET/POST/DELETE | Recipe CRUD |
 | `/api/recipes/macros` | POST | Calculate nutritional macros for a recipe |
 | `/api/notes` | GET/POST | Recipe notes CRUD |
@@ -104,3 +104,9 @@ Reference: `libs/supabase/db-schema.sql` (read-only, do not modify this file)
 - If interactive checklists are useful, label any browser-local persistence explicitly as personal progress, provide a reset control, and keep deployment status separate. Handle unavailable browser storage gracefully. Never execute operational commands from report controls.
 - Keep supporting Markdown/logs when useful, but link to them from the HTML and keep factual content aligned. For sharing outside the repository, bundle required relative assets or embed them so the delivered page remains usable.
 - Before delivery, open the report in a browser, inspect desktop and narrow layouts, check links/assets, and exercise any interactive controls and print layout. Link to the HTML as the primary final deliverable and open its preview in Codex when available.
+
+## AI model changes
+
+- Review current official OpenAI model and migration documentation before recommending or changing models. Record the review date, alternatives, workload fit, request compatibility, and published pricing in the branded report. Do not retain an older default without evaluating current options.
+- Keep server model defaults centralized in `libs/ai/models.ts`; document deployment environment overrides. Preserve strict schemas, validation, timeouts, quotas, and idempotency when migrating.
+- Distinguish documentation-based selection and mocked contract tests from live quality/cost/latency evaluation. Never describe an untested model as benchmarked or production-verified.
