@@ -69,3 +69,5 @@ The database test creates and drops its own test database inside the named dispo
 - Save retries reuse the successful request ID; deleting a recipe does not reset generation usage. Check historical `recipe_usage` source labels, especially legacy `premium`, before migrating billing expectations.
 - Deletion is owner-only and blocks accounts with paid access or a linked Stripe customer, including delinquent subscriptions. Billed accounts require support-assisted billing closure before deletion; Stripe customers are not deleted by this RPC. Automated billed-account offboarding remains a release follow-up.
 - Inbound email, newsletter and push delivery are deliberately unavailable until their actual configuration, abuse/consent controls and delivery infrastructure are supplied. There are no placeholder credentials that pretend these services work.
+
+Native update compatibility uses the `fingerprint` runtime policy so the Expo57 native upgrade cannot reuse the old1.0.0 runtime by accident. New native binaries are required. [Expo runtime compatibility](https://docs.expo.dev/eas-update/runtime-versions/).
