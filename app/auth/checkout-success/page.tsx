@@ -1,186 +1,87 @@
 "use client";
-import { LoaderCircle } from "lucide-react";
-
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-
-function CheckoutSuccessContent() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const sessionId = searchParams.get("session_id");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [email, setEmail] = useState<string | null>(null);
-
+function Content() {
+  const params = useSearchParams(),
+    router = useRouter();
+  const id = params.get("session_id");
+  const [state, setState] = useState<"loading" | "pending" | "ready" | "error">(
+    "loading",
+  );
   useEffect(() => {
-    const handleAutoLogin = async () => {
-      if (!sessionId) {
-        setError(
-          "Open the confirmation link from checkout, or sign in to check your plan.",
-        );
-        setIsLoading(false);
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout>;
+    async function check() {
+      if (!id) {
+        setState("error");
         return;
       }
-
       try {
-        // Get session details from Stripe (this will work client-side for completed sessions)
         const response = await fetch(
-          `/api/stripe/session-details?session_id=${sessionId}`,
+          `/api/stripe/session-details?session_id=${encodeURIComponent(id)}`,
+          { signal: controller.signal },
         );
-        const sessionData = await response.json();
-
-        if (!response.ok) {
-          throw new Error(sessionData.error || "Failed to get session details");
-        }
-
-        const customerEmail = sessionData.customer_email;
-
-        if (!customerEmail) {
-          throw new Error("No email found in session");
-        }
-
-        // Since users must be authenticated before checkout, just redirect to recipes
-        setEmail(customerEmail);
-        setSuccess(true);
-        setIsLoading(false);
-        setTimeout(() => {
-          router.push(
-            "/recipes?message=Payment successful! Welcome to premium recipes",
-          );
-        }, 2000);
-      } catch (err) {
-        console.error("Auto-login error:", err);
-        setError(err instanceof Error ? err.message : "An error occurred");
-        setIsLoading(false);
+        if (!response.ok) throw new Error();
+        const result = await response.json();
+        if (result.complete && result.has_access) {
+          setState("ready");
+          timer = setTimeout(() => router.push("/recipes"), 2000);
+        } else setState("pending");
+      } catch {
+        if (!controller.signal.aborted) setState("error");
       }
+    }
+    check();
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
     };
-
-    handleAutoLogin();
-  }, [sessionId]);
-
-  if (error) {
-    return (
-      <div className="ej-secondary-checkout min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-8">
-          <div className="mb-6">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg
-                className="w-8 h-8 text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Let’s check your plan.
-            </h1>
-            <p className="text-gray-600 mb-6">{error}</p>
-          </div>
-
-          <div className="space-y-4">
-            <button
-              onClick={() => router.push("/sign-in")}
-              className="btn btn-primary btn-block"
-            >
-              Go to Sign In
-            </button>
-            <button
-              onClick={() => router.push("/")}
-              className="btn btn-outline btn-block"
-            >
-              Back to Home
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (success) {
-    return (
-      <div className="ej-secondary-checkout min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-8">
-          <div className="mb-6">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg
-                className="w-8 h-8 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              You’re all set.
-            </h1>
-            <p className="text-gray-600 mb-6">
-              Your payment has been processed successfully! You now have access
-              to premium recipes.
-              {email && (
-                <>
-                  <br />
-                  <strong>{email}</strong>
-                </>
-              )}
-            </p>
-          </div>
-          <p className="text-sm text-gray-500">
-            Redirecting in a few seconds...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
+  }, [id, router]);
   return (
-    <div className="ej-secondary-checkout min-h-screen flex items-center justify-center">
-      <div className="text-center" role="status" aria-live="polite">
-        <LoaderCircle
-          className="animate-spin mx-auto mb-4"
-          aria-hidden="true"
-          size={32}
-        />
-        <h1 className="text-2xl font-bold mb-2">Checking your checkout…</h1>
-        <p className="text-gray-600">
-          Please wait while we confirm your payment and activate your premium
-          access.
-        </p>
+    <section className="ej-secondary-state" aria-live="polite">
+      <p className="ej-secondary-eyebrow">Your ErmaJean account</p>
+      <h1>
+        {state === "ready"
+          ? "Dinner just got easier."
+          : state === "pending"
+            ? "We’re confirming your access."
+            : state === "error"
+              ? "Let’s check your account."
+              : "Checking your checkout…"}
+      </h1>
+      <p>
+        {state === "ready"
+          ? "Your subscription is active. Taking you to your recipes."
+          : state === "pending"
+            ? "Checkout is still being confirmed. Your account will update when confirmation arrives."
+            : state === "error"
+              ? "We couldn’t confirm this checkout. Sign in to the account you used, or check your account before trying another payment."
+              : "Just a moment while we check your account."}
+      </p>
+      <div className="ej-secondary-actions">
+        <Link
+          className="ej-secondary-button"
+          href={state === "error" ? "/sign-in" : "/recipes"}
+        >
+          {state === "error" ? "Sign in" : "Go to recipes"}
+        </Link>
+        {state === "pending" && (
+          <button
+            className="ej-secondary-button ej-secondary-outline"
+            onClick={() => window.location.reload()}
+          >
+            Check again
+          </button>
+        )}
       </div>
-    </div>
+    </section>
   );
 }
-
-export default function CheckoutSuccessPage() {
+export default function CheckoutSuccess() {
   return (
-    <Suspense
-      fallback={
-        <div className="ej-secondary-checkout min-h-screen flex items-center justify-center">
-          <div className="text-center" role="status" aria-live="polite">
-            <LoaderCircle
-              className="animate-spin mx-auto mb-4"
-              aria-hidden="true"
-              size={32}
-            />
-            <h1 className="text-2xl font-bold mb-2">Loading...</h1>
-          </div>
-        </div>
-      }
-    >
-      <CheckoutSuccessContent />
+    <Suspense fallback={<p role="status">Checking your checkout…</p>}>
+      <Content />
     </Suspense>
   );
 }

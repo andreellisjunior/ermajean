@@ -1,88 +1,42 @@
-import { createCheckout } from '@/libs/stripe';
-import { createClient } from '@/libs/supabase/server';
-import { NextRequest, NextResponse } from 'next/server';
-
-// This function is used to create a Stripe Checkout Session (one-time payment or subscription)
-// It's called by the <ButtonCheckout /> component
-// Users must be authenticated. It will prefill the Checkout data with their email and/or credit card (if any)
+import { NextRequest, NextResponse } from "next/server";
+import { requireUser, apiError, readJson, ApiError } from "@/libs/auth";
+import { createCheckout } from "@/libs/stripe";
+import { isCheckoutPrice } from "@/libs/planUtils";
+import { allowedWebReturn } from "@/libs/billing-policy";
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-
-  if (!body.priceId || body.priceId.trim() === '') {
-    return NextResponse.json(
-      { error: 'Price ID is required' },
-      { status: 400 }
-    );
-  } else if (!body.successUrl || !body.cancelUrl) {
-    return NextResponse.json(
-      { error: 'Success and cancel URLs are required' },
-      { status: 400 }
-    );
-  } else if (!body.mode) {
-    return NextResponse.json(
-      {
-        error:
-          "Mode is required (either 'payment' for one-time payments or 'subscription' for recurring subscription)",
-      },
-      { status: 400 }
-    );
-  }
-
   try {
-    const supabase = createClient();
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    // Require authentication before checkout
-    if (!user?.id) {
-      return NextResponse.json(
-        {
-          error:
-            'Authentication required. Please sign in or create an account first.',
-        },
-        { status: 401 }
-      );
-    }
-
-    const { priceId, mode, successUrl, cancelUrl } = body;
-
-    // Get user profile data
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
+    const { user, supabase } = await requireUser(req);
+    const raw = await readJson(req);
+    if (!raw || typeof raw !== "object" || Array.isArray(raw))
+      throw new ApiError(400, "Invalid request");
+    const body = raw as Record<string, unknown>;
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || "https://ermajean.com";
+    const successUrl = allowedWebReturn(body.successUrl, origin),
+      cancelUrl = allowedWebReturn(body.cancelUrl, origin);
+    if (
+      !isCheckoutPrice(body.priceId) ||
+      body.mode !== "subscription" ||
+      !successUrl ||
+      !cancelUrl
+    )
+      throw new ApiError(400, "Invalid checkout request");
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("customer_id")
+      .eq("id", user.id)
       .single();
-
-    if (!profileData) {
-      return NextResponse.json(
-        {
-          error: 'User profile not found. Please complete your account setup.',
-        },
-        { status: 400 }
-      );
-    }
-
-    const stripeSessionURL = await createCheckout({
-      priceId,
-      mode,
-      successUrl,
-      cancelUrl,
-      // Pass the authenticated user ID to Stripe
-      clientReferenceId: user.id,
-      user: {
-        email: profileData.email,
-        // If the user has already purchased, prefill their credit card
-        customerId: profileData.customer_id || null,
-      },
-      // If you send coupons from the frontend, you can pass it here
-      // couponId: body.couponId,
+    if (error || !data) throw new ApiError(503, "Profile unavailable");
+    return NextResponse.json({
+      url: await createCheckout({
+        priceId: body.priceId,
+        mode: "subscription",
+        successUrl,
+        cancelUrl,
+        clientReferenceId: user.id,
+        user: { email: user.email, customerId: data.customer_id || undefined },
+      }),
     });
-
-    return NextResponse.json({ url: stripeSessionURL });
   } catch (e) {
-    console.error(e);
-    return NextResponse.json({ error: e?.message }, { status: 500 });
+    return apiError(e);
   }
 }

@@ -1,46 +1,35 @@
-import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-08-16',
-  typescript: true,
-});
-
+import { NextRequest, NextResponse } from "next/server";
+import { requireUser, apiError, ApiError } from "@/libs/auth";
+import { stripeClient } from "@/libs/stripe";
+import { getPlanType } from "@/libs/planUtils";
+import { ownsCheckout } from "@/libs/billing-policy";
 export async function GET(req: NextRequest) {
   try {
-    const sessionId = req.nextUrl.searchParams.get('session_id');
-
-    if (!sessionId) {
-      return NextResponse.json(
-        { error: 'Session ID is required' },
-        { status: 400 }
-      );
-    }
-
-    // Retrieve the checkout session from Stripe
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-
-    if (!session.customer) {
-      return NextResponse.json(
-        { error: 'No customer found in session' },
-        { status: 400 }
-      );
-    }
-
-    // Get customer details
-    const customer = (await stripe.customers.retrieve(
-      session.customer as string
-    )) as Stripe.Customer;
-
-    return NextResponse.json({
-      customer_email: customer.email,
-      session_id: sessionId,
-    });
-  } catch (error) {
-    console.error('Session details error:', error);
+    const { user, supabase } = await requireUser(req);
+    const id = req.nextUrl.searchParams.get("session_id");
+    if (!id || !/^cs_[A-Za-z0-9_]+$/.test(id))
+      throw new ApiError(400, "Invalid session");
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("customer_id,has_access,price_id")
+      .eq("id", user.id)
+      .single();
+    if (error) throw new ApiError(503, "Profile unavailable");
+    const session = await stripeClient().checkout.sessions.retrieve(id);
+    if (!ownsCheckout(session, user.id, data?.customer_id))
+      throw new ApiError(404, "Session unavailable");
     return NextResponse.json(
-      { error: 'Failed to retrieve session details' },
-      { status: 500 }
+      {
+        session_id: id,
+        complete: session.status === "complete",
+        payment_status: session.payment_status,
+        has_access: ["monthly", "unlimited"].includes(
+          getPlanType(!!data?.has_access, data?.price_id),
+        ),
+      },
+      { headers: { "Cache-Control": "no-store" } },
     );
+  } catch (e) {
+    return apiError(e);
   }
 }
