@@ -157,3 +157,7 @@ Always use `Haptic.*` from `utils/haptics.ts`. Common usage:
 - The API client base URL is hardcoded to `https://ermajean.com/api` — no staging environment
 - NativeWind `className` and `style` can conflict; prefer `style` for shadow properties
 - The `Fonts` export in `constants/theme.ts` references system fonts — no custom font loading needed
+
+## Human-facing reports
+
+Follow the repository-root `AGENTS.md` reporting standard: audits, plans, implementation reports, and release checklists must be delivered as ErmaJean-branded HTML by default. Use `docs/backend-2026-09-24/index.html` as the reference; Markdown may remain as supporting source material.

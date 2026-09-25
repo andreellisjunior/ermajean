@@ -92,3 +92,15 @@ Reference: `libs/supabase/db-schema.sql` (read-only, do not modify this file)
 - The `config.ts` at root (web) imports DaisyUI theme types. The mobile `config.ts` is a simpler standalone copy.
 - Server actions in `app/actions.ts` handle both auth and recipe operations — keep them grouped logically.
 - Stripe webhooks must be verified with `STRIPE_WEBHOOK_SECRET` before processing.
+
+## Human-facing reports and checklists
+
+- Deliver audits, implementation reports, plans, release checklists, and handoff summaries as **ErmaJean-branded HTML files by default**, unless the user explicitly requests another format. Markdown alone is not the human-facing deliverable. This applies to web, mobile, and backend work.
+- Save each report at `docs/<topic-or-date>/index.html`. Use `docs/backend-2026-09-24/index.html` as the reference for brand and information hierarchy; adapt the layout to the report instead of copying obsolete facts or metrics.
+- Match the approved brand: cream `#F7F3E8`, forest green `#244638`, tomato `#B84732`, sage `#DEE6D8`, butter `#EADBA7`; Fraunces headings and DM Sans body text. Reuse the local fonts in `docs/report-assets/` (retain their licenses) and existing approved ErmaJean artwork. Use warm, plain language while keeping technical findings precise.
+- Lead with the outcome, report date, scope, and current status. Clearly distinguish implemented, locally tested, staging-verified, and deployed work. Never imply that a checklist checkmark or a passing local test proves production readiness.
+- Make reports easy to scan: concise summaries, meaningful headings, descriptive status labels, prioritized next steps, and expandable technical evidence. Preserve material findings, caveats, source links, exact commands, and validation evidence; do not hide unresolved work behind a polished summary.
+- Include responsive layouts, semantic HTML, accessible contrast, visible keyboard focus, and useful print/PDF styling. Avoid horizontal page overflow on phones; allow code blocks to scroll. Prefer static HTML/CSS and minimal JavaScript, with no build step, external analytics, or remote runtime dependencies.
+- If interactive checklists are useful, label any browser-local persistence explicitly as personal progress, provide a reset control, and keep deployment status separate. Handle unavailable browser storage gracefully. Never execute operational commands from report controls.
+- Keep supporting Markdown/logs when useful, but link to them from the HTML and keep factual content aligned. For sharing outside the repository, bundle required relative assets or embed them so the delivered page remains usable.
+- Before delivery, open the report in a browser, inspect desktop and narrow layouts, check links/assets, and exercise any interactive controls and print layout. Link to the HTML as the primary final deliverable and open its preview in Codex when available.
