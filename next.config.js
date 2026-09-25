@@ -1,15 +1,12 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+module.exports = {
   reactStrictMode: true,
   images: {
-    domains: [
-      // NextJS <Image> component needs to whitelist domains for src={}
+    remotePatterns: [
       "lh3.googleusercontent.com",
       "pbs.twimg.com",
       "images.unsplash.com",
       "logos-world.net",
-    ],
+    ].map((hostname) => ({ protocol: "https", hostname })),
   },
 };
-
-module.exports = nextConfig;

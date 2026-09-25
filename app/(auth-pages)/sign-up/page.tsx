@@ -3,7 +3,11 @@ import { FormMessage, Message } from "@/components/ui/form-message";
 import Link from "next/link";
 import { SubmitButton } from "@/components/ui/submit-button";
 
-export default function Signup({ searchParams }: { searchParams: Message }) {
+export default async function Signup({
+  searchParams,
+}: {
+  searchParams: Promise<Message>;
+}) {
   return (
     <>
       <h1>Come on in.</h1>
@@ -11,8 +15,8 @@ export default function Signup({ searchParams }: { searchParams: Message }) {
         Dinner shouldn’t be a second job. Start with 3 free AI recipes and a
         place for all your keepers.
       </p>
-      <FormMessage message={searchParams} />
-      {!("success" in searchParams) && (
+      <FormMessage message={await searchParams} />
+      {!("success" in (await searchParams)) && (
         <form action={googleAuth}>
           <SubmitButton pendingText="Opening Google…">
             Continue with Google

@@ -42,7 +42,7 @@ export default function PaidFeatureModal({
             },
       )) as { url: string };
       if (!url) throw new Error();
-      window.location.href = url;
+      window.location.assign(url);
     } catch {
       setError(
         "Billing couldn’t open. Your plan has not changed. Please try again.",

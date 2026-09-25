@@ -5,16 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 
-export default function ForgotPassword({
+export default async function ForgotPassword({
   searchParams,
 }: {
-  searchParams: Message;
+  searchParams: Promise<Message>;
 }) {
   return (
     <>
       <h1>Let’s get you back in.</h1>
       <p>Enter your email and we’ll send a password reset link.</p>
-      {!("success" in searchParams) && (
+      {!("success" in (await searchParams)) && (
         <form action={forgotPasswordAction}>
           <Label htmlFor="email">Email</Label>
           <Input
@@ -30,7 +30,7 @@ export default function ForgotPassword({
           </SubmitButton>
         </form>
       )}
-      <FormMessage message={searchParams} />
+      <FormMessage message={await searchParams} />
       <div className="ej-auth-links">
         <Link href="/sign-in">Back to sign in</Link>
       </div>

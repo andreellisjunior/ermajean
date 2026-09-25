@@ -6,7 +6,7 @@ import type { Recipe } from "@/types/config";
 
 const getSharedRecipe = cache(async (id: string): Promise<Recipe | null> => {
   try {
-    const { data, error } = await createClient()
+    const { data, error } = await (await createClient())
       .from("share_recipes")
       .select("*")
       .eq("recipe_id", id)
@@ -21,9 +21,9 @@ const getSharedRecipe = cache(async (id: string): Promise<Recipe | null> => {
 export async function generateMetadata({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }): Promise<Metadata> {
-  const recipe = await getSharedRecipe(params.id);
+  const recipe = await getSharedRecipe((await params).id);
   return {
     title: recipe
       ? `${recipe.recipe_name} | ErmaJean`
@@ -45,9 +45,9 @@ function lines(value: unknown): string[] {
 export default async function ShareRecipe({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const recipe = await getSharedRecipe(params.id);
+  const recipe = await getSharedRecipe((await params).id);
   if (!recipe)
     return (
       <section className="ej-secondary-state">
@@ -60,7 +60,7 @@ export default async function ShareRecipe({
         <div className="ej-secondary-actions">
           <a
             className="ej-secondary-button"
-            href={`/recipe/${encodeURIComponent(params.id)}`}
+            href={`/recipe/${encodeURIComponent((await params).id)}`}
           >
             Try again
           </a>

@@ -5,6 +5,7 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 import { Button } from './button';
 import Logo from '@/app/assets/Logo (color).jpg';
+import Link from 'next/link';
 import Image from 'next/image';
 
 const Navigation = () => {
@@ -50,12 +51,12 @@ const Navigation = () => {
           ))}
         </div>
         <div className='hidden md:flex md:flex-1 md:justify-end md:gap-4'>
-          <a href='/sign-in' className='text-sm/6 font-semibold text-gray-900'>
+          <Link href='/sign-in' className='text-sm/6 font-semibold text-gray-900'>
             <Button variant='link'>Sign In</Button>
-          </a>
-          <a href='/sign-up' className='text-sm/6 font-semibold text-gray-900'>
+          </Link>
+          <Link href='/sign-up' className='text-sm/6 font-semibold text-gray-900'>
             <Button>Get Started Free</Button>
-          </a>
+          </Link>
         </div>
       </nav>
       <Dialog
@@ -96,18 +97,18 @@ const Navigation = () => {
                 ))}
               </div>
               <div className='py-6 flex flex-col gap-4'>
-                <a
+                <Link
                   href='/sign-in'
                   className='text-sm/6 font-semibold text-gray-900'
                 >
                   <Button variant='link'>Sign In</Button>
-                </a>
-                <a
+                </Link>
+                <Link
                   href='/sign-up'
                   className='text-sm/6 font-semibold text-gray-900'
                 >
                   <Button>Get Started Free</Button>
-                </a>
+                </Link>
               </div>
             </div>
           </div>

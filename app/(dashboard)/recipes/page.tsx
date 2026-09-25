@@ -5,15 +5,15 @@ import { redirect } from "next/navigation";
 export default async function Page({
   searchParams,
 }: {
-  searchParams: { session_id?: string };
+  searchParams: Promise<{ session_id?: string }>;
 }) {
-  if (searchParams.session_id) {
+  if ((await searchParams).session_id) {
     const {
       data: { user },
-    } = await createClient().auth.getUser();
+    } = await (await createClient()).auth.getUser();
     if (!user)
       redirect(
-        `/auth/checkout-success?session_id=${encodeURIComponent(searchParams.session_id)}`,
+        `/auth/checkout-success?session_id=${encodeURIComponent((await searchParams).session_id)}`,
       );
   }
   return <Workspace view="recipes" data={await loadWorkspace()} />;

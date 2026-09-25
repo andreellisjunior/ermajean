@@ -51,8 +51,16 @@ const recipes = [
       "Warm the chickpeas.\nServe with spinach and your favorite dressing.",
   },
 ];
-export default function Page({ params }: { params: { screen: string } }) {
-  if (!["kitchen", "recipes", "recipe", "plan", "shop"].includes(params.screen))
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ screen: string }>;
+}) {
+  if (
+    !["kitchen", "recipes", "recipe", "plan", "shop"].includes(
+      (await params).screen,
+    )
+  )
     notFound();
   const data: WorkspaceData = {
     preview: true,
@@ -82,7 +90,14 @@ export default function Page({ params }: { params: { screen: string } }) {
   };
   return (
     <Workspace
-      view={params.screen as "kitchen" | "recipes" | "recipe" | "plan" | "shop"}
+      view={
+        (await params).screen as
+          | "kitchen"
+          | "recipes"
+          | "recipe"
+          | "plan"
+          | "shop"
+      }
       data={data}
       recipeId="demo-chicken"
     />

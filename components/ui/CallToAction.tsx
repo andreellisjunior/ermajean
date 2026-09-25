@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import Image from "next/image";
 import CTAImage from "../../app/assets/cta-background.jpg";
 import { Button } from "./button";
@@ -15,9 +16,9 @@ export default function CallToAction() {
               Start creating, saving and sharing your recipes today. Sign up for
               free and get started in minutes!
             </p>
-            <a href="/sign-up">
+            <Link href="/sign-up">
               <Button>Get Started For Free Today!</Button>
-            </a>
+            </Link>
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from './button';
 import Multiscreen from '../../app/assets/multiscreen.png';
@@ -27,9 +28,9 @@ export default function Header() {
                   Create, save and share your recipes with family and friends!
                 </p>
                 <div className='flex flex-col sm:flex-row gap-4 my-4 justify-center'>
-                  <a href='/sign-up'>
+                  <Link href='/sign-up'>
                     <Button size='lg'>Get Started For Free</Button>
-                  </a>
+                  </Link>
                   <a href='#features'>
                     <Button size='lg' variant='outline'>
                       Learn More

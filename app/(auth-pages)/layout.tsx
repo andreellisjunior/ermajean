@@ -17,7 +17,7 @@ export default async function RootLayout({
 }) {
   const {
     data: { user },
-  } = await createClient().auth.getUser();
+  } = await (await createClient()).auth.getUser();
   if (user) redirect("/kitchen");
   return (
     <html lang="en" className={brandFonts}>

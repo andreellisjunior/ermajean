@@ -8,10 +8,10 @@ import "@/components/redesign/public.css";
 
 export const metadata = { title: "Reset your password | ErmaJean" };
 
-export default function ResetPassword({
+export default async function ResetPassword({
   searchParams,
 }: {
-  searchParams: Message;
+  searchParams: Promise<Message>;
 }) {
   return (
     <div className="ej-auth">
@@ -36,9 +36,9 @@ export default function ResetPassword({
         </section>
         <section className="ej-auth-card">
           <h1>Reset your password.</h1>
-          {"success" in searchParams ? (
+          {"success" in (await searchParams) ? (
             <>
-              <FormMessage message={searchParams} />
+              <FormMessage message={await searchParams} />
               <Link href="/kitchen" className="ej-button ej-green">
                 Back to my kitchen →
               </Link>
@@ -68,7 +68,7 @@ export default function ResetPassword({
                 <SubmitButton pendingText="Updating password…">
                   Save new password
                 </SubmitButton>
-                <FormMessage message={searchParams} />
+                <FormMessage message={await searchParams} />
               </form>
             </>
           )}

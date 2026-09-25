@@ -4,11 +4,16 @@ import { FormMessage, Message } from "@/components/ui/form-message";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { SubmitButton } from "@/components/ui/submit-button";
 
-export default function Login({ searchParams }: { searchParams: Message }) {
+export default function Login({
+  searchParams,
+}: {
+  searchParams: Promise<Message>;
+}) {
+  const message = use(searchParams);
   const router = useRouter();
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
@@ -24,7 +29,7 @@ export default function Login({ searchParams }: { searchParams: Message }) {
           setError("");
           try {
             const result = await signInAction(new FormData(e.currentTarget));
-            if (result?.status === 500)
+            if (result?.status !== 200)
               setError(`${result.message}. Please try again.`);
             else {
               router.replace("/kitchen");
@@ -58,7 +63,7 @@ export default function Login({ searchParams }: { searchParams: Message }) {
           {sending ? "Signing in…" : "Back to my kitchen"}
         </button>
         {error && <FormMessage message={{ error }} />}
-        <FormMessage message={searchParams} />
+        <FormMessage message={message} />
       </form>
       <div className="ej-auth-links">
         <Link href="/forgot-password">Forgot password?</Link>
