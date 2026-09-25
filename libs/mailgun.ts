@@ -39,6 +39,8 @@ export const sendEmail = async ({
   html?: string;
   replyTo?: string;
 }): Promise<any> => {
+  if (!process.env.MAILGUN_API_KEY)
+    throw new Error("Email delivery is not configured");
   const data = {
     from: config.mailgun.fromAdmin,
     to: [to],
@@ -51,6 +53,6 @@ export const sendEmail = async ({
   await mg.messages.create(
     (config.mailgun.subdomain ? `${config.mailgun.subdomain}.` : "") +
       config.domainName,
-    data
+    data,
   );
 };
