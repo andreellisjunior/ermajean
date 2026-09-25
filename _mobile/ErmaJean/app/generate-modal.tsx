@@ -1,4 +1,4 @@
-import * as Crypto from 'expo-crypto';
+import * as Crypto from "expo-crypto";
 import { useKitchenPreferences } from "@/hooks/use-kitchen-preferences";
 import { UpgradeSheet } from "@/components/redesign/upgrade-sheet";
 import { isAxiosError } from "axios";
@@ -28,12 +28,12 @@ export default function Generate() {
   const [busy, setBusy] = useState(false);
   const [upgrade, setUpgrade] = useState(false);
   const [error, setError] = useState("");
-  const [requestId,setRequestId]=useState<string|null>(null);
+  const [requestId, setRequestId] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<RecipeInput[]>([]);
   useEffect(() => {
     setPreferences(defaults.dietary);
   }, [defaults.dietary]);
-  const attempt=useRef<{body:string;key:string}|null>(null);
+  const attempt = useRef<{ body: string; key: string } | null>(null);
   async function generate() {
     if (designPreview) {
       setError("Preview only — sign in to generate a real dinner.");
@@ -53,16 +53,35 @@ export default function Generate() {
     setError("");
     setBusy(true);
     try {
-      const body={ingredients:all.join(', '),taste:'',total_time:`${time} minutes`,serving:String(servings),course:'Dinner',restrictions:preferences,is_kid_friendly:false};
-      const serialized=JSON.stringify(body);
-      if(attempt.current?.body!==serialized)attempt.current={body:serialized,key:Crypto.randomUUID()};
-      const response=await apiClient.post<unknown,{recipe:RecipeInput;requestId:string}>('/generate-recipe',body,{headers:{'Idempotency-Key':attempt.current.key}});
-      if(!response.recipe?.recipe_name||typeof response.recipe.ingredients!=='string'||typeof response.recipe.instructions!=='string')throw Error('The recipe response was incomplete. Try again.');
+      const body = {
+        ingredients: all.join(", "),
+        taste: "",
+        total_time: `${time} minutes`,
+        serving: String(servings),
+        course: "Dinner",
+        restrictions: preferences,
+        is_kid_friendly: false,
+      };
+      const serialized = JSON.stringify(body);
+      if (attempt.current?.body !== serialized)
+        attempt.current = { body: serialized, key: Crypto.randomUUID() };
+      const response = await apiClient.post<
+        unknown,
+        { recipe: RecipeInput; requestId: string }
+      >("/generate-recipe", body, {
+        headers: { "Idempotency-Key": attempt.current.key },
+      });
+      if (
+        !response.recipe?.recipe_name ||
+        typeof response.recipe.ingredients !== "string" ||
+        typeof response.recipe.instructions !== "string"
+      )
+        throw Error("The recipe response was incomplete. Try again.");
       setRequestId(response.requestId);
       setDrafts([response.recipe]);
-
+      attempt.current = null; // A successful result completes this operation; the next explicit generation is new.
     } catch (e) {
-      if(isAxiosError(e) && e.response?.status === 502)attempt.current=null;
+      if (isAxiosError(e) && e.response?.status === 502) attempt.current = null;
       if (isAxiosError(e) && e.response?.status === 403) setUpgrade(true);
       setError(
         e instanceof Error ? e.message : "Could not find dinner. Try again.",
@@ -75,9 +94,12 @@ export default function Generate() {
     setBusy(true);
     setError("");
     try {
-      if(!requestId)throw Error("Generate a recipe first.");
-      const {data:recipe,error}=await supabase.rpc("save_generated_recipe",{p_key:requestId});
-      if(error)throw error;
+      if (!requestId) throw Error("Generate a recipe first.");
+      const { data: recipe, error } = await supabase.rpc(
+        "save_generated_recipe",
+        { p_key: requestId },
+      );
+      if (error) throw error;
       router.replace(`/recipe/${recipe.id}`);
     } catch (e) {
       setError(String(e));

@@ -3,7 +3,11 @@ import { useCallback, useState } from "react";
 import { View, Text, Pressable, Share } from "react-native";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import * as Crypto from "expo-crypto";
-import {deriveShoppingItems,loadShoppingItems,saveShoppingItem} from "@/services/shoppingService";
+import {
+  deriveShoppingItems,
+  loadShoppingItems,
+  saveShoppingItem,
+} from "@/services/shoppingService";
 import {
   Page,
   Title,
@@ -17,16 +21,14 @@ import {
 import { getRecipes } from "@/services/recipeService";
 import { getMealPlans } from "@/services/mealPlanService";
 import { getWeekStart, getWeekEnd } from "@/utils/dateUtils";
-import {
-  formatShoppingList,
-} from "@/utils/shoppingListUtils";
+import { formatShoppingList } from "@/utils/shoppingListUtils";
 import { ShoppingListItem } from "@/types/config";
 
 export default function Shop() {
   const { week } = useLocalSearchParams<{ week?: string }>();
   const [items, setItems] = useState<ShoppingListItem[]>([]);
   const [key, setKey] = useState("");
-  const [saving,setSaving]=useState(false);
+  const [saving, setSaving] = useState(false);
   const [bought, setBought] = useState(false);
   const [adding, setAdding] = useState(false);
   const [newItem, setNewItem] = useState("");
@@ -76,11 +78,19 @@ export default function Shop() {
         setCount(3);
         return;
       }
-      const start=getWeekStart(date);
-      const weekKey=`${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,'0')}-${String(start.getDate()).padStart(2,'0')}`;
+      const start = getWeekStart(date);
+      const weekKey = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
       setKey(weekKey);
-      const [recipes, meals] = await Promise.all([getRecipes(),getMealPlans(start,getWeekEnd(date))]);
-      setItems(await loadShoppingItems(weekKey,deriveShoppingItems(meals,new Map(recipes.map(r=>[r.id,r])))));
+      const [recipes, meals] = await Promise.all([
+        getRecipes(),
+        getMealPlans(start, getWeekEnd(date)),
+      ]);
+      setItems(
+        await loadShoppingItems(
+          weekKey,
+          deriveShoppingItems(meals, new Map(recipes.map((r) => [r.id, r]))),
+        ),
+      );
       setCount(meals.length);
     } catch (e) {
       setError(String(e));
@@ -94,14 +104,23 @@ export default function Shop() {
     }, [load]),
   );
   async function update(next: ShoppingListItem[]) {
-    const previous=items;
-    const changed=next.filter(item=> !previous.some(p=>p.id===item.id && p.checked===item.checked));
+    const previous = items;
+    const changed = next.filter(
+      (item) =>
+        !previous.some((p) => p.id === item.id && p.checked === item.checked),
+    );
     setItems(next);
-    if(designPreview)return;
-    setSaving(true);setError('');
-    try {for(const item of changed)await saveShoppingItem(key,item);}
-    catch(e){setItems(previous);setError(String(e));}
-    finally{setSaving(false);}
+    if (designPreview) return;
+    setSaving(true);
+    setError("");
+    try {
+      for (const item of changed) await saveShoppingItem(key, item);
+    } catch (e) {
+      setItems(previous);
+      setError(String(e));
+    } finally {
+      setSaving(false);
+    }
   }
 
   const visible = items.filter((i) => i.checked === bought);
@@ -230,7 +249,8 @@ export default function Shop() {
         }}
       />
       <Text style={[S.small, { textAlign: "center" }]}>
-        From {count} planned meals · {designPreview ? "Preview only" : "Synced to your account"}
+        From {count} planned meals ·{" "}
+        {designPreview ? "Preview only" : "Synced to your account"}
       </Text>
       <Action
         label="Share list"

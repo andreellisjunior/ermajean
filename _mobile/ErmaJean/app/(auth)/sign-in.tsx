@@ -1,4 +1,4 @@
-import { completeAuthUrl } from '@/libs/auth-callback';
+import { completeAuthUrl } from "@/libs/auth-callback";
 import { Page, Title, S, C, Action, Field } from "@/components/redesign/ui";
 import { useState } from "react";
 import { View, Text, Alert, Image } from "react-native";
@@ -113,7 +113,10 @@ export default function AuthScreen() {
       const { error } = await supabase.auth.resetPasswordForEmail(
         email.trim(),
         {
-          redirectTo: makeRedirectUri({scheme:"ermajean",path:"reset-password"}),
+          redirectTo: makeRedirectUri({
+            scheme: "ermajean",
+            path: "reset-password",
+          }),
         },
       );
       if (error) {
@@ -159,7 +162,7 @@ export default function AuthScreen() {
         );
         if (result.type === "success" && result.url) {
           await completeAuthUrl(result.url);
-          router.replace('/(tabs)');
+          router.replace("/(tabs)");
         }
       }
     } catch (err: any) {

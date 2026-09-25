@@ -8,7 +8,7 @@
  */
 export function getWeekStart(date: Date): Date {
   const d = new Date(date);
-  const day = (d.getDay()+6)%7;
+  const day = (d.getDay() + 6) % 7;
   d.setDate(d.getDate() - day);
   d.setHours(0, 0, 0, 0);
   return d;
@@ -29,8 +29,8 @@ export function getWeekEnd(date: Date): Date {
  */
 export function formatDate(date: Date): string {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
@@ -41,13 +41,13 @@ export function formatDate(date: Date): string {
 export function getDaysInWeek(date: Date): Date[] {
   const weekStart = getWeekStart(date);
   const days: Date[] = [];
-  
+
   for (let i = 0; i < 7; i++) {
     const day = new Date(weekStart);
     day.setDate(weekStart.getDate() + i);
     days.push(day);
   }
-  
+
   return days;
 }
 

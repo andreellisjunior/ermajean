@@ -1,4 +1,4 @@
-import { exchangeAuthCode } from '@/libs/auth-callback';
+import { exchangeAuthCode } from "@/libs/auth-callback";
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
@@ -27,7 +27,11 @@ export default function AuthCallback() {
           throw Error(
             error_description || "Sign-in was not completed. Please try again.",
           );
-        if(code){await exchangeAuthCode(code);if(active)router.replace('/(tabs)');return;}
+        if (code) {
+          await exchangeAuthCode(code);
+          if (active) router.replace("/(tabs)");
+          return;
+        }
         if (!access_token || !refresh_token)
           throw Error("This sign-in link is incomplete. Please sign in again.");
         const { error } = await supabase.auth.setSession({

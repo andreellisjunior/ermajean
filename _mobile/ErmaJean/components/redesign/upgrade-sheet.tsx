@@ -21,7 +21,11 @@ export function UpgradeSheet({
       <Tip>You can make plenty with what you’ve already got.</Tip>
       <Action
         label="Review plans on the website"
-        onPress={() => void Linking.openURL(`${process.env.EXPO_PUBLIC_WEB_URL || "https://ermajean.com"}/#pricing`)}
+        onPress={() =>
+          void Linking.openURL(
+            `${process.env.EXPO_PUBLIC_WEB_URL || "https://ermajean.com"}/#pricing`,
+          )
+        }
       />
       <Action secondary label="Back to my kitchen" onPress={onClose} />
       <Text style={S.small}>

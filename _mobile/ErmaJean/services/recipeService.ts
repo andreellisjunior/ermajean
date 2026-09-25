@@ -4,78 +4,77 @@
  * Requirements: 7.3
  */
 
-import { supabase } from '../libs/supabase';
-import { Recipe, RecipeInput } from '../types/config';
+import { supabase } from "../libs/supabase";
+import { Recipe, RecipeInput } from "../types/config";
 
 /**
  * Fetches all recipes for the current user
- * 
+ *
  * @returns Array of Recipe objects
  */
 export async function getRecipes(): Promise<Recipe[]> {
   const { data: user } = await supabase.auth.getUser();
   if (!user.user) {
-    throw new Error('User not authenticated');
+    throw new Error("User not authenticated");
   }
 
   const { data, error } = await supabase
-    .from('recipes')
-    .select('*')
-    .eq('user_id', user.user.id)
-    .order('created_at', { ascending: false });
+    .from("recipes")
+    .select("*")
+    .eq("user_id", user.user.id)
+    .order("created_at", { ascending: false });
 
   if (error) {
     throw new Error(`Failed to fetch recipes: ${error.message}`);
   }
 
-  return (data || []).map(recipe=>({...recipe,id:String(recipe.id)}));
+  return (data || []).map((recipe) => ({ ...recipe, id: String(recipe.id) }));
 }
 
 /**
  * Fetches a single recipe by ID
- * 
+ *
  * @param id - Recipe ID
  * @returns Recipe object or null if not found
  */
 export async function getRecipeById(id: string): Promise<Recipe | null> {
   const { data: user } = await supabase.auth.getUser();
   if (!user.user) {
-    throw new Error('User not authenticated');
+    throw new Error("User not authenticated");
   }
 
   const { data, error } = await supabase
-    .from('recipes')
-    .select('*')
-    .eq('id', id)
-    .eq('user_id', user.user.id)
+    .from("recipes")
+    .select("*")
+    .eq("id", id)
+    .eq("user_id", user.user.id)
     .single();
 
   if (error) {
-    if (error.code === 'PGRST116') {
+    if (error.code === "PGRST116") {
       return null; // Recipe not found
     }
     throw new Error(`Failed to fetch recipe: ${error.message}`);
   }
 
-  return data ? {...data,id:String(data.id)} : data;
+  return data ? { ...data, id: String(data.id) } : data;
 }
-
 
 /**
  * Creates a new recipe
  * Requirements: 7.3
- * 
+ *
  * @param recipe - Recipe input data
  * @returns The created Recipe object
  */
 export async function createRecipe(recipe: RecipeInput): Promise<Recipe> {
   const { data: user } = await supabase.auth.getUser();
   if (!user.user) {
-    throw new Error('User not authenticated');
+    throw new Error("User not authenticated");
   }
 
   const { data, error } = await supabase
-    .from('recipes')
+    .from("recipes")
     .insert({
       user_id: user.user.id,
       recipe_name: recipe.recipe_name,
@@ -104,39 +103,49 @@ export async function createRecipe(recipe: RecipeInput): Promise<Recipe> {
     throw new Error(`Failed to create recipe: ${error.message}`);
   }
 
-  return data ? {...data,id:String(data.id)} : data;
+  return data ? { ...data, id: String(data.id) } : data;
 }
 
 /**
  * Updates an existing recipe
  * Requirements: 7.3
- * 
+ *
  * @param id - Recipe ID to update
  * @param recipe - Partial recipe data to update
  * @returns The updated Recipe object
  */
 export async function updateRecipe(
   id: string,
-  recipe: Partial<RecipeInput>
+  recipe: Partial<RecipeInput>,
 ): Promise<Recipe> {
   const { data: user } = await supabase.auth.getUser();
   if (!user.user) {
-    throw new Error('User not authenticated');
+    throw new Error("User not authenticated");
   }
 
   const { data, error } = await supabase
-    .from('recipes')
+    .from("recipes")
     .update({
-      ...(recipe.recipe_name !== undefined && { recipe_name: recipe.recipe_name }),
-      ...(recipe.description !== undefined && { description: recipe.description }),
+      ...(recipe.recipe_name !== undefined && {
+        recipe_name: recipe.recipe_name,
+      }),
+      ...(recipe.description !== undefined && {
+        description: recipe.description,
+      }),
       ...(recipe.prep_time !== undefined && { prep_time: recipe.prep_time }),
       ...(recipe.cook_time !== undefined && { cook_time: recipe.cook_time }),
       ...(recipe.total_time !== undefined && { total_time: recipe.total_time }),
       ...(recipe.servings !== undefined && { servings: recipe.servings }),
-      ...(recipe.difficulty_level !== undefined && { difficulty_level: recipe.difficulty_level }),
+      ...(recipe.difficulty_level !== undefined && {
+        difficulty_level: recipe.difficulty_level,
+      }),
       ...(recipe.course !== undefined && { course: recipe.course }),
-      ...(recipe.ingredients !== undefined && { ingredients: recipe.ingredients }),
-      ...(recipe.instructions !== undefined && { instructions: recipe.instructions }),
+      ...(recipe.ingredients !== undefined && {
+        ingredients: recipe.ingredients,
+      }),
+      ...(recipe.instructions !== undefined && {
+        instructions: recipe.instructions,
+      }),
       ...(recipe.calories !== undefined && { calories: recipe.calories }),
       ...(recipe.protein !== undefined && { protein: recipe.protein }),
       ...(recipe.carbs !== undefined && { carbs: recipe.carbs }),
@@ -144,10 +153,12 @@ export async function updateRecipe(
       ...(recipe.fiber !== undefined && { fiber: recipe.fiber }),
       ...(recipe.sugar !== undefined && { sugar: recipe.sugar }),
       ...(recipe.sodium !== undefined && { sodium: recipe.sodium }),
-      ...(recipe.is_kid_friendly !== undefined && { is_kid_friendly: recipe.is_kid_friendly }),
+      ...(recipe.is_kid_friendly !== undefined && {
+        is_kid_friendly: recipe.is_kid_friendly,
+      }),
     })
-    .eq('id', id)
-    .eq('user_id', user.user.id)
+    .eq("id", id)
+    .eq("user_id", user.user.id)
     .select()
     .single();
 
@@ -155,26 +166,26 @@ export async function updateRecipe(
     throw new Error(`Failed to update recipe: ${error.message}`);
   }
 
-  return data ? {...data,id:String(data.id)} : data;
+  return data ? { ...data, id: String(data.id) } : data;
 }
 
 /**
  * Deletes a recipe by ID
  * Requirements: 7.3
- * 
+ *
  * @param id - Recipe ID to delete
  */
 export async function deleteRecipe(id: string): Promise<void> {
   const { data: user } = await supabase.auth.getUser();
   if (!user.user) {
-    throw new Error('User not authenticated');
+    throw new Error("User not authenticated");
   }
 
   const { error } = await supabase
-    .from('recipes')
+    .from("recipes")
     .delete()
-    .eq('id', id)
-    .eq('user_id', user.user.id);
+    .eq("id", id)
+    .eq("user_id", user.user.id);
 
   if (error) {
     throw new Error(`Failed to delete recipe: ${error.message}`);
