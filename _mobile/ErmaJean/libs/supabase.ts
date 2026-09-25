@@ -30,6 +30,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
           ? AsyncStorage
           : undefined
         : ExpoSecureStoreAdapter,
+    flowType: "pkce",
     autoRefreshToken: true,
     persistSession: Platform.OS !== "web" || typeof window !== "undefined",
     detectSessionInUrl: false,

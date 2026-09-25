@@ -1,3 +1,4 @@
+import { exchangeAuthCode } from '@/libs/auth-callback';
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
@@ -5,11 +6,13 @@ import { supabase } from "@/libs/supabase";
 import { Page, Title, S, Status, Action } from "@/components/redesign/ui";
 export default function AuthCallback() {
   const {
+    code,
     access_token,
     refresh_token,
     error: errorCode,
     error_description,
   } = useLocalSearchParams<{
+    code?: string;
     access_token?: string;
     refresh_token?: string;
     error?: string;
@@ -24,6 +27,7 @@ export default function AuthCallback() {
           throw Error(
             error_description || "Sign-in was not completed. Please try again.",
           );
+        if(code){await exchangeAuthCode(code);if(active)router.replace('/(tabs)');return;}
         if (!access_token || !refresh_token)
           throw Error("This sign-in link is incomplete. Please sign in again.");
         const { error } = await supabase.auth.setSession({
@@ -43,7 +47,7 @@ export default function AuthCallback() {
     return () => {
       active = false;
     };
-  }, [access_token, refresh_token, errorCode, error_description]);
+  }, [code, access_token, refresh_token, errorCode, error_description]);
   return (
     <Page header={false}>
       <Title>Come on in.</Title>

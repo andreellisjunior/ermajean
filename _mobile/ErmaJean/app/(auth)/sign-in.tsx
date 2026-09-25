@@ -1,3 +1,4 @@
+import { completeAuthUrl } from '@/libs/auth-callback';
 import { Page, Title, S, C, Action, Field } from "@/components/redesign/ui";
 import { useState } from "react";
 import { View, Text, Alert, Image } from "react-native";
@@ -112,7 +113,7 @@ export default function AuthScreen() {
       const { error } = await supabase.auth.resetPasswordForEmail(
         email.trim(),
         {
-          redirectTo: "https://ermajean.com/auth/callback?type=recovery",
+          redirectTo: makeRedirectUri({scheme:"ermajean",path:"reset-password"}),
         },
       );
       if (error) {
@@ -137,7 +138,7 @@ export default function AuthScreen() {
 
     try {
       const redirectUrl = makeRedirectUri({
-        scheme: undefined,
+        scheme: "ermajean",
         path: "auth/callback",
       });
 
@@ -157,13 +158,8 @@ export default function AuthScreen() {
           redirectUrl,
         );
         if (result.type === "success" && result.url) {
-          const url = new URL(result.url);
-          const access_token = url.searchParams.get("access_token");
-          const refresh_token = url.searchParams.get("refresh_token");
-
-          if (access_token && refresh_token) {
-            await supabase.auth.setSession({ access_token, refresh_token });
-          }
+          await completeAuthUrl(result.url);
+          router.replace('/(tabs)');
         }
       }
     } catch (err: any) {

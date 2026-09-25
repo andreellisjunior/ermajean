@@ -1,3 +1,4 @@
+import {getEntitlements,Entitlements} from '@/services/entitlementService';
 import { useKitchenPreferences } from "@/hooks/use-kitchen-preferences";
 import { Sheet } from "@/components/redesign/sheet";
 import { designPreview } from "@/utils/design-preview";
@@ -29,6 +30,7 @@ export default function ProfileScreen() {
   );
   const [dietary, setDietary] = useState("");
   const [settingsError, setSettingsError] = useState("");
+  const [entitlements,setEntitlements]=useState<Entitlements|null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -37,6 +39,7 @@ export default function ProfileScreen() {
     setLoading(true);
     setError("");
     try {
+      if(!designPreview)void getEntitlements().then(setEntitlements).catch(()=>setEntitlements(null));
       setProfile(
         designPreview
           ? {
@@ -121,7 +124,7 @@ export default function ProfileScreen() {
           <Tip>A little structure. Plenty of room for real life.</Tip>
           <View style={S.card}>
             <Text style={S.body}>
-              Subscription · {profile.has_access ? "Premium" : "Free"}
+              Subscription · {designPreview?"Free":entitlements?.plan??"Unavailable"}
             </Text>
             <Action
               secondary
