@@ -1,64 +1,8 @@
-import { createClient } from '@/libs/supabase/server';
-import { NextRequest, NextResponse } from 'next/server';
-
-export async function GET(req: NextRequest) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { searchParams } = new URL(req.url);
-  const recipeId = searchParams.get('id');
-
-  const { data: notes, error } = await supabase
-    .from('notes')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('recipe_id', +recipeId)
-    .order('created_at', { ascending: false });
-
-  return NextResponse.json(notes);
-}
-
-export async function POST(req: NextRequest) {
-  const supabase = createClient();
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-
-  const { id, edit, recipeId, title, note } = await req.json();
-
-  if (edit) {
-    const { data, error } = await supabase
-      .from('notes')
-      .update({ title, note, updated_at: new Date() })
-      .eq('id', id)
-      .select();
-    return NextResponse.json(data);
-  } else {
-    const { data, error } = await supabase
-      .from('notes')
-      .insert([
-        {
-          user_id: userId,
-          title,
-          note,
-          recipe_id: recipeId,
-          created_at: new Date(),
-          updated_at: new Date(),
-        },
-      ])
-      .select();
-    return NextResponse.json(data);
-  }
-}
-
-export async function DELETE(req: NextRequest) {
-  const supabase = createClient();
-  const { id } = await req.json();
-
-  const { data, error } = await supabase
-    .from('notes')
-    .delete()
-    .eq('id', id)
-    .select();
-
-  return NextResponse.json(data);
-}
+import {NextResponse} from 'next/server';
+import {z} from 'zod';
+import {apiError,requireUser,readJson,ApiError} from '@/libs/auth';
+import {idSchema,noteSchema} from '@/libs/security/recipe-validation';
+import {ownedRecipe} from '@/libs/recipe-service';
+export async function GET(req:Request){try{const {user,supabase}=await requireUser(req);const id=idSchema.parse(new URL(req.url).searchParams.get('id'));await ownedRecipe(supabase,user.id,id);const {data,error}=await supabase.from('notes').select('*').eq('user_id',user.id).eq('recipe_id',id).order('created_at',{ascending:false});if(error)throw error;return NextResponse.json(data);}catch(error){return apiError(error);}}
+export async function POST(req:Request){try{const {user,supabase}=await requireUser(req);const body=noteSchema.parse(await readJson(req));await ownedRecipe(supabase,user.id,body.recipeId);const values={title:body.title,note:body.note,updated_at:new Date().toISOString()};const result=body.edit?await supabase.from('notes').update(values).eq('id',body.id!).eq('recipe_id',body.recipeId).eq('user_id',user.id).select():await supabase.from('notes').insert({...values,user_id:user.id,recipe_id:body.recipeId}).select();if(result.error)throw result.error;if(!result.data?.length)throw new ApiError(404,'Note not found');return NextResponse.json(result.data,{status:body.edit?200:201});}catch(error){return apiError(error);}}
+export async function DELETE(req:Request){try{const {user,supabase}=await requireUser(req);const {id}=z.object({id:idSchema}).strict().parse(await readJson(req));const {data,error}=await supabase.from('notes').delete().eq('id',id).eq('user_id',user.id).select();if(error)throw error;if(!data?.length)throw new ApiError(404,'Note not found');return NextResponse.json(data);}catch(error){return apiError(error);}}
