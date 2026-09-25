@@ -1,5 +1,7 @@
 # Backend and framework hardening — 24 September 2026
 
+**Human-readable report:** [Open the branded report and release checklist](index.html). This Markdown file is the supporting source reference.
+
 Implemented on `codex/redesign`. Production has NOT been migrated or deployed. Live Supabase policies, Stripe deliveries, email redirects, native binaries and paid model quality are not verified by local tests.
 
 ## Changes
